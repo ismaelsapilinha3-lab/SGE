@@ -11,15 +11,15 @@ return new class extends Migration
         Schema::create('assiduidades', function (Blueprint $table) {
             $table->id('id_assiduidade');
             $table->foreignId('id_estagio')
-                ->constrained('estagios', 'id_estagio')
-                ->onDelete('cascade');
+                ->constrained('estagios', 'id_estagio')->restrictOnDelete();
+            $table->foreignId('id_supervisor')->nullable()
+                ->constrained('utilizadores', 'id_utilizador')->nullOnDelete(); // quem lançou
+
             $table->date('data');
-            // CORRIGIDO: entrada/saida passam de string livre para time
-            $table->time('entrada')->nullable();
-            $table->time('saida')->nullable();
-            // CORRIGIDO: estado passa de string livre para enum controlado
-            $table->enum('estado', ['presente', 'falta', 'falta_justificada'])->default('presente');
-            $table->text('observacao')->nullable();
+            $table->enum('estado', ['presente', 'atraso', 'falta', 'falta_justificada']);
+            $table->time('hora_entrada')->nullable();
+            $table->time('hora_saida')->nullable();
+            $table->text('justificacao')->nullable();
             $table->timestamps();
 
             $table->unique(['id_estagio', 'data']);

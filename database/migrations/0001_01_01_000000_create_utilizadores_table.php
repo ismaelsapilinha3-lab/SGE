@@ -6,17 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
+        Schema::create('utilizadores', function (Blueprint $table) {
+            $table->id('id_utilizador');
+            $table->string('nome');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('telefone', 20)->nullable();
+            $table->string('foto')->nullable(); // caminho do ficheiro, não BLOB
+            $table->enum('tipo_utilizador', ['administrador', 'coordenador', 'supervisor', 'estagiario']);
+            $table->boolean('ativo')->default(true);
             $table->rememberToken();
             $table->timestamps();
         });
@@ -37,13 +37,10 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('utilizadores');
     }
 };
