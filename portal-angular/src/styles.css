@@ -1,0 +1,53 @@
+/* =====================================================
+   ADICIONAR AO styles.css GLOBAL (não ao home.component.css)
+   Tokens de cor/espaçamento + reset base do projeto.
+   Necessário porque Angular "escopa" o CSS de cada
+   componente — um :root definido dentro de um componente
+   não fica visível para os restantes componentes.
+===================================================== */
+
+/* ---------- TOKENS ---------- */
+:root{
+  --azul:#0A2540;
+  --azul-medio:#1A3D6B;
+  --azul-claro:#EEF3F9;
+  --azul-linha:#D8E1EC;
+
+  --laranja:#FF6B00;
+  --laranja-hover:#E85F00;
+
+  --texto:#1A1F36;
+  --texto-suave:#4F566B;
+  --cinza:#8792A2;
+  --borda:#E3E8EE;
+  --fundo:#F7F9FC;
+  --branco:#FFFFFF;
+
+  --verde:#137A47;
+  --verde-fundo:#ECFDF3;
+
+  --radius:6px;
+  --radius-sm:4px;
+
+  --sombra:0 1px 2px rgba(16,24,40,.05);
+}
+
+/* ---------- RESET / BASE ---------- */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:120px}
+body{
+  font-family:Inter,Arial,sans-serif;
+  background:var(--fundo);
+  color:var(--texto);
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:#DCEBFF;color:#0A2540}
+button,input,select{font:inherit;font-family:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{
+  outline:2px solid var(--azul-medio);
+  outline-offset:2px;
+}
+.hidden{display:none!important}/* You can add global styles to this file, and also import other style files */

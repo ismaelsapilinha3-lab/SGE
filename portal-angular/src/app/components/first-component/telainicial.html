@@ -1,0 +1,141 @@
+<section id="pagina-publica">
+  <nav class="public-nav">
+    <div class="public-brand">
+      <img [src]="logoUrl" alt="Logo Multitel" width="38" height="38" style="border-radius:50%;object-fit:cover;display:block">
+      Multitel
+    </div>
+    <div class="public-links">
+      <a href="#sobre-multitel">A Multitel</a>
+      <a routerLink="/departamentos">Departamentos & Direções</a>
+      <a href="#como-funciona">Como funciona</a>
+    </div>
+    <button (click)="abrirLogin()" class="public-login">Entrar</button>
+  </nav>
+
+  <header class="public-hero" id="inicio">
+    <div class="hero-flex">
+      <div class="hero-left">
+        <span class="hero-badge">PORTAL DE ESTÁGIOS · MULTITEL</span>
+        <h1>Começa aqui a tua<span>experiência profissional.</span></h1>
+        <p>Uma plataforma simples e organizada para candidaturas, acompanhamento do estágio, comunicação com a Multitel e entrega dos relatórios.</p>
+        <div class="hero-buttons">
+          <h2>Horários Laborais</h2>
+        </div>
+        <div class="hero-schedule">
+          <div><strong>Segunda à Sexta</strong><span>Receção de candidaturas</span></div>
+          <div><strong>07h30-16h30</strong><span>Atendimento</span></div>
+          <div><strong>08h30–17h30</strong><span>Horário alternativo</span></div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="percurso-card">
+          <small>O TEU PERCURSO</small>
+          <h3>Do primeiro acesso ao certificado</h3>
+          <ol class="percurso-steps">
+            <li><span class="step-num">1</span><div><strong>Candidatura</strong><p>Preenche os teus dados e escolhe o departamento.</p></div></li>
+            <li><span class="step-num">2</span><div><strong>Análise</strong><p>Os coordenadores do departamento analisam a candidatura.</p></div></li>
+            <li><span class="step-num">3</span><div><strong>Estágio</strong><p>Acompanha o percurso e entrega os relatórios semanais.</p></div></li>
+            <li><span class="step-num">4</span><div><strong>Certificação</strong><p>Após avaliação final, recebe o resultado no portal.</p></div></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="public-content">
+    <section id="departamentos">
+      <div class="public-title">
+        <small>ÁREAS PROFISSIONAIS</small>
+        <h2>Conheça os nossos departamentos</h2>
+        <p>Cada departamento oferece oportunidades de aprendizagem e crescimento profissional.</p>
+      </div>
+
+      <div class="dept-carousel" (mouseenter)="pausarAutoplay()" (mouseleave)="reiniciarAutoplay()">
+        <button class="dept-nav-btn dept-nav-prev" (click)="anteriorDept()" aria-label="Departamento anterior">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <button class="dept-nav-btn dept-nav-next" (click)="proximoDept()" aria-label="Próximo departamento">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <div class="dept-slides">
+          <article class="dept-slide" *ngFor="let dept of departamentos; let i = index" [class.ativo]="i === departamentoAtual">
+            <span class="dept-number">{{ dept.sigla }}</span>
+            <h3>{{ dept.nome }}</h3>
+            <p>{{ dept.descricao }}</p>
+          </article>
+        </div>
+        <div class="dept-dots">
+          <button *ngFor="let dept of departamentos; let i = index"
+                  class="dept-dot" [class.ativo]="i === departamentoAtual"
+                  (click)="irParaDept(i)"
+                  [attr.aria-label]="'Departamento ' + (i + 1)"></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="multitel-about" id="sobre-multitel">
+      <div class="section-label">A MULTITEL</div>
+      <h2>Um ambiente orientado para aprendizagem e desenvolvimento profissional</h2>
+      <p>O Portal de Estágios foi concebido para aproximar estudantes e jovens profissionais das diferentes áreas de atuação da Multitel, permitindo conhecer os departamentos e identificar oportunidades de aprendizagem prática.</p>
+    </section>
+
+    <section class="internship-section" id="como-funciona">
+      <div class="section-label">SOBRE O ESTÁGIO</div>
+      <h2>Desenvolva competências através da experiência profissional</h2>
+      <div class="internship-grid">
+        <div><h3>Aprendizagem prática</h3><p>O estágio permite aplicar conhecimentos adquiridos durante a formação em atividades e contextos profissionais.</p></div>
+        <div><h3>Acompanhamento</h3><p>Os estagiários podem ser acompanhados ao longo do seu percurso e das atividades atribuídas.</p></div>
+        <div><h3>Desenvolvimento profissional</h3><p>A experiência contribui para o fortalecimento de competências técnicas, profissionais e de trabalho em equipa.</p></div>
+      </div>
+    </section>
+
+    <section id="sobre" class="public-cta">
+      <div><small>COMECE A SUA JORNADA</small><h2>Pronto para solicitar um estágio?</h2><p>Faça o seu cadastro e acompanhe o processo da sua candidatura.</p></div>
+      <button (click)="abrirLogin()">Entrar / Candidatar-me</button>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-main">
+      <div class="footer-brand-block">
+        <div class="logo">
+          <img class="logo-imagem" [src]="logoUrl" alt="Multitel" width="44" height="44">
+          <div class="logo-nome">MULTITEL</div>
+        </div>
+        <p>Multitel — Empresa de Serviços de Telecomunicações, com vasta experiência no ramo das telecomunicações em Angola.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
+          <a href="#" aria-label="Facebook"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+        </div>
+      </div>
+
+      <div class="footer-contact">
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.68 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.32 1.85.55 2.81.68A2 2 0 0 1 22 16.92z"/></svg></div>
+          <div><strong>(+244) 223 530 000</strong><span>Linha de apoio</span></div>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg></div>
+          <div><strong>venda&#64;multitel.co.ao</strong><span>E-mail suporte</span></div>
+        </div>
+        <div class="footer-contact-item">
+          <div class="footer-contact-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div><strong>Rua Cristiano dos Santos, nº 5, Bairro Miramar, Distrito Urbano do Sambizanga</strong><span>Localização</span></div>
+        </div>
+      </div>
+
+
+      <div class="footer-links">
+        <h4>PORTAL</h4>
+        <ul>
+          <li><a href="#" (click)="abrirLogin(); $event.preventDefault()">Área do Estagiário</a></li>
+
+          <li><a href="https://www.multitel.co.ao" target="_blank" rel="noopener">Site institucional</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">© 2026 <strong style="color:#fff">Multitel</strong> — Todos os direitos reservados.</div>
+  </footer>
+</section>
+

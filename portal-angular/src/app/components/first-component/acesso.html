@@ -1,0 +1,150 @@
+<section id="pagina-acesso">
+  <main class="area-formularios">
+    <div class="form-card" [class.cadastro]="abaAtiva === 'cadastro'">
+
+      <button type="button" class="btn-voltar-inicio" (click)="voltarParaPaginaInicial()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Voltar à página inicial
+      </button>
+
+      <div class="abas">
+        <button class="aba" [class.ativa]="abaAtiva === 'login'" (click)="mostrarFormulario('login')">Entrar</button>
+        <button class="aba" [class.ativa]="abaAtiva === 'cadastro'" (click)="mostrarFormulario('cadastro')">Criar conta</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="login-box" *ngIf="abaAtiva === 'login'">
+        <form class="formulario" #formLogin="ngForm" (ngSubmit)="onSubmitLogin()">
+          <div class="cabecalho">
+            <h2>Entrar no Portal</h2>
+            <p>Acede à tua área de estagiário utilizando apenas o Nº do BI e o teu email.</p>
+            <div class="seguranca-nota">Acesso simples e exclusivo para candidatos registados.</div>
+          </div>
+
+          <div style="margin-top:25px">
+            <div class="campo">
+              <label for="login-email">E-mail</label>
+              <input id="login-email" name="email" type="text" placeholder="empresadofuturo@gmail.com"
+                     [(ngModel)]="login.email" required>
+            </div>
+
+            <div class="campo">
+              <label for="login-senha">Palavra Passe</label>
+              <input id="login-senha" name="senha" type="password" placeholder="*******"
+                     [(ngModel)]="login.senha" required>
+            </div>
+
+            <a href="painelestagiario.html"><button class="botao" type="submit">Entrar</button></a>
+            <div class="mensagem" [class.ok]="loginMensagem.tipo === 'ok'" [class.erro]="loginMensagem.tipo === 'erro'">
+              {{ loginMensagem.texto }}
+            </div>
+
+            <div class="alternativa">
+              Ainda não tens conta?
+              <button type="button" (click)="mostrarFormulario('cadastro')">Criar conta</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- CADASTRO -->
+      <form class="formulario" *ngIf="abaAtiva === 'cadastro'" #formCadastro="ngForm" (ngSubmit)="onSubmitCadastro()">
+        <div class="cabecalho">
+          <h2>Criar conta de estagiário</h2>
+          <p>Preenche os teus dados e envia os documentos necessários para a candidatura.</p>
+          <div class="seguranca-nota">Confirma todos os dados antes de submeter a candidatura.</div>
+        </div>
+
+        <div class="cadastro-grid">
+
+          <section>
+            <div class="bloco-titulo">DADOS PESSOAIS</div>
+
+            <div class="campos-grid">
+              <div class="campo total">
+                <label for="nome">Nome completo</label>
+                <input id="nome" name="nome" type="text" placeholder="Nome completo"
+                       [(ngModel)]="cadastro.nome" required>
+              </div>
+
+              <div class="campo">
+                <label for="curso">Curso</label>
+                <input id="curso" name="curso" type="text" placeholder="Ex: Engenharia Informática"
+                       [(ngModel)]="cadastro.curso" required>
+              </div>
+
+              <div class="campo">
+                <label for="universidade">Universidade / Instituição</label>
+                <input id="universidade" name="universidade" type="text" placeholder="Nome da instituição"
+                       [(ngModel)]="cadastro.universidade" required>
+              </div>
+
+              <div class="campo">
+                <label for="nascimento">Data de nascimento</label>
+                <input id="nascimento" name="nascimento" type="date"
+                       [(ngModel)]="cadastro.nascimento" required>
+              </div>
+
+              <div class="campo">
+                <label for="sexo">Sexo</label>
+                <select id="sexo" name="sexo" [(ngModel)]="cadastro.sexo" required>
+                  <option value="">Selecionar</option>
+                  <option>Feminino</option>
+                  <option>Masculino</option>
+                </select>
+              </div>
+
+              <div class="campo">
+                <label for="cadastro-bi">Nº do BI</label>
+                <input id="cadastro-bi" name="bi" type="text" placeholder="000000000LA000"
+                       [(ngModel)]="cadastro.bi" required>
+              </div>
+
+              <div class="campo">
+                <label for="contacto">Contacto</label>
+                <input id="contacto" name="contacto" type="tel" placeholder="+244 9XX XXX XXX"
+                       [(ngModel)]="cadastro.contacto" required>
+              </div>
+
+              <div class="campo total">
+                <label for="cadastro-email">Email</label>
+                <input id="cadastro-email" name="cadastroEmail" type="email" placeholder="nome.apelido@email.com"
+                       [(ngModel)]="cadastro.email" required>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div class="bloco-titulo">DOCUMENTOS DA CANDIDATURA</div>
+
+            <div class="documentos-grid">
+              <label class="documento-upload"
+                     *ngFor="let doc of documentos"
+                     [class.escolhido]="!!doc.arquivo"
+                     (dragover)="$event.preventDefault()"
+                     (drop)="onFileDrop($event, doc)">
+                <div class="upload-simbolo"></div>
+                <strong [innerHTML]="doc.rotulo"></strong>
+                <span>{{ doc.arquivo ? doc.arquivo.name : doc.dica }}</span>
+                <input type="file" [accept]="doc.accept" (change)="onFileChange($event, doc)" required>
+              </label>
+            </div>
+          </section>
+
+        </div>
+
+        <button class="botao" type="submit" style="margin-top:5px">Criar conta e continuar</button>
+        <div class="mensagem" [class.ok]="cadastroMensagem.tipo === 'ok'" [class.erro]="cadastroMensagem.tipo === 'erro'">
+          {{ cadastroMensagem.texto }}
+        </div>
+
+        <div class="alternativa">
+          Já tens conta?
+          <button type="button" (click)="mostrarFormulario('login')">Entrar</button>
+        </div>
+      </form>
+
+    </div>
+  </main>
+</section>
+

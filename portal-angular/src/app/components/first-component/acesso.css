@@ -1,0 +1,294 @@
+/* =====================================================
+   acesso.component.css
+   Extraído do protótipo estático (portal_estagios_multitel).
+   Estilos da página de acesso (login / cadastro).
+   Depende dos tokens globais (:root) definidos em styles.css
+   — ver global-tokens-snippet.css enviado anteriormente.
+===================================================== */
+
+/* =====================================================
+   2. PÁGINA DE ACESSO (LOGIN / CADASTRO)
+===================================================== */
+#pagina-acesso{
+  min-height:100vh;
+  background:#fff;
+  display:grid;
+  grid-template-columns:1fr;
+}
+.area-formularios{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:48px clamp(24px,5vw,72px);
+  overflow:auto;
+}
+.form-card{width:100%;max-width:480px}
+.form-card.cadastro{max-width:920px}
+
+.btn-voltar-inicio{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  width:fit-content;
+  margin-right:auto;
+  gap:8px;
+  border:1px solid var(--azul);
+  background:var(--azul);
+  padding:9px 14px;
+  margin-bottom:22px;
+  border-radius:var(--radius);
+  color:#fff;
+  font-weight:500;font-size:13px;
+}
+.btn-voltar-inicio:hover{
+  background:var(--azul-medio);
+  color:#fff;
+  border-color:var(--azul-medio);
+}
+.btn-voltar-inicio svg{flex:none}
+
+/* Abas */
+.abas{
+  display:flex;
+  background:#F1F4F8;
+  padding:4px;
+  border-radius:var(--radius);
+  margin-bottom:30px;
+  border:1px solid var(--borda);
+}
+.aba{
+  flex:1;
+  border:0;background:transparent;
+  color:var(--texto-suave);
+  padding:11px;
+  border-radius:var(--radius-sm);
+  font-weight:600;font-size:13.5px;
+}
+.aba.ativa{background:var(--azul);color:#fff;box-shadow:var(--sombra)}
+
+/* Cabeçalho de formulário */
+.cabecalho h2{
+  font:700 26px 'Inter',sans-serif;
+  color:var(--azul);
+  letter-spacing:-.4px;
+}
+.cabecalho p{
+  margin-top:6px;
+  color:var(--texto-suave);
+  font-size:13.5px;
+  line-height:1.55;
+}
+
+/* Box do formulário de login */
+.login-box{
+  border:1px solid var(--borda);
+  border-radius:var(--radius);
+  background:#fff;
+  box-shadow:var(--sombra);
+  padding:28px 26px;
+}
+
+/* Campos */
+.formulario{margin-top:24px}
+.campo{margin-bottom:16px}
+.campo label{
+  display:block;
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--texto);
+  margin-bottom:6px;
+}
+.campo input,.campo select{
+  width:100%;
+  border:1px solid var(--borda);
+  background:#fff;
+  border-radius:var(--radius);
+  padding:11px 13px;
+  font-size:13.5px;
+  color:var(--texto);
+  outline:none;
+  min-height:42px;
+  transition:border-color .15s,box-shadow .15s;
+}
+.campo input::placeholder{color:var(--cinza)}
+.campo input:focus,.campo select:focus{
+  border-color:var(--azul-medio);
+  box-shadow:0 0 0 3px rgba(26,61,107,.1);
+}
+/* Remove o fundo azul que o navegador aplica ao preencher automaticamente (autofill) */
+.campo input:-webkit-autofill,
+.campo input:-webkit-autofill:hover,
+.campo input:-webkit-autofill:focus,
+.campo input:-webkit-autofill:active,
+.campo select:-webkit-autofill{
+  -webkit-box-shadow:0 0 0 1000px #fff inset !important;
+  box-shadow:0 0 0 1000px #fff inset !important;
+  -webkit-text-fill-color:var(--texto) !important;
+  caret-color:var(--texto);
+  background-color:#fff !important;
+  transition:background-color 9999s ease-in-out 0s;
+}
+
+/* Botão principal */
+.botao{
+  width:100%;
+  border:0;
+  border-radius:var(--radius);
+  padding:12px;
+  background:var(--azul);
+  color:#fff;
+  font-weight:600;
+  font-size:14px;
+  min-height:44px;
+  transition:background .15s;
+}
+.botao:hover{background:var(--azul-medio)}
+.botao:disabled{opacity:.6;cursor:not-allowed}
+
+.alternativa{
+  text-align:center;
+  margin-top:16px;
+  color:var(--texto-suave);
+  font-size:13px;
+}
+.alternativa button{
+  border:0;background:none;
+  color:var(--azul-medio);
+  font-weight:600;
+  padding:0;
+}
+.alternativa button:hover{text-decoration:underline}
+
+
+.seguranca-nota{
+  margin-top:12px;
+  padding:10px 12px;
+  border-left:3px solid var(--azul-medio);
+  background:transparent;
+  color:var(--texto-suave);
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  font-size:11.5px;
+  line-height:1.55;
+}
+
+/* CADASTRO — grid */
+.cadastro-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:30px;
+  margin-top:24px;
+}
+.bloco-titulo{
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:1px;
+  color:var(--azul-medio);
+  padding-bottom:10px;
+  border-bottom:1px solid var(--borda);
+  margin-bottom:16px;
+}
+.campos-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0 14px;
+}
+.total{grid-column:1/-1}
+
+/* Upload de documentos */
+.documentos-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.documento-upload{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-height:120px;
+  border:1px dashed rgba(255,255,255,.35);
+  border-radius:var(--radius);
+  background:var(--azul);
+  padding:16px 14px;
+  text-align:center;
+  cursor:pointer;
+  transition:border-color .15s,background .15s;
+}
+.documento-upload:hover{
+  border-color:rgba(255,255,255,.6);
+  background:var(--azul-medio);
+}
+.documento-upload.dragover{
+  border-color:rgba(255,255,255,.6);
+  background:var(--azul-medio);
+}
+.documento-upload.escolhido{
+  border-style:solid;
+  border-color:var(--verde);
+  background:var(--verde-fundo);
+}
+.documento-upload input{display:none}
+.upload-simbolo{
+  width:26px;height:26px;
+  border:1px solid rgba(255,255,255,.5);
+  border-radius:50%;
+  margin:0 auto 8px;
+  position:relative;
+  background:rgba(255,255,255,.08);
+}
+.upload-simbolo:before,.upload-simbolo:after{
+  content:"";
+  position:absolute;
+  background:#fff;
+}
+.upload-simbolo:before{width:12px;height:1px;left:6px;top:12px}
+.upload-simbolo:after{width:1px;height:12px;left:12px;top:6px}
+.documento-upload strong{
+  display:block;
+  font-size:12px;
+  color:#fff;
+  line-height:1.4;
+  font-weight:600;
+}
+.documento-upload span{
+  display:block;
+  color:#C7D2E5;
+  font-size:11px;
+  line-height:1.4;
+  margin-top:4px;
+}
+.documento-upload.escolhido .upload-simbolo{
+  border-color:var(--cinza);
+  background:#fff;
+}
+.documento-upload.escolhido .upload-simbolo:before,
+.documento-upload.escolhido .upload-simbolo:after{
+  background:var(--texto-suave);
+}
+.documento-upload.escolhido strong{color:var(--azul)}
+.documento-upload.escolhido span{
+  color:var(--verde);
+  font-weight:600;
+}
+
+/* Mensagens */
+.mensagem{
+  font-size:12.5px;
+  margin-top:12px;
+  min-height:16px;
+  text-align:center;
+}
+.mensagem.erro{color:#B42318}
+.mensagem.ok{color:var(--verde)}
+
+
+/* ---------- Responsivo (extraído das media queries globais) ---------- */
+@media(max-width:820px){
+  .cadastro-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .area-formularios{padding:32px 18px}
+  .form-card.cadastro{max-width:100%}
+  .campos-grid,.documentos-grid{grid-template-columns:1fr}
+}
+
