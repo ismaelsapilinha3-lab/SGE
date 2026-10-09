@@ -1,36 +1,98 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Departamento {
   id_departamento: number;
   nome: string;
 }
 
-@Injectable({ providedIn: 'root' })
-export class CandidaturaService {
-  private base = 'http://localhost:8000/api';
+export interface UtilizadorAuth {
+  id_utilizador: number;
+  nome: string;
+  email: string;
+  tipo_utilizador: string;
+}
 
-  constructor(private http: HttpClient) {}
+export interface RespostaCandidatura {
+  id_candidatura: number;
+  token: string;
+  user: UtilizadorAuth;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CandidaturaService {
+
+  private http = inject(HttpClient);
+
+  private readonly baseUrl = environment.apiUrl;
 
   listarDepartamentos(): Observable<Departamento[]> {
-    return this.http.get<Departamento[]>(`${this.base}/departamentos`);
+    return this.http.get<Departamento[]>(
+      `${this.baseUrl}/departamentos`
+    );
   }
 
   submeter(
-    dados: Record<string, any>,
-    documentos: { key: string; arquivo: File | null }[]
-  ): Observable<{ id_candidatura: number }> {
+    dados: {
+      nome: string;
+      email: string;
+      password: string;
+      password_confirmation: string;
+      curso: string;
+      universidade: string;
+      nascimento: string;
+      sexo: string;
+      bi: string;
+      contacto: string;
+      id_departamento_selecionado: number;
+    },
+    documentos: {
+      key: string;
+      arquivo: File | null;
+    }[]
+  ): Observable<RespostaCandidatura> {
+
     const formData = new FormData();
 
-    Object.entries(dados).forEach(([campo, valor]) => {
-      if (valor !== null && valor !== undefined) {
-        formData.append(campo, String(valor));
+    // Dados do candidato
+    formData.append('nome', dados.nome);
+    formData.append('email', dados.email);
+    formData.append('password', dados.password);
+    formData.append(
+      'password_confirmation',
+      dados.password_confirmation
+    );
+    formData.append('curso', dados.curso);
+    formData.append('universidade', dados.universidade);
+    formData.append('nascimento', dados.nascimento);
+    formData.append('sexo', dados.sexo);
+    formData.append('bi', dados.bi);
+    formData.append('contacto', dados.contacto);
+
+    formData.append(
+      'id_departamento_selecionado',
+      String(dados.id_departamento_selecionado)
+    );
+
+    // Documentos
+    documentos.forEach(documento => {
+      if (documento.arquivo) {
+        formData.append(
+          `documentos[${documento.key}]`,
+          documento.arquivo,
+          documento.arquivo.name
+        );
       }
     });
 
-    documentos.forEach(doc => formData.append(`documentos[${doc.key}]`, doc.arquivo as File));
-
-    return this.http.post<{ id_candidatura: number }>(`${this.base}/candidaturas`, formData);
+    return this.http.post<RespostaCandidatura>(
+      `${this.baseUrl}/candidaturas`,
+      formData
+    );
   }
 }
+

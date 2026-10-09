@@ -1,350 +1,446 @@
-import { AfterViewInit, Component, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import {
+Component,
+PLATFORM_ID,
+computed,
+inject,
+signal
+} from '@angular/core';
 import { Router } from '@angular/router';
+
+import { AuthService } from '../../core/auth.service';
+import {
+CandidaturaEstagiario,
+CandidaturaEstagiarioService,
+DocumentoEstagiario
+} from '../../core/candidatura-estagiario.service';
 
 type Estado = 'analise' | 'aceite' | 'recusado';
 
-interface DadosEstagiario {
-  nome: string;
-  bi: string;
-  contacto: string;
-  email: string;
-  nascimento: string;
-  sexo: string;
-  curso: string;
-  universidade: string;
-  estado: Estado;
-  data: string;
-}
-
-interface DocumentoDB {
-  id?: string;
-  titulo: string;
-  nome: string;
-  ficheiro?: File;
-}
-
 interface ConfigEstado {
-  badge: string;
-  titulo: string;
-  texto: string;
-  p2: 'active' | 'done' | '';
-  p3: 'done' | 'bad' | '';
-  c3: string;
-  l3: string;
+css: string;
+badge: string;
+titulo: string;
+texto: string;
+p2: 'active' | 'done' | '';
+p3: 'done' | 'bad' | '';
+c3: string;
+l3: string;
+}
+
+interface Historico {
+classe: string;
+icone: string;
+titulo: string;
+texto: string;
+data: string;
 }
 
 const ESTADOS: Record<Estado, ConfigEstado> = {
-  analise: {
-    badge: 'Em análise',
-    titulo: 'Pedido em análise',
-    texto: 'A equipa responsável está a analisar a tua candidatura. O resultado aparece nesta área.',
-    p2: 'active',
-    p3: '',
-    c3: '3',
-    l3: 'Resultado',
-  },
-  aceite: {
-    badge: 'Aceite',
-    titulo: 'Candidatura aceite',
-    texto: 'Parabéns! A tua candidatura foi aceite. A Multitel vai contactar-te com os próximos passos do estágio.',
-    p2: 'done',
-    p3: 'done',
-    c3: '✓',
-    l3: 'Aceite',
-  },
-  recusado: {
-    badge: 'Não aceite',
-    titulo: 'Candidatura não aceite',
-    texto: 'Desta vez a tua candidatura não foi aceite. Para mais informações, contacta a linha de apoio: 223 530 000.',
-    p2: 'done',
-    p3: 'bad',
-    c3: '✕',
-    l3: 'Não aceite',
-  },
+
+analise: {
+css: 'analise',
+badge: 'Em análise',
+titulo: 'Pedido em análise',
+texto:
+'A equipa responsável está a analisar a tua candidatura. O resultado aparecerá nesta área.',
+p2: 'active',
+p3: '',
+c3: '3',
+l3: 'Resultado'
+},
+
+aceite: {
+css: 'aceite',
+badge: 'Aceite',
+titulo: 'Candidatura aceite',
+texto:
+'Parabéns! A tua candidatura foi aceite. A Multitel vai contactar-te com os próximos passos do estágio.',
+p2: 'done',
+p3: 'done',
+c3: '✓',
+l3: 'Aceite'
+},
+
+recusado: {
+css: 'recusado',
+badge: 'Não aceite',
+titulo: 'Candidatura não aceite',
+texto:
+'A tua candidatura não foi aceite. Para mais informações, contacta a linha de apoio da Multitel.',
+p2: 'done',
+p3: 'bad',
+c3: '✕',
+l3: 'Não aceite'
+}
 };
 
 @Component({
-  selector: 'app-painelestagiario',
-  standalone: true,
-  templateUrl: './painelestagiario.html',
-  styleUrl: './painelestagiario.css',
+selector: 'app-painelestagiario',
+standalone: true,
+imports: [CommonModule],
+templateUrl: './painelestagiario.html',
+styleUrl: './painelestagiario.css'
 })
-export class PainelestagiarioComponent implements AfterViewInit {
-  private nDocs = 0;
+export class PainelestagiarioComponent {
 
-  constructor(
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private router: Router
-  ) {}
+private readonly platformId = inject(PLATFORM_ID);
+private readonly router = inject(Router);
 
-  ngAfterViewInit(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+readonly authService = inject(AuthService);
+private readonly candidaturaService =
+inject(CandidaturaEstagiarioService);
 
-    let dados = this.obterEstagiario();
+readonly carregando = signal(true);
+readonly erro = signal<string | null>(null);
 
-    if (!dados) {
-      dados = {
-        nome: 'Estagiário Exemplo',
-        bi: '000000000LA000',
-        contacto: '+244 923 000 000',
-        email: 'estagiario@exemplo.com',
-        nascimento: '2003-05-15',
-        sexo: 'Masculino',
-        curso: 'Engenharia Informática',
-        universidade: 'Instituição de Ensino',
-        estado: 'analise',
-        data: new Date().toISOString(),
-      };
-      this.guardarEstagiario(dados);
-    }
+readonly candidatura =
+signal<CandidaturaEstagiario | null>(null);
 
-    this.preencherArea(dados);
+readonly primeiroNome = computed(() => {
+const utilizador = this.authService.utilizador();
 
-    const ano = document.getElementById('ano-atual');
-    if (ano) ano.textContent = String(new Date().getFullYear());
-  }
 
-  /* ----------------- PERSISTÊNCIA (localStorage) ----------------- */
+if (!utilizador?.nome) {
+  return 'Estagiário';
+}
 
-  private guardarEstagiario(dados: DadosEstagiario): void {
-    localStorage.setItem('multitel_estagiario', JSON.stringify(dados));
-  }
+return utilizador.nome
+  .trim()
+  .split(/\s+/)[0];
 
-  private obterEstagiario(): DadosEstagiario | null {
-    const dados = localStorage.getItem('multitel_estagiario');
-    return dados ? (JSON.parse(dados) as DadosEstagiario) : null;
-  }
 
-  /* ----------------- DOCUMENTOS GUARDADOS (IndexedDB) ----------------- */
+});
 
-  private abrirDB(): Promise<IDBDatabase> {
-    return new Promise((ok, ko) => {
-      const r = indexedDB.open('multitel_docs', 1);
-      r.onupgradeneeded = () => r.result.createObjectStore('docs', { keyPath: 'id' });
-      r.onsuccess = () => ok(r.result);
-      r.onerror = () => ko(r.error);
-    });
-  }
+readonly inicial = computed(() => {
+const utilizador = this.authService.utilizador();
 
-  private async lerDocsDB(): Promise<DocumentoDB[]> {
-    try {
-      const db = await this.abrirDB();
-      return await new Promise<DocumentoDB[]>((ok) => {
-        const r = db.transaction('docs').objectStore('docs').getAll();
-        r.onsuccess = () => ok(r.result as DocumentoDB[]);
-        r.onerror = () => ok([]);
-      });
-    } catch (e) {
-      return [];
-    }
-  }
 
-  private async renderDocs(): Promise<void> {
-    const lista = await this.lerDocsDB();
-    this.nDocs = lista.length;
-    this.renderHist();
+if (!utilizador?.nome) {
+  return 'E';
+}
 
-    const el = document.getElementById('est-docs-lista');
-    if (!el) return;
-    el.textContent = '';
+return utilizador.nome
+  .trim()
+  .charAt(0)
+  .toUpperCase();
 
-    const documentos: DocumentoDB[] = lista.length
-      ? lista
-      : [
-          { titulo: 'Cópia do BI', nome: 'BI.pdf' },
-          { titulo: 'Declaração de matrícula', nome: 'Declaracao_de_matricula.pdf' },
-          { titulo: 'Carta a pedido do estágio', nome: 'Carta_de_pedido_de_estagio.pdf' },
-          { titulo: 'Declaração', nome: 'Declaracao.pdf' },
-          { titulo: 'Currículo Vitae', nome: 'Curriculo_Vitae.pdf' },
-          { titulo: 'Foto tipo passe', nome: 'Foto_tipo_passe.jpg' },
-        ];
 
-    documentos.forEach((d) => {
-      const a = document.createElement('article');
-      a.className = 'est-doc';
+});
 
-      const prev = document.createElement('div');
-      prev.className = 'est-doc-prev';
+readonly estado = computed<ConfigEstado>(() => {
+const candidatura = this.candidatura();
 
-      if (d.ficheiro && (d.ficheiro.type || '').startsWith('image/')) {
-        const img = document.createElement('img');
-        img.alt = 'Pré-visualização de ' + d.titulo;
-        img.src = URL.createObjectURL(d.ficheiro);
-        prev.appendChild(img);
-      } else {
-        prev.textContent = (d.nome.split('.').pop() || 'DOC').toUpperCase().slice(0, 4);
-      }
 
-      const cab = document.createElement('div');
-      cab.className = 'est-doc-head';
+if (!candidatura) {
+  return ESTADOS.analise;
+}
 
-      const h = document.createElement('h3');
-      h.textContent = d.titulo;
+return ESTADOS[candidatura.estado] ?? ESTADOS.analise;
 
-      const st = document.createElement('span');
-      st.className = 'est-doc-status';
-      st.textContent = 'Submetido';
 
-      cab.append(h, st);
+});
 
-      const p = document.createElement('p');
-      p.textContent = d.nome;
+readonly texto = computed(() => {
+return this.estado().texto;
+});
 
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'est-doc-ver';
-      b.textContent = 'Ver documento';
-      b.onclick = () => {
-        if (!d.ficheiro) return;
-        const u = URL.createObjectURL(d.ficheiro);
-        window.open(u, '_blank');
-        setTimeout(() => URL.revokeObjectURL(u), 60000);
-      };
+readonly historico = computed<Historico[]>(() => {
 
-      a.append(prev, cab, p, b);
-      el.appendChild(a);
-    });
-  }
 
-  /* ----------------- HISTÓRICO ----------------- */
+const candidatura = this.candidatura();
 
-  private renderHist(): void {
-    const ol = document.getElementById('est-hist');
-    if (!ol) return;
+if (!candidatura) {
+  return [];
+}
 
-    const d = this.obterEstagiario() || ({} as Partial<DadosEstagiario>);
-    const e: Estado = d.estado || 'analise';
-    const data = d.data ? new Date(d.data).toLocaleDateString('pt-AO') : '';
-    const n = this.nDocs || 0;
+const historico: Historico[] = [];
 
-    const res: [string, string, string, string] =
-      e === 'aceite'
-        ? ['feito', '✓', 'Candidatura aceite', 'Vais receber os próximos passos do estágio.']
-        : e === 'recusado'
-        ? ['bad', '✕', 'Candidatura não aceite', 'Para mais informações, contacta a linha de apoio: 223 530 000.']
-        : ['', '', 'Resultado', 'Ainda sem decisão. Vai aparecer aqui.'];
+historico.push({
+  classe: 'done',
+  icone: '✓',
+  titulo: 'Candidatura submetida',
+  texto: 'A tua candidatura foi recebida pela Multitel.',
+  data: candidatura.data_submissao
+});
 
-    const itens: string[][] = [
-      ['feito', '✓', 'Candidatura submetida', 'Os teus dados foram enviados com sucesso.', data],
-      [
-        'feito',
-        '✓',
-        'Documentos recebidos',
-        n ? n + ' documentos guardados e bloqueados para alterações.' : 'Documentos guardados e bloqueados para alterações.',
-        data,
-      ],
-      [
-        e === 'analise' ? 'atual' : 'feito',
-        e === 'analise' ? '•' : '✓',
-        'Análise da candidatura',
-        'A equipa da Multitel avalia o teu pedido e os documentos.',
-        '',
-      ],
-      [...res, ''],
-    ];
+if (
+  candidatura.estado === 'aceite' ||
+  candidatura.estado === 'recusado'
+) {
+  historico.push({
+    classe: 'done',
+    icone: '✓',
+    titulo: 'Candidatura analisada',
+    texto:
+      'A candidatura foi analisada pela equipa responsável.',
+    data: candidatura.data_submissao
+  });
+}
 
-    ol.innerHTML = itens
-      .map(
-        (i) =>
-          '<li class="' + i[0] + '"><i>' + i[1] + '</i><div><strong>' + i[2] + '</strong><span>' + i[3] + '</span></div><time>' + i[4] + '</time></li>'
-      )
-      .join('');
-  }
+if (candidatura.estado === 'aceite') {
+  historico.push({
+    classe: 'done',
+    icone: '✓',
+    titulo: 'Candidatura aceite',
+    texto: 'A candidatura foi aceite pela Multitel.',
+    data: candidatura.data_submissao
+  });
+}
 
-  /* ----------------- ESTADOS DA CANDIDATURA ----------------- */
+if (candidatura.estado === 'recusado') {
+  historico.push({
+    classe: 'bad',
+    icone: '✕',
+    titulo: 'Candidatura não aceite',
+    texto: 'A candidatura não foi aceite.',
+    data: candidatura.data_submissao
+  });
+}
 
-  private aplicarEstado(e: Estado): void {
-    const c = ESTADOS[e] || ESTADOS.analise;
-    const estadoEl = document.querySelector<HTMLElement>('.est-status');
-    if (estadoEl) estadoEl.dataset['estado'] = ESTADOS[e] ? e : 'analise';
+return historico;
 
-    const tituloEl = document.getElementById('est-estado-titulo');
-    if (tituloEl) tituloEl.textContent = c.titulo;
 
-    const textoEl = document.getElementById('est-estado-texto');
-    if (textoEl) textoEl.textContent = c.texto;
+});
 
-    const badgeEl = document.getElementById('est-estado-badge');
-    if (badgeEl) badgeEl.textContent = c.badge;
+constructor() {
 
-    const passo2 = document.getElementById('est-passo2');
-    if (passo2) passo2.className = 'est-step ' + c.p2;
 
-    const p3 = document.getElementById('est-passo3');
-    if (p3) {
-      p3.className = 'est-step ' + c.p3;
-      const circle = p3.querySelector<HTMLElement>('.est-step-circle');
-      if (circle) circle.textContent = c.c3;
-      const label = p3.querySelector<HTMLElement>('span');
-      if (label) label.textContent = c.l3;
-    }
+if (isPlatformBrowser(this.platformId)) {
+  this.carregarPainel();
+} else {
+  this.carregando.set(false);
+}
 
-    const demo = document.getElementById('est-demo-select') as HTMLSelectElement | null;
-    if (demo) demo.value = ESTADOS[e] ? e : 'analise';
 
-    this.renderHist();
-  }
+}
 
-  /** Chamado pelo (change) do <select id="est-demo-select"> no template */
-  simularEstado(valor: string): void {
-    const e = valor as Estado;
-    const d = this.obterEstagiario();
-    if (d) {
-      d.estado = e;
-      this.guardarEstagiario(d);
-    }
-    this.aplicarEstado(e);
-  }
+private carregarPainel(): void {
 
-  /* ----------------- PREENCHIMENTO DA ÁREA ----------------- */
 
-  private preencherArea(dados: DadosEstagiario): void {
-    const _pn = (dados.nome || 'Estagiário').trim().split(/\s+/)[0];
-    const primeiroNome = _pn.charAt(0).toUpperCase() + _pn.slice(1).toLowerCase();
+this.carregando.set(true);
+this.erro.set(null);
 
-    const _av = document.getElementById('est-avatar');
-    if (_av) _av.textContent = primeiroNome.charAt(0).toUpperCase();
+this.candidaturaService.minhaCandidatura().subscribe({
 
-    this.setText('nome-topo', 'Bem-vindo, ' + primeiroNome);
-    this.setText('nome-hero', primeiroNome + '!');
+  next: (dados) => {
+    this.candidatura.set(dados);
+    this.carregando.set(false);
+  },
 
-    this.setText('perfil-nome', dados.nome || 'Não informado');
-    this.setText('perfil-bi', dados.bi || 'Não informado');
-    this.setText('perfil-contacto', dados.contacto || 'Não informado');
-    this.setText('perfil-email', dados.email || 'Não informado');
-    this.setText(
-      'perfil-nascimento',
-      dados.nascimento ? new Date(dados.nascimento + 'T00:00:00').toLocaleDateString('pt-AO') : 'Não informado'
+  error: (erro) => {
+
+    console.error(
+      'Erro ao carregar candidatura:',
+      erro
     );
-    this.setText('perfil-sexo', dados.sexo || 'Não informado');
-    this.setText('perfil-curso', dados.curso || 'Não informado');
-    this.setText('perfil-universidade', dados.universidade || 'Não informado');
 
-    this.aplicarEstado(dados.estado || 'analise');
+    this.candidatura.set(null);
+    this.carregando.set(false);
 
-    const dc = document.getElementById('data-candidatura');
-    if (dc && dados.data) dc.textContent = new Date(dados.data).toLocaleDateString('pt-AO');
+    if (erro.status === 401) {
+      this.erro.set(
+        'A sessão expirou. Faça login novamente.'
+      );
+      return;
+    }
 
-    void this.renderDocs();
+    if (erro.status === 404) {
+      this.erro.set(
+        'Não foi encontrada uma candidatura associada a esta conta.'
+      );
+      return;
+    }
+
+    this.erro.set(
+      'Não foi possível carregar os dados da candidatura.'
+    );
   }
+});
 
-  private setText(id: string, valor: string): void {
-    const el = document.getElementById(id);
-    if (el) el.textContent = valor;
+
+}
+
+recarregar(): void {
+this.carregarPainel();
+}
+
+irPara(rota: string): void {
+
+
+if (!rota) {
+  return;
+}
+
+this.router.navigate([rota]);
+
+
+}
+
+sair(): void {
+
+
+this.authService.logout().subscribe({
+  next: () => {
+    this.router.navigate(['/acesso']);
+  },
+
+  error: () => {
+    this.router.navigate(['/acesso']);
   }
+});
 
-  /* ----------------- NAVEGAÇÃO E SESSÃO (chamadas pelo template) ----------------- */
 
-  /** Chamado pelo (click) dos botões de navegação no template */
-  irPara(id: string): void {
-    const elemento = document.getElementById(id);
-    if (elemento) elemento.scrollIntoView({ behavior: 'smooth' });
+}
+
+extensao(documento: DocumentoEstagiario): string {
+
+
+const nome = documento.nome_arquivo || '';
+
+const partes = nome.split('.');
+
+if (partes.length < 2) {
+  return 'FILE';
+}
+
+return partes
+  .pop()
+  ?.toUpperCase() || 'FILE';
+
+
+}
+
+tituloDocumento(documento: DocumentoEstagiario): string {
+
+
+if (documento.tipo_documento) {
+  return documento.tipo_documento
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, letra => letra.toUpperCase());
+}
+
+if (documento.nome_arquivo) {
+  return documento.nome_arquivo;
+}
+
+return 'Documento';
+
+
+}
+
+rotuloEstadoDocumento(
+documento: DocumentoEstagiario
+): string {
+
+
+const estado =
+  documento.estado?.toLowerCase();
+
+switch (estado) {
+
+  case 'aprovado':
+  case 'aceite':
+  case 'aceito':
+    return 'Aprovado';
+
+  case 'recusado':
+  case 'rejeitado':
+    return 'Recusado';
+
+  case 'pendente':
+  case 'em análise':
+  case 'em_analise':
+    return 'Em análise';
+
+  default:
+    return 'Recebido';
+}
+
+
+}
+
+ver(documento: DocumentoEstagiario): void {
+
+
+if (!isPlatformBrowser(this.platformId)) {
+  return;
+}
+
+/*
+ * Abre a janela imediatamente para evitar
+ * bloqueio do popup pelo navegador.
+ */
+const janela = window.open(
+  '',
+  '_blank'
+);
+
+if (!janela) {
+  this.erro.set(
+    'O navegador bloqueou a abertura do documento.'
+  );
+  return;
+}
+
+this.candidaturaService
+  .visualizarDocumento(documento.id_documento)
+  .subscribe({
+
+    next: (blob) => {
+
+      const url =
+        URL.createObjectURL(blob);
+
+      janela.location.href = url;
+
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 60000);
+    },
+
+    error: (erro) => {
+
+      janela.close();
+
+      console.error(
+        'Erro ao abrir documento:',
+        erro
+      );
+
+      this.erro.set(
+        'Não foi possível abrir este documento.'
+      );
+    }
+  });
+
+
+}
+
+formatarData(
+data: string | null | undefined
+): string {
+
+
+if (!data) {
+  return '-';
+}
+
+const objeto = new Date(data);
+
+if (Number.isNaN(objeto.getTime())) {
+  return data;
+}
+
+return new Intl.DateTimeFormat(
+  'pt-PT',
+  {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
   }
+).format(objeto);
 
-  /** Chamado pelo (click) do botão "Sair" no template */
-  voltarAoAcesso(): void {
-    sessionStorage.removeItem('multitel_sessao');
-    this.router.navigate(['/telainicial']);
-  }
+
+}
 }
