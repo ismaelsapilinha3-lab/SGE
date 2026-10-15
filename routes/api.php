@@ -8,6 +8,7 @@ use App\Http\Controllers\DocumentoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
 /*
 |--------------------------------------------------------------------------
 | Autenticação
@@ -18,6 +19,7 @@ Route::post('/login', [
     AuthController::class,
     'login'
 ]);
+
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +36,7 @@ Route::post('/candidaturas', [
     CandidaturaController::class,
     'store'
 ])->middleware('throttle:5,1');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -53,9 +56,10 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+
     /*
     |--------------------------------------------------------------------------
-    | Candidatura do estagiário autenticado
+    | Candidatura do estagiário
     |--------------------------------------------------------------------------
     */
 
@@ -63,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
         CandidaturaController::class,
         'minhaCandidatura'
     ]);
+
 
     /*
     |--------------------------------------------------------------------------
@@ -75,21 +80,25 @@ Route::middleware('auth:sanctum')->group(function () {
         'logout'
     ]);
 
+
     /*
     |--------------------------------------------------------------------------
     | Documentos
     |--------------------------------------------------------------------------
     */
 
-    Route::post('/documentos', [
-        DocumentoController::class,
-        'store'
-    ]);
-
+    // Visualizar documento existente.
     Route::get('/documentos/{documento}', [
         DocumentoController::class,
         'download'
     ]);
+
+    // Substituir documento por uma nova versão.
+    Route::post('/documentos/{documento}/substituir', [
+        DocumentoController::class,
+        'substituir'
+    ]);
+
 
     /*
     |--------------------------------------------------------------------------
@@ -97,32 +106,35 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::middleware('admin')->prefix('admin')->group(function () {
+    Route::middleware('admin')
+        ->prefix('admin')
+        ->group(function () {
 
-        Route::get('/dashboard', [
-            AdminController::class,
-            'dashboard'
-        ]);
+            Route::get('/dashboard', [
+                AdminController::class,
+                'dashboard'
+            ]);
 
-        Route::get('/candidaturas', [
-            AdminController::class,
-            'candidaturas'
-        ]);
+            Route::get('/candidaturas', [
+                AdminController::class,
+                'candidaturas'
+            ]);
 
-        Route::get('/candidaturas/{id}', [
-            AdminController::class,
-            'show'
-        ]);
+            Route::get('/candidaturas/{id}', [
+                AdminController::class,
+                'show'
+            ]);
 
-        Route::patch('/candidaturas/{id}/aprovar', [
-            AdminController::class,
-            'aprovar'
-        ]);
+            Route::patch('/candidaturas/{id}/aprovar', [
+                AdminController::class,
+                'aprovar'
+            ]);
 
-        Route::patch('/candidaturas/{id}/recusar', [
-            AdminController::class,
-            'recusar'
-        ]);
-    });
+            Route::patch('/candidaturas/{id}/recusar', [
+                AdminController::class,
+                'recusar'
+            ]);
+
+        });
+
 });
-

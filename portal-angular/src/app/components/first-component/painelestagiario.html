@@ -1,3 +1,4 @@
+
 <a
   class="skip-link"
   href="#conteudo-principal"
@@ -16,12 +17,14 @@
 
       <span class="topo-direita">
         Linha de apoio · 223 530 000
+
         <span
           class="topo-separador"
           aria-hidden="true"
         >
           •
         </span>
+
         Dias úteis
       </span>
     </div>
@@ -367,6 +370,7 @@
          ======================================================= -->
     @if (candidatura(); as c) {
 
+      
 
       <!-- =====================================================
            ESTADO DA CANDIDATURA
@@ -390,15 +394,8 @@
               {{ estado().titulo }}
             </h2>
 
-            <span
-              class="est-badge"
-              role="status"
-            >
-              <i
-                class="est-dot"
-                aria-hidden="true"
-              ></i>
-
+            <span class="est-badge">
+              <i class="est-dot" aria-hidden="true"></i>
               {{ estado().badge }}
             </span>
 
@@ -411,14 +408,14 @@
         </div>
 
 
-        <!-- Progresso -->
-        <ol
+        <!-- Progresso da candidatura -->
+        <div
           class="est-progress"
           aria-label="Progresso da candidatura"
         >
 
           <!-- Etapa 1 -->
-          <li class="est-step done">
+          <div class="est-step done">
 
             <div
               class="est-step-circle"
@@ -427,15 +424,13 @@
               ✓
             </div>
 
-            <span>
-              Candidatura
-            </span>
+            <span>Candidatura</span>
 
-          </li>
+          </div>
 
 
           <!-- Etapa 2 -->
-          <li
+          <div
             id="est-passo2"
             [class]="'est-step ' + estado().p2"
           >
@@ -444,24 +439,20 @@
               class="est-step-circle"
               aria-hidden="true"
             >
-
               @if (estado().p2 === 'done') {
                 ✓
               } @else {
                 2
               }
-
             </div>
 
-            <span>
-              Análise
-            </span>
+            <span>Análise</span>
 
-          </li>
+          </div>
 
 
           <!-- Etapa 3 -->
-          <li
+          <div
             id="est-passo3"
             [class]="'est-step ' + estado().p3"
           >
@@ -477,15 +468,15 @@
               {{ estado().l3 }}
             </span>
 
-          </li>
+          </div>
 
-        </ol>
+        </div>
 
       </section>
 
 
       <!-- =====================================================
-           PERFIL / DADOS DO CANDIDATO
+           PERFIL DO CANDIDATO
            ===================================================== -->
       <section
         id="est-perfil"
@@ -493,7 +484,7 @@
         aria-labelledby="titulo-perfil"
       >
 
-        <header class="est-section-head">
+        <div class="est-section-head">
 
           <div>
             <span class="section-kicker">
@@ -509,17 +500,13 @@
             </p>
           </div>
 
-        </header>
+        </div>
 
 
         <div class="est-grid">
 
-
           <!-- Dados pessoais -->
-          <article
-            class="est-card"
-            aria-labelledby="titulo-dados-pessoais"
-          >
+          <article class="est-card">
 
             <div class="est-card-top">
 
@@ -546,66 +533,57 @@
               </div>
 
               <div>
-
                 <span class="card-label">
                   IDENTIFICAÇÃO
                 </span>
 
-                <h3 id="titulo-dados-pessoais">
-                  Dados pessoais
-                </h3>
-
+                <h3>Dados pessoais</h3>
               </div>
 
             </div>
 
 
-            <dl class="est-data">
+            <div class="est-data">
 
               <div class="est-data-row">
-                <dt>Nome completo</dt>
-                <dd>{{ c.nome }}</dd>
+                <span>Nome completo</span>
+                <strong>{{ c.nome }}</strong>
               </div>
 
               <div class="est-data-row">
-                <dt>N.º de identificação</dt>
-                <dd>{{ c.bi }}</dd>
+                <span>N.º de identificação</span>
+                <strong>{{ c.bi }}</strong>
               </div>
 
               <div class="est-data-row">
-                <dt>Contacto</dt>
-                <dd>{{ c.contacto }}</dd>
+                <span>Contacto</span>
+                <strong>{{ c.contacto }}</strong>
               </div>
 
               <div class="est-data-row">
-                <dt>E-mail</dt>
-                <dd>{{ c.email }}</dd>
+                <span>E-mail</span>
+                <strong>{{ c.email }}</strong>
               </div>
 
               <div class="est-data-row">
-                <dt>Data de nascimento</dt>
-                <dd>
-                  <time [attr.datetime]="c.nascimento">
-                    {{ c.nascimento | date:'dd/MM/yyyy' }}
-                  </time>
-                </dd>
+                <span>Data de nascimento</span>
+                <strong>
+                  {{ c.nascimento | date:'dd/MM/yyyy' }}
+                </strong>
               </div>
 
               <div class="est-data-row">
-                <dt>Sexo</dt>
-                <dd>{{ c.sexo }}</dd>
+                <span>Sexo</span>
+                <strong>{{ c.sexo }}</strong>
               </div>
 
-            </dl>
+            </div>
 
           </article>
 
 
-          <!-- Formação -->
-          <article
-            class="est-card"
-            aria-labelledby="titulo-dados-academicos"
-          >
+          <!-- Formação académica -->
+          <article class="est-card">
 
             <div class="est-card-top">
 
@@ -626,40 +604,37 @@
               </div>
 
               <div>
-
                 <span class="card-label">
                   FORMAÇÃO
                 </span>
 
-                <h3 id="titulo-dados-academicos">
-                  Dados académicos
-                </h3>
-
+                <h3>Dados académicos</h3>
               </div>
 
             </div>
 
 
-            <dl class="est-data">
+            <div class="est-data">
 
               <div class="est-data-row">
-                <dt>Curso</dt>
-                <dd>{{ c.curso }}</dd>
+                <span>Curso</span>
+                <strong>{{ c.curso }}</strong>
               </div>
 
               <div class="est-data-row">
-                <dt>Instituição</dt>
-                <dd>{{ c.universidade }}</dd>
+                <span>Instituição</span>
+                <strong>{{ c.universidade }}</strong>
               </div>
 
               <div class="est-data-row est-data-full">
-                <dt>Direção pretendida</dt>
-                <dd>
-                  {{ c.departamento ?? 'A definir' }}
-                </dd>
+                <span>Direção pretendida</span>
+
+                <strong>
+                  {{ c.departamento || 'A definir' }}
+                </strong>
               </div>
 
-            </dl>
+            </div>
 
           </article>
 
@@ -669,7 +644,7 @@
 
 
       <!-- =====================================================
-           DOCUMENTOS
+           DOCUMENTOS DO CANDIDATO
            ===================================================== -->
       <section
         id="est-documentos"
@@ -677,10 +652,9 @@
         aria-labelledby="titulo-documentos"
       >
 
-        <header class="est-section-head">
+        <div class="est-section-head">
 
           <div>
-
             <span class="section-kicker">
               DOCUMENTAÇÃO
             </span>
@@ -689,26 +663,21 @@
               Os meus documentos
             </h2>
 
-            <p id="descricao-documentos">
-              Documentos associados à tua candidatura.
+            <p>
+              Consulta os documentos associados à tua candidatura.
             </p>
-
           </div>
 
-        </header>
+        </div>
 
 
         <!-- Informação de segurança -->
-        <aside
-          class="est-bloqueio"
-          aria-label="Informação de segurança dos documentos"
-        >
+        <div class="est-bloqueio">
 
           <div
             class="bloqueio-icon"
             aria-hidden="true"
           >
-
             <svg
               class="ic"
               viewBox="0 0 24 24"
@@ -721,101 +690,124 @@
 
               <path d="M9 12l2 2 4-4"></path>
             </svg>
-
           </div>
 
           <div>
-
-            <strong>
-              Documentação protegida
-            </strong>
+            <strong>Documentação protegida</strong>
 
             <span>
               Os documentos são armazenados de forma segura
               e apenas ficam disponíveis ao utilizador autorizado.
             </span>
+          </div>
+
+        </div>
+
+
+        <!-- Mensagem de sucesso -->
+        @if (sucessoDocumento()) {
+
+          <div
+            class="est-aviso est-aviso--sucesso"
+            role="status"
+            aria-live="polite"
+          >
+
+            <strong>Documento atualizado</strong>
+
+            <span>
+              {{ sucessoDocumento() }}
+            </span>
 
           </div>
 
-        </aside>
+        }
+
+
+        <!-- Mensagem de erro -->
+        @if (erroDocumento()) {
+
+          <div
+            class="est-aviso est-aviso--erro"
+            role="alert"
+            aria-live="assertive"
+          >
+
+            <strong>
+              Não foi possível substituir o documento
+            </strong>
+
+            <span>
+              {{ erroDocumento() }}
+            </span>
+
+          </div>
+
+        }
 
 
         <!-- Lista de documentos -->
-        <ul
-          class="est-docs"
-          aria-describedby="descricao-documentos"
-        >
+        <div class="est-docs">
 
           @for (
             d of c.documentos;
             track d.id_documento
           ) {
 
-            <li class="est-doc-list-item">
+            <article class="est-doc">
 
-              <article
-                class="est-doc"
-                [attr.aria-labelledby]="'documento-' + d.id_documento"
-              >
+              <!-- Identificação do documento -->
+              <div class="est-doc-prev">
 
-                <!-- Tipo -->
-                <div
-                  class="est-doc-prev"
-                  aria-hidden="true"
-                >
+                <div class="doc-type">
+                  {{ extensao(d) }}
+                </div>
 
-                  <div class="doc-type">
-                    {{ extensao(d) }}
+              </div>
+
+
+              <!-- Informação e ações -->
+              <div class="est-doc-content">
+
+                <div class="est-doc-head">
+
+                  <div>
+                    <span class="doc-label">
+                      DOCUMENTO
+                    </span>
+
+                    <h3>
+                      {{ tituloDocumento(d) }}
+                    </h3>
                   </div>
+
+
+                  <span
+                    class="est-doc-status"
+                    [class.rejeitado]="d.estado === 'rejeitado'"
+                  >
+                    {{ rotuloEstadoDocumento(d) }}
+                  </span>
 
                 </div>
 
 
-                <!-- Conteúdo -->
-                <div class="est-doc-content">
-
-                  <div class="est-doc-head">
-
-                    <div>
-
-                      <span class="doc-label">
-                        DOCUMENTO
-                      </span>
-
-                      <h3
-                        [id]="'documento-' + d.id_documento"
-                      >
-                        {{ tituloDocumento(d) }}
-                      </h3>
-
-                    </div>
+                <p>
+                  {{ d.nome_arquivo || 'Documento enviado' }}
+                </p>
 
 
-                    <span class="est-doc-status">
-                      {{ rotuloEstadoDocumento(d) }}
-                    </span>
-
-                  </div>
-
-
-                  <p>
-                    {{ d.nome_arquivo || 'Documento enviado' }}
-                  </p>
-
+                <!-- Visualizar documento -->
+                <div class="est-doc-actions">
 
                   <button
                     type="button"
                     class="est-doc-ver"
+                    [disabled]="documentoEmSubstituicao() !== null"
                     (click)="ver(d)"
-                    [attr.aria-label]="
-                      'Ver documento ' +
-                      (d.nome_arquivo || tituloDocumento(d))
-                    "
                   >
 
-                    <span>
-                      Ver documento
-                    </span>
+                    <span>Ver documento</span>
 
                     <svg
                       class="ic"
@@ -836,21 +828,105 @@
 
                   </button>
 
+
+                  <!-- Substituir documento -->
+                  <div class="est-doc-substituicao">
+
+                    <input
+                      type="file"
+                      [id]="'ficheiro-documento-' + d.id_documento"
+                      [attr.aria-label]="'Selecionar novo ficheiro para ' + tituloDocumento(d)"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      [disabled]="
+                        c.estado !== 'analise' ||
+                        documentoEmSubstituicao() !== null
+                      "
+                      (change)="substituirDocumento(d, $event)"
+                      hidden
+                    >
+
+                    <label
+                      [for]="'ficheiro-documento-' + d.id_documento"
+                      class="est-doc-substituir"
+                      [class.is-disabled]="
+                        c.estado !== 'analise' ||
+                        documentoEmSubstituicao() !== null
+                      "
+                      [attr.aria-disabled]="
+                        c.estado !== 'analise' ||
+                        documentoEmSubstituicao() !== null
+                      "
+                    >
+
+                      @if (
+                        documentoEmSubstituicao() === d.id_documento
+                      ) {
+
+                        <span>
+                          A enviar...
+                        </span>
+
+                      } @else {
+
+                        <span>
+                          Substituir documento
+                        </span>
+
+                      }
+
+                    </label>
+
+                  </div>
+
                 </div>
 
-              </article>
 
-            </li>
+                <!-- Explicação da substituição -->
+                @if (c.estado === 'analise') {
+
+                  <small class="est-doc-ajuda">
+                    Formatos aceites: PDF, JPG e PNG.
+                    Tamanho máximo: 5 MB.
+                  </small>
+
+                } @else {
+
+                  <small class="est-doc-ajuda">
+                    A substituição só está disponível
+                    enquanto a candidatura estiver em análise.
+                  </small>
+
+                }
+
+              </div>
+
+            </article>
+
+          } @empty {
+
+            <div class="est-vazio">
+
+              <strong>
+                Ainda não existem documentos
+              </strong>
+
+              <p>
+                Não foram encontrados documentos associados
+                à tua candidatura.
+              </p>
+
+            </div>
 
           }
 
-        </ul>
+        </div>
 
       </section>
 
 
+
       <!-- =====================================================
-           HISTÓRICO
+           HISTÓRICO DA CANDIDATURA
            ===================================================== -->
       <section
         id="est-historico"
@@ -858,10 +934,9 @@
         aria-labelledby="titulo-historico"
       >
 
-        <header class="est-section-head">
+        <div class="est-section-head">
 
           <div>
-
             <span class="section-kicker">
               PROCESSO
             </span>
@@ -873,23 +948,19 @@
             <p>
               Acompanha os principais momentos do teu processo.
             </p>
-
           </div>
 
-        </header>
+        </div>
 
 
-        <ol
-          class="est-hist"
-          aria-label="Histórico da candidatura"
-        >
+        <div class="est-hist">
 
           @for (
             h of historico();
             track $index
           ) {
 
-            <li
+            <div
               class="hist-item"
               [class.hist-bad]="h.classe === 'bad'"
             >
@@ -913,17 +984,30 @@
 
               </div>
 
-              <time
-                [attr.datetime]="h.data"
-              >
+              <time>
                 {{ formatarData(h.data) }}
               </time>
 
-            </li>
+            </div>
+
+          } @empty {
+
+            <div class="est-vazio">
+
+              <strong>
+                Sem histórico disponível
+              </strong>
+
+              <p>
+                Ainda não existem atualizações registadas
+                para apresentar.
+              </p>
+
+            </div>
 
           }
 
-        </ol>
+        </div>
 
       </section>
 
@@ -933,11 +1017,10 @@
            ===================================================== -->
       <section
         class="est-section"
-        aria-labelledby="titulo-informacao"
+        aria-labelledby="titulo-informacoes"
       >
 
         <div class="est-info">
-
 
           <!-- Próximos passos -->
           <article class="est-note">
@@ -972,16 +1055,17 @@
                 INFORMAÇÃO
               </span>
 
-              <h2 id="titulo-informacao">
+              <h2 id="titulo-informacoes">
                 O que acontece a seguir?
               </h2>
 
               <p>
-                Mantém os teus contactos atualizados
-                e acompanha regularmente este painel.
-                Caso a candidatura seja aceite,
-                receberás informações sobre os próximos
-                passos do processo de estágio.
+                Mantém os teus contactos atualizados e
+                acompanha regularmente este painel.
+
+                Caso a candidatura seja aceite, receberás
+                informações sobre os próximos passos
+                do processo de estágio.
               </p>
 
             </div>
@@ -989,26 +1073,22 @@
           </article>
 
 
-          <!-- Resumo -->
-          <article
-            class="est-date"
-            aria-label="Resumo da candidatura"
-          >
+          <!-- Resumo da candidatura -->
+          <article class="est-date">
 
             <span>
               DATA DA CANDIDATURA
             </span>
 
-            <time
-              [attr.datetime]="c.data_submissao"
-            >
+            <strong>
               {{ formatarData(c.data_submissao) }}
-            </time>
+            </strong>
 
             <small>
               Direção:
+
               <b>
-                {{ c.departamento ?? 'A definir' }}
+                {{ c.departamento || 'A definir' }}
               </b>
             </small>
 
@@ -1020,6 +1100,11 @@
 
     }
 
+
+    <!-- =======================================================
+         FIM DOS DADOS DA CANDIDATURA
+         ======================================================= -->
+
   </main>
 
 
@@ -1030,12 +1115,8 @@
 
     <div class="rodape-in">
 
-
-      <!-- Marca -->
-      <section
-        class="rodape-brand"
-        aria-labelledby="titulo-rodape"
-      >
+      <!-- Marca institucional -->
+      <div class="rodape-brand">
 
         <div class="rodape-logo">
 
@@ -1044,9 +1125,7 @@
             alt="Logótipo Multitel"
           >
 
-          <span id="titulo-rodape">
-            MULTITEL
-          </span>
+          <span>MULTITEL</span>
 
         </div>
 
@@ -1055,18 +1134,13 @@
           de candidaturas ao programa de estágios.
         </p>
 
-      </section>
+      </div>
 
 
       <!-- Contactos -->
-      <section
-        class="rodape-contactos"
-        aria-labelledby="titulo-contactos"
-      >
+      <div class="rodape-contactos">
 
-        <h2 id="titulo-contactos">
-          Contactos
-        </h2>
+        <h4>CONTACTOS</h4>
 
 
         <div class="rodape-contacto">
@@ -1090,15 +1164,8 @@
           </div>
 
           <div>
-            <strong>
-              <a href="tel:+244223530000">
-                223 530 000
-              </a>
-            </strong>
-
-            <span>
-              Linha de apoio
-            </span>
+            <strong>223 530 000</strong>
+            <span>Linha de apoio</span>
           </div>
 
         </div>
@@ -1131,57 +1198,38 @@
           </div>
 
           <div>
-            <strong>
-              Multitel
-            </strong>
-
-            <span>
-              Contacto institucional
-            </span>
+            <strong>Multitel</strong>
+            <span>Contacto institucional</span>
           </div>
 
         </div>
 
-      </section>
+      </div>
 
 
-      <!-- Links -->
+      <!-- Navegação do rodapé -->
       <nav
         class="rodape-links"
-        aria-label="Navegação complementar"
+        aria-label="Links do portal"
       >
 
-        <h2>
-          Portal
-        </h2>
+        <h4>PORTAL</h4>
 
-        <ul>
+        <a href="#est-inicio">
+          Início
+        </a>
 
-          <li>
-            <a href="#est-inicio">
-              Início
-            </a>
-          </li>
+        <a href="#est-perfil">
+          Meu perfil
+        </a>
 
-          <li>
-            <a href="#est-perfil">
-              Meu perfil
-            </a>
-          </li>
+        <a href="#est-documentos">
+          Documentos
+        </a>
 
-          <li>
-            <a href="#est-documentos">
-              Documentos
-            </a>
-          </li>
-
-          <li>
-            <a href="#est-acompanhamento">
-              Acompanhamento
-            </a>
-          </li>
-
-        </ul>
+        <a href="#est-acompanhamento">
+          Acompanhamento
+        </a>
 
       </nav>
 
