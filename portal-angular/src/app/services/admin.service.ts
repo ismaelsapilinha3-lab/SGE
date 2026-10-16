@@ -1,3 +1,4 @@
+
 import { Injectable, inject } from '@angular/core';
 import {
   HttpClient,
@@ -22,7 +23,7 @@ export interface DashboardAdmin {
 
 
 /* =========================================================
-   DEPARTAMENTO / DIREÇÃO
+   DEPARTAMENTO
    ========================================================= */
 
 export interface Departamento {
@@ -30,6 +31,20 @@ export interface Departamento {
   nome: string;
   descricao?: string | null;
   ativo?: boolean;
+  estagiarios_ativos?: number;
+}
+
+
+export interface DepartamentoDados {
+  nome: string;
+  descricao?: string | null;
+  ativo?: boolean;
+}
+
+
+export interface RespostaDepartamento {
+  mensagem: string;
+  departamento: Departamento;
 }
 
 
@@ -39,29 +54,17 @@ export interface Departamento {
 
 export interface Documento {
   id_documento: number;
-
   id_candidatura: number;
-
   id_estagio?: number | null;
-
   tipo_documento: string;
-
   versao?: number;
-
   nome_arquivo: string;
-
   caminho_arquivo: string;
-
   data_upload: string;
-
   validade?: string | null;
-
   estado?: string | null;
-
   descricao?: string | null;
-
   created_at?: string;
-
   updated_at?: string;
 }
 
@@ -71,25 +74,15 @@ export interface Documento {
    ========================================================= */
 
 export interface Candidatura {
-
   id_candidatura: number;
-
   nome: string;
-
   email: string;
-
   curso: string;
-
   universidade: string;
-
   nascimento: string;
-
   sexo: string;
-
   bi: string;
-
   contacto: string;
-
   id_departamento_selecionado: number;
 
   estado:
@@ -99,21 +92,13 @@ export interface Candidatura {
     | 'encerrada';
 
   motivo_recusa?: string | null;
-
   data_decisao?: string | null;
-
   id_coordenador?: number | null;
-
   encaminhada_em?: string | null;
-
   bi_ativo?: string | null;
-
   created_at: string;
-
   updated_at: string;
-
   departamento?: Departamento;
-
   documentos?: Documento[];
 }
 
@@ -123,27 +108,16 @@ export interface Candidatura {
    ========================================================= */
 
 export interface CandidaturasResponse {
-
   current_page: number;
-
   data: Candidatura[];
-
   first_page_url: string;
-
   from: number | null;
-
   last_page: number;
-
   last_page_url: string;
-
   next_page_url: string | null;
-
   path: string;
-
   per_page: number;
-
   prev_page_url: string | null;
-
   total: number;
 }
 
@@ -152,6 +126,33 @@ export interface CandidaturasResponse {
    SERVIÇO ADMINISTRATIVO
    ========================================================= */
 
+/* =======================================================
+   ESTAGIARIOS
+   ======================================================= */
+
+export interface Estagiario {
+  id_estagio: number | null;
+  id_candidatura: number;
+  id_estagiario: number | null;
+  nome: string;
+  email: string;
+  telefone?: string | null;
+  curso?: string | null;
+  universidade?: string | null;
+  departamento?: string | null;
+  data_inicio?: string | null;
+  data_fim_prevista?: string | null;
+  data_fim_real?: string | null;
+  estado_estagio?: string | null;
+  motivo_suspensao?: string | null;
+}
+
+export interface EstagiariosResponse {
+  data: Estagiario[];
+  total: number;
+  current_page: number;
+  last_page: number;
+}
 @Injectable({
   providedIn: 'root'
 })
@@ -168,24 +169,52 @@ export class AdminService {
      ======================================================= */
 
   dashboard(): Observable<DashboardAdmin> {
-
     return this.http.get<DashboardAdmin>(
       `${this.apiUrl}/dashboard`
     );
-
   }
 
 
   /* =======================================================
-     DIREÇÕES
+     DEPARTAMENTOS
      ======================================================= */
 
   listarDepartamentos(): Observable<Departamento[]> {
-
     return this.http.get<Departamento[]>(
       `${environment.apiUrl}/departamentos`
     );
+  }
 
+
+  /* =======================================================
+     CRIAR DEPARTAMENTO
+     ======================================================= */
+
+  criarDepartamento(
+    dados: DepartamentoDados
+  ): Observable<RespostaDepartamento> {
+    return this.http.post<RespostaDepartamento>(
+      `${this.apiUrl}/departamentos`,
+      {
+        nome: dados.nome,
+        descricao: dados.descricao ?? null
+      }
+    );
+  }
+
+
+  /* =======================================================
+     EDITAR DEPARTAMENTO
+     ======================================================= */
+
+  atualizarDepartamento(
+    id: number,
+    dados: DepartamentoDados
+  ): Observable<RespostaDepartamento> {
+    return this.http.patch<RespostaDepartamento>(
+      `${this.apiUrl}/departamentos/${id}`,
+      dados
+    );
   }
 
 
@@ -205,48 +234,26 @@ export class AdminService {
       .set('page', pagina)
       .set('por_pagina', porPagina);
 
-
-    /* -------------------------------------------------------
-       PESQUISA
-       ------------------------------------------------------- */
-
     if (pesquisa?.trim()) {
-
       params = params.set(
         'pesquisa',
         pesquisa.trim()
       );
-
     }
 
-
-    /* -------------------------------------------------------
-       FILTRO POR ESTADO
-       ------------------------------------------------------- */
-
     if (estado) {
-
       params = params.set(
         'estado',
         estado
       );
-
     }
 
-
-    /* -------------------------------------------------------
-       FILTRO POR DIREÇÃO
-       ------------------------------------------------------- */
-
     if (idDepartamento) {
-
       params = params.set(
         'id_departamento',
         idDepartamento
       );
-
     }
-
 
     return this.http.get<CandidaturasResponse>(
       `${this.apiUrl}/candidaturas`,
@@ -254,7 +261,6 @@ export class AdminService {
         params
       }
     );
-
   }
 
 
@@ -265,11 +271,9 @@ export class AdminService {
   obterCandidatura(
     id: number
   ): Observable<Candidatura> {
-
     return this.http.get<Candidatura>(
       `${this.apiUrl}/candidaturas/${id}`
     );
-
   }
 
 
@@ -280,12 +284,10 @@ export class AdminService {
   aprovarCandidatura(
     id: number
   ): Observable<any> {
-
     return this.http.patch(
       `${this.apiUrl}/candidaturas/${id}/aprovar`,
       {}
     );
-
   }
 
 
@@ -297,39 +299,67 @@ export class AdminService {
     id: number,
     motivo: string
   ): Observable<any> {
-
     return this.http.patch(
       `${this.apiUrl}/candidaturas/${id}/recusar`,
       {
         motivo
       }
     );
-
   }
 
 
   /* =======================================================
      VISUALIZAR DOCUMENTO
-     
-     Endpoint protegido pelo Laravel Sanctum.
-
-     O interceptor de autenticação adicionará
-     automaticamente:
-
-     Authorization: Bearer TOKEN
      ======================================================= */
+
+  listarEstagiarios(
+    pesquisa: string = '',
+    estado: string = '',
+    pagina: number = 1,
+    porPagina: number = 15
+  ): Observable<EstagiariosResponse> {
+    let params = new HttpParams()
+      .set('page', pagina)
+      .set('por_pagina', porPagina);
+
+    if (pesquisa.trim()) {
+      params = params.set('pesquisa', pesquisa.trim());
+    }
+
+    if (estado) {
+      params = params.set('estado', estado);
+    }
+
+    return this.http.get<EstagiariosResponse>(
+      `${this.apiUrl}/estagiarios`,
+      { params }
+    );
+  }
+
+  atualizarEstadoEstagio(
+    idCandidatura: number,
+    dados: {
+      estado: 'ativo' | 'suspenso' | 'concluido' | 'cancelado';
+      data_inicio?: string;
+      data_fim_prevista?: string;
+      motivo_suspensao?: string;
+    }
+  ): Observable<{ message: string; data: unknown }> {
+    return this.http.patch<{ message: string; data: unknown }>(
+      `${this.apiUrl}/estagiarios/${idCandidatura}/estado`,
+      dados
+    );
+  }
 
   visualizarDocumento(
     idDocumento: number
   ): Observable<Blob> {
-
     return this.http.get(
       `${environment.apiUrl}/documentos/${idDocumento}`,
       {
         responseType: 'blob'
       }
     );
-
   }
 
 }

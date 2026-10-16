@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Http\Controllers\AdminController;
@@ -99,10 +100,24 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('admin')->prefix('admin')->group(function () {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Painel do administrador
+        |--------------------------------------------------------------------------
+        */
+
         Route::get('/dashboard', [
             AdminController::class,
             'dashboard'
         ]);
+        Route::get('/estagiarios', [AdminController::class, 'estagiarios']);
+        Route::patch('/estagiarios/{idCandidatura}/estado', [AdminController::class, 'atualizarEstadoEstagio']);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Candidaturas
+        |--------------------------------------------------------------------------
+        */
 
         Route::get('/candidaturas', [
             AdminController::class,
@@ -123,6 +138,21 @@ Route::middleware('auth:sanctum')->group(function () {
             AdminController::class,
             'recusar'
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Gestão de departamentos
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post('/departamentos', [
+            DepartamentoController::class,
+            'store'
+        ]);
+
+        Route::patch('/departamentos/{id}', [
+            DepartamentoController::class,
+            'update'
+        ]);
     });
 });
-

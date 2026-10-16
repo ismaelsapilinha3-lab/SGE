@@ -1,4 +1,4 @@
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+﻿import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
 Component,
 PLATFORM_ID,
@@ -43,7 +43,7 @@ css: 'analise',
 badge: 'Em análise',
 titulo: 'Pedido em análise',
 texto:
-'A equipa responsável está a analisar a tua candidatura. O resultado aparecerá nesta área.',
+'A equipa responsÃ¡vel estÃ¡ a analisar a tua candidatura. O resultado aparecerá¡ nesta Ã¡rea.',
 p2: 'active',
 p3: '',
 c3: '3',
@@ -58,7 +58,7 @@ texto:
 'Parabéns! A tua candidatura foi aceite. A Multitel vai contactar-te com os próximos passos do estágio.',
 p2: 'done',
 p3: 'done',
-c3: '✓',
+c3: 'âœ“',
 l3: 'Aceite'
 },
 
@@ -70,7 +70,7 @@ texto:
 'A tua candidatura não foi aceite. Para mais informações, contacta a linha de apoio da Multitel.',
 p2: 'done',
 p3: 'bad',
-c3: '✕',
+c3: 'âœ•',
 l3: 'Não aceite'
 }
 };
@@ -102,7 +102,7 @@ const utilizador = this.authService.utilizador();
 
 
 if (!utilizador?.nome) {
-  return 'Estagiário';
+  return 'EstagiÃ¡rio';
 }
 
 return utilizador.nome
@@ -158,7 +158,7 @@ const historico: Historico[] = [];
 
 historico.push({
   classe: 'done',
-  icone: '✓',
+  icone: 'âœ“',
   titulo: 'Candidatura submetida',
   texto: 'A tua candidatura foi recebida pela Multitel.',
   data: candidatura.data_submissao
@@ -170,10 +170,10 @@ if (
 ) {
   historico.push({
     classe: 'done',
-    icone: '✓',
+    icone: 'âœ“',
     titulo: 'Candidatura analisada',
     texto:
-      'A candidatura foi analisada pela equipa responsável.',
+      'A candidatura foi analisada pela equipa responsÃ¡vel.',
     data: candidatura.data_submissao
   });
 }
@@ -181,7 +181,7 @@ if (
 if (candidatura.estado === 'aceite') {
   historico.push({
     classe: 'done',
-    icone: '✓',
+    icone: 'âœ“',
     titulo: 'Candidatura aceite',
     texto: 'A candidatura foi aceite pela Multitel.',
     data: candidatura.data_submissao
@@ -191,7 +191,7 @@ if (candidatura.estado === 'aceite') {
 if (candidatura.estado === 'recusado') {
   historico.push({
     classe: 'bad',
-    icone: '✕',
+    icone: 'âœ•',
     titulo: 'Candidatura não aceite',
     texto: 'A candidatura não foi aceite.',
     data: candidatura.data_submissao
@@ -240,7 +240,7 @@ this.candidaturaService.minhaCandidatura().subscribe({
 
     if (erro.status === 401) {
       this.erro.set(
-        'A sessão expirou. Faça login novamente.'
+        'A sessÃ£o expirou. FaÃ§a login novamente.'
       );
       return;
     }
@@ -253,7 +253,7 @@ this.candidaturaService.minhaCandidatura().subscribe({
     }
 
     this.erro.set(
-      'Não foi possível carregar os dados da candidatura.'
+      'Não foi possÃ­vel carregar os dados da candidatura.'
     );
   }
 });
@@ -265,17 +265,19 @@ recarregar(): void {
 this.carregarPainel();
 }
 
-irPara(rota: string): void {
+  irPara(rota: string): void {
+    if (!rota) {
+      return;
+    }
 
+    const id = rota.startsWith('#') ? rota.substring(1) : rota;
+    const destino = document.getElementById(id);
 
-if (!rota) {
-  return;
-}
-
-this.router.navigate([rota]);
-
-
-}
+    destino?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
 
 sair(): void {
 
@@ -409,7 +411,7 @@ this.candidaturaService
       );
 
       this.erro.set(
-        'Não foi possível abrir este documento.'
+        'Não foi possÃ­vel abrir este documento.'
       );
     }
   });
@@ -443,4 +445,20 @@ return new Intl.DateTimeFormat(
 
 
 }
+
+  navegarSecao(id: string): void {
+    const secao = document.getElementById(id);
+
+    if (!secao) {
+      console.warn('Secção não encontrada:', id);
+      return;
+    }
+
+    secao.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+
 }
+

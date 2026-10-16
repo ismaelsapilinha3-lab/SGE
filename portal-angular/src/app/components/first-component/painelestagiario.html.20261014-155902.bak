@@ -1,0 +1,1191 @@
+﻿<div id="pagina-estagiario">
+
+  <!-- =========================================================
+       BARRA INSTITUCIONAL
+       ========================================================= -->
+  <div class="topo">
+    <div class="topo-conteudo">
+      <span>Portal de Estágios Multitel</span>
+
+      <span class="topo-direita">
+        Linha de apoio · 223 530 000
+        <span
+          class="topo-separador"
+          aria-hidden="true"
+        >
+          •
+        </span>
+        Dias úteis
+      </span>
+    </div>
+  </div>
+
+
+  <!-- =========================================================
+       NAVEGAÇÃO PRINCIPAL
+       ========================================================= -->
+  <header class="cabecalho-principal">
+
+    <nav
+      class="barra"
+      aria-label="Navegação principal"
+    >
+
+      <div class="barra-conteudo">
+
+        <!-- Marca -->
+        <a
+          class="marca"
+          href="#est-inicio"
+          aria-label="Multitel — Portal de Estágios"
+        >
+
+          <img
+            src="assets/img/multitel.png"
+            alt="Logótipo Multitel"
+          >
+
+          <div class="marca-texto">
+            <strong>MULTITEL</strong>
+            <small>PORTAL DE ESTÁGIOS</small>
+          </div>
+
+        </a>
+
+
+        <!-- Menu principal -->
+        <ul class="abas">
+
+          <li>
+            <a
+              href="#est-inicio"
+              class="nav-link"
+              aria-label="Ir para o início"
+            >
+              <svg
+                class="ic"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M3 11.5 12 4l9 7.5"></path>
+                <path d="M5.5 10.5V20h13v-9.5"></path>
+                <path d="M9.5 20v-5.5h5V20"></path>
+              </svg>
+
+              <span>Início</span>
+            </a>
+          </li>
+
+
+          <li>
+            <a
+              href="#est-perfil"
+              class="nav-link"
+              aria-label="Ver meu perfil"
+            >
+              <svg
+                class="ic"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle
+                  cx="12"
+                  cy="8"
+                  r="3.5"
+                ></circle>
+
+                <path
+                  d="M5 20c.7-3.4 3.1-5 7-5s6.3 1.6 7 5"
+                ></path>
+              </svg>
+
+              <span>Meu perfil</span>
+            </a>
+          </li>
+
+
+          <li>
+            <a
+              href="#est-documentos"
+              class="nav-link"
+              aria-label="Ver documentos"
+            >
+              <svg
+                class="ic"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M6 3h8l4 4v14H6z"></path>
+                <path d="M14 3v5h5"></path>
+                <path d="M9 13h6"></path>
+                <path d="M9 17h6"></path>
+              </svg>
+
+              <span>Documentos</span>
+            </a>
+          </li>
+
+
+          <li>
+            <a
+              href="#est-acompanhamento"
+              class="nav-link"
+              aria-label="Acompanhar candidatura"
+            >
+              <svg
+                class="ic"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M4 17V7"></path>
+                <path d="M10 17V4"></path>
+                <path d="M16 17v-7"></path>
+                <path d="M22 17V9"></path>
+              </svg>
+
+              <span>Acompanhamento</span>
+            </a>
+          </li>
+
+        </ul>
+
+
+        <!-- Utilizador -->
+        <div class="user">
+
+          <div class="user-info">
+            <strong>Olá, {{ primeiroNome() }}</strong>
+            <span>Candidato a estágio</span>
+          </div>
+
+          <div
+            class="av"
+            aria-hidden="true"
+          >
+            {{ inicial() }}
+          </div>
+
+          <button
+            type="button"
+            class="sair"
+            (click)="sair()"
+            aria-label="Encerrar sessão"
+          >
+            <svg
+              class="ic"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M10 5H5v14h5"></path>
+              <path d="M14 8l4 4-4 4"></path>
+              <path d="M9 12h9"></path>
+            </svg>
+
+            <span>Sair</span>
+          </button>
+
+        </div>
+
+      </div>
+
+    </nav>
+
+  </header>
+
+
+  <!-- =========================================================
+       CABEÇALHO / HERO
+       ========================================================= -->
+  <header
+    id="est-inicio"
+    class="cab"
+  >
+
+    <div class="cab-conteudo">
+
+      <span class="cab-label">
+        ÁREA DO CANDIDATO
+      </span>
+
+      <h1>
+        Acompanha a tua candidatura
+      </h1>
+
+      <p>
+        Consulta o estado do teu processo, os teus dados,
+        documentos enviados e todas as atualizações
+        relacionadas com a candidatura ao programa
+        de estágio da Multitel.
+      </p>
+
+      <div class="est-hero-actions">
+
+        <button
+          type="button"
+          class="est-btn-primary"
+          (click)="irPara('est-acompanhamento')"
+        >
+          <span>Acompanhar candidatura</span>
+
+          <svg
+            class="ic"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M5 12h13"></path>
+            <path d="m13 6 6 6-6 6"></path>
+          </svg>
+        </button>
+
+
+        <button
+          type="button"
+          class="est-btn-light"
+          (click)="irPara('est-perfil')"
+        >
+          Ver meu perfil
+        </button>
+
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <!-- =========================================================
+       CONTEÚDO PRINCIPAL
+       ========================================================= -->
+  <main
+    id="conteudo-principal"
+    class="est-main"
+    tabindex="-1"
+  >
+
+    <!-- =======================================================
+         CARREGAMENTO
+         ======================================================= -->
+    @if (carregando()) {
+
+      <div
+        class="est-loading"
+        role="status"
+        aria-live="polite"
+        aria-label="A carregar os dados da candidatura"
+      >
+
+        <div
+          class="loading-spinner"
+          aria-hidden="true"
+        ></div>
+
+        <div>
+          <strong>A carregar o teu painel</strong>
+
+          <span>
+            Estamos a preparar as informações da candidatura.
+          </span>
+        </div>
+
+      </div>
+
+    }
+
+
+    <!-- =======================================================
+         ERRO
+         ======================================================= -->
+    @if (erro()) {
+
+      <div
+        class="est-aviso est-aviso--erro"
+        role="alert"
+        aria-live="assertive"
+      >
+
+        <div
+          class="aviso-icon"
+          aria-hidden="true"
+        >
+
+          <svg
+            class="ic"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="9"
+            ></circle>
+
+            <path d="M12 8v5"></path>
+            <path d="M12 16h.01"></path>
+          </svg>
+
+        </div>
+
+        <div>
+          <strong>
+            Não foi possível carregar o painel
+          </strong>
+
+          <span>
+            {{ erro() }}
+          </span>
+
+          <button
+            type="button"
+            class="est-btn-light"
+            (click)="recarregar()"
+          >
+            Tentar novamente
+          </button>
+        </div>
+
+      </div>
+
+    }
+
+
+    <!-- =======================================================
+         DADOS DA CANDIDATURA
+         ======================================================= -->
+    @if (candidatura(); as c) {
+
+
+      <!-- =====================================================
+           ESTADO DA CANDIDATURA
+           ===================================================== -->
+      <section
+        id="est-acompanhamento"
+        class="est-status"
+        [attr.data-estado]="estado().css"
+        aria-labelledby="titulo-estado"
+      >
+
+        <div class="status-conteudo">
+
+          <span class="est-status-label">
+            ESTADO DA CANDIDATURA
+          </span>
+
+          <div class="status-titulo">
+
+            <h2 id="titulo-estado">
+              {{ estado().titulo }}
+            </h2>
+
+            <span
+              class="est-badge"
+              role="status"
+            >
+              <i
+                class="est-dot"
+                aria-hidden="true"
+              ></i>
+
+              {{ estado().badge }}
+            </span>
+
+          </div>
+
+          <p>
+            {{ texto() }}
+          </p>
+
+        </div>
+
+
+        <!-- Progresso -->
+        <ol
+          class="est-progress"
+          aria-label="Progresso da candidatura"
+        >
+
+          <!-- Etapa 1 -->
+          <li class="est-step done">
+
+            <div
+              class="est-step-circle"
+              aria-hidden="true"
+            >
+              ✓
+            </div>
+
+            <span>
+              Candidatura
+            </span>
+
+          </li>
+
+
+          <!-- Etapa 2 -->
+          <li
+            id="est-passo2"
+            [class]="'est-step ' + estado().p2"
+          >
+
+            <div
+              class="est-step-circle"
+              aria-hidden="true"
+            >
+
+              @if (estado().p2 === 'done') {
+                ✓
+              } @else {
+                2
+              }
+
+            </div>
+
+            <span>
+              Análise
+            </span>
+
+          </li>
+
+
+          <!-- Etapa 3 -->
+          <li
+            id="est-passo3"
+            [class]="'est-step ' + estado().p3"
+          >
+
+            <div
+              class="est-step-circle"
+              aria-hidden="true"
+            >
+              {{ estado().c3 }}
+            </div>
+
+            <span>
+              {{ estado().l3 }}
+            </span>
+
+          </li>
+
+        </ol>
+
+      </section>
+
+
+      <!-- =====================================================
+           PERFIL / DADOS DO CANDIDATO
+           ===================================================== -->
+      <section
+        id="est-perfil"
+        class="est-section"
+        aria-labelledby="titulo-perfil"
+      >
+
+        <header class="est-section-head">
+
+          <div>
+            <span class="section-kicker">
+              DADOS DO CANDIDATO
+            </span>
+
+            <h2 id="titulo-perfil">
+              Meu perfil
+            </h2>
+
+            <p>
+              Informações fornecidas durante a candidatura.
+            </p>
+          </div>
+
+        </header>
+
+
+        <div class="est-grid">
+
+
+          <!-- Dados pessoais -->
+          <article
+            class="est-card"
+            aria-labelledby="titulo-dados-pessoais"
+          >
+
+            <div class="est-card-top">
+
+              <div
+                class="est-card-icon"
+                aria-hidden="true"
+              >
+                <svg
+                  class="ic"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle
+                    cx="12"
+                    cy="8"
+                    r="3.5"
+                  ></circle>
+
+                  <path
+                    d="M5 20c.7-3.4 3.1-5 7-5s6.3 1.6 7 5"
+                  ></path>
+                </svg>
+              </div>
+
+              <div>
+
+                <span class="card-label">
+                  IDENTIFICAÇÃO
+                </span>
+
+                <h3 id="titulo-dados-pessoais">
+                  Dados pessoais
+                </h3>
+
+              </div>
+
+            </div>
+
+
+            <dl class="est-data">
+
+              <div class="est-data-row">
+                <dt>Nome completo</dt>
+                <dd>{{ c.nome }}</dd>
+              </div>
+
+              <div class="est-data-row">
+                <dt>N.º de identificação</dt>
+                <dd>{{ c.bi }}</dd>
+              </div>
+
+              <div class="est-data-row">
+                <dt>Contacto</dt>
+                <dd>{{ c.contacto }}</dd>
+              </div>
+
+              <div class="est-data-row">
+                <dt>E-mail</dt>
+                <dd>{{ c.email }}</dd>
+              </div>
+
+              <div class="est-data-row">
+                <dt>Data de nascimento</dt>
+                <dd>
+                  <time [attr.datetime]="c.nascimento">
+                    {{ c.nascimento | date:'dd/MM/yyyy' }}
+                  </time>
+                </dd>
+              </div>
+
+              <div class="est-data-row">
+                <dt>Sexo</dt>
+                <dd>{{ c.sexo }}</dd>
+              </div>
+
+            </dl>
+
+          </article>
+
+
+          <!-- Formação -->
+          <article
+            class="est-card"
+            aria-labelledby="titulo-dados-academicos"
+          >
+
+            <div class="est-card-top">
+
+              <div
+                class="est-card-icon"
+                aria-hidden="true"
+              >
+                <svg
+                  class="ic"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M4 5h16v14H4z"></path>
+                  <path d="M8 9h8"></path>
+                  <path d="M8 13h5"></path>
+                </svg>
+              </div>
+
+              <div>
+
+                <span class="card-label">
+                  FORMAÇÃO
+                </span>
+
+                <h3 id="titulo-dados-academicos">
+                  Dados académicos
+                </h3>
+
+              </div>
+
+            </div>
+
+
+            <dl class="est-data">
+
+              <div class="est-data-row">
+                <dt>Curso</dt>
+                <dd>{{ c.curso }}</dd>
+              </div>
+
+              <div class="est-data-row">
+                <dt>Instituição</dt>
+                <dd>{{ c.universidade }}</dd>
+              </div>
+
+              <div class="est-data-row est-data-full">
+                <dt>Direção pretendida</dt>
+                <dd>
+                  {{ c.departamento ?? 'A definir' }}
+                </dd>
+              </div>
+
+            </dl>
+
+          </article>
+
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================
+           DOCUMENTOS
+           ===================================================== -->
+      <section
+        id="est-documentos"
+        class="est-section"
+        aria-labelledby="titulo-documentos"
+      >
+
+        <header class="est-section-head">
+
+          <div>
+
+            <span class="section-kicker">
+              DOCUMENTAÇÃO
+            </span>
+
+            <h2 id="titulo-documentos">
+              Os meus documentos
+            </h2>
+
+            <p id="descricao-documentos">
+              Documentos associados à tua candidatura.
+            </p>
+
+          </div>
+
+        </header>
+
+
+        <!-- Informação de segurança -->
+        <aside
+          class="est-bloqueio"
+          aria-label="Informação de segurança dos documentos"
+        >
+
+          <div
+            class="bloqueio-icon"
+            aria-hidden="true"
+          >
+
+            <svg
+              class="ic"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M12 3 4 7v5c0 4.5 3 7.5 8 9 4-1.5 8-4.5 8-9V7z"
+              ></path>
+
+              <path d="M9 12l2 2 4-4"></path>
+            </svg>
+
+          </div>
+
+          <div>
+
+            <strong>
+              Documentação protegida
+            </strong>
+
+            <span>
+              Os documentos são armazenados de forma segura
+              e apenas ficam disponíveis ao utilizador autorizado.
+            </span>
+
+          </div>
+
+        </aside>
+
+
+        <!-- Lista de documentos -->
+        <ul
+          class="est-docs"
+          aria-describedby="descricao-documentos"
+        >
+
+          @for (
+            d of c.documentos;
+            track d.id_documento
+          ) {
+
+            <li class="est-doc-list-item">
+
+              <article
+                class="est-doc"
+                [attr.aria-labelledby]="'documento-' + d.id_documento"
+              >
+
+                <!-- Tipo -->
+                <div
+                  class="est-doc-prev"
+                  aria-hidden="true"
+                >
+
+                  <div class="doc-type">
+                    {{ extensao(d) }}
+                  </div>
+
+                </div>
+
+
+                <!-- Conteúdo -->
+                <div class="est-doc-content">
+
+                  <div class="est-doc-head">
+
+                    <div>
+
+                      <span class="doc-label">
+                        DOCUMENTO
+                      </span>
+
+                      <h3
+                        [id]="'documento-' + d.id_documento"
+                      >
+                        {{ tituloDocumento(d) }}
+                      </h3>
+
+                    </div>
+
+
+                    <span class="est-doc-status">
+                      {{ rotuloEstadoDocumento(d) }}
+                    </span>
+
+                  </div>
+
+
+                  <p>
+                    {{ d.nome_arquivo || 'Documento enviado' }}
+                  </p>
+
+
+                  <button
+                    type="button"
+                    class="est-doc-ver"
+                    (click)="ver(d)"
+                    [attr.aria-label]="
+                      'Ver documento ' +
+                      (d.nome_arquivo || tituloDocumento(d))
+                    "
+                  >
+
+                    <span>
+                      Ver documento
+                    </span>
+
+                    <svg
+                      class="ic"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path
+                        d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"
+                      ></path>
+
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="2.5"
+                      ></circle>
+                    </svg>
+
+                  </button>
+
+                </div>
+
+              </article>
+
+            </li>
+
+          }
+
+        </ul>
+
+      </section>
+
+
+      <!-- =====================================================
+           HISTÓRICO
+           ===================================================== -->
+      <section
+        id="est-historico"
+        class="est-section"
+        aria-labelledby="titulo-historico"
+      >
+
+        <header class="est-section-head">
+
+          <div>
+
+            <span class="section-kicker">
+              PROCESSO
+            </span>
+
+            <h2 id="titulo-historico">
+              Histórico da candidatura
+            </h2>
+
+            <p>
+              Acompanha os principais momentos do teu processo.
+            </p>
+
+          </div>
+
+        </header>
+
+
+        <ol
+          class="est-hist"
+          aria-label="Histórico da candidatura"
+        >
+
+          @for (
+            h of historico();
+            track $index
+          ) {
+
+            <li
+              class="hist-item"
+              [class.hist-bad]="h.classe === 'bad'"
+            >
+
+              <div
+                class="hist-marker"
+                aria-hidden="true"
+              >
+                {{ h.icone }}
+              </div>
+
+              <div class="hist-content">
+
+                <strong>
+                  {{ h.titulo }}
+                </strong>
+
+                <span>
+                  {{ h.texto }}
+                </span>
+
+              </div>
+
+              <time
+                [attr.datetime]="h.data"
+              >
+                {{ formatarData(h.data) }}
+              </time>
+
+            </li>
+
+          }
+
+        </ol>
+
+      </section>
+
+
+      <!-- =====================================================
+           INFORMAÇÕES ADICIONAIS
+           ===================================================== -->
+      <section
+        class="est-section"
+        aria-labelledby="titulo-informacao"
+      >
+
+        <div class="est-info">
+
+
+          <!-- Próximos passos -->
+          <article class="est-note">
+
+            <div
+              class="note-icon"
+              aria-hidden="true"
+            >
+
+              <svg
+                class="ic"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="9"
+                ></circle>
+
+                <path d="M12 10v6"></path>
+                <path d="M12 7h.01"></path>
+              </svg>
+
+            </div>
+
+
+            <div>
+
+              <span class="section-kicker">
+                INFORMAÇÃO
+              </span>
+
+              <h2 id="titulo-informacao">
+                O que acontece a seguir?
+              </h2>
+
+              <p>
+                Mantém os teus contactos atualizados
+                e acompanha regularmente este painel.
+                Caso a candidatura seja aceite,
+                receberás informações sobre os próximos
+                passos do processo de estágio.
+              </p>
+
+            </div>
+
+          </article>
+
+
+          <!-- Resumo -->
+          <article
+            class="est-date"
+            aria-label="Resumo da candidatura"
+          >
+
+            <span>
+              DATA DA CANDIDATURA
+            </span>
+
+            <time
+              [attr.datetime]="c.data_submissao"
+            >
+              {{ formatarData(c.data_submissao) }}
+            </time>
+
+            <small>
+              Direção:
+              <b>
+                {{ c.departamento ?? 'A definir' }}
+              </b>
+            </small>
+
+          </article>
+
+        </div>
+
+      </section>
+
+    }
+
+  </main>
+
+
+  <!-- =========================================================
+       RODAPÉ
+       ========================================================= -->
+  <footer class="rodape">
+
+    <div class="rodape-in">
+
+
+      <!-- Marca -->
+      <section
+        class="rodape-brand"
+        aria-labelledby="titulo-rodape"
+      >
+
+        <div class="rodape-logo">
+
+          <img
+            src="assets/img/multitel.png"
+            alt="Logótipo Multitel"
+          >
+
+          <span id="titulo-rodape">
+            MULTITEL
+          </span>
+
+        </div>
+
+        <p>
+          Portal de gestão e acompanhamento
+          de candidaturas ao programa de estágios.
+        </p>
+
+      </section>
+
+
+      <!-- Contactos -->
+      <section
+        class="rodape-contactos"
+        aria-labelledby="titulo-contactos"
+      >
+
+        <h2 id="titulo-contactos">
+          Contactos
+        </h2>
+
+
+        <div class="rodape-contacto">
+
+          <div
+            class="contacto-icon"
+            aria-hidden="true"
+          >
+
+            <svg
+              class="ic"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M5 4h4l2 5-2 2c1 2 2 3 4 4l2-2 5 2v4c0 1-1 2-2 2C10 21 3 14 3 6c0-1 1-2 2-2z"
+              ></path>
+            </svg>
+
+          </div>
+
+          <div>
+            <strong>
+              <a href="tel:+244223530000">
+                223 530 000
+              </a>
+            </strong>
+
+            <span>
+              Linha de apoio
+            </span>
+          </div>
+
+        </div>
+
+
+        <div class="rodape-contacto">
+
+          <div
+            class="contacto-icon"
+            aria-hidden="true"
+          >
+
+            <svg
+              class="ic"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <rect
+                x="3"
+                y="5"
+                width="18"
+                height="14"
+                rx="2"
+              ></rect>
+
+              <path d="m4 7 8 6 8-6"></path>
+            </svg>
+
+          </div>
+
+          <div>
+            <strong>
+              Multitel
+            </strong>
+
+            <span>
+              Contacto institucional
+            </span>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- Links -->
+      <nav
+        class="rodape-links"
+        aria-label="Navegação complementar"
+      >
+
+        <h2>
+          Portal
+        </h2>
+
+        <ul>
+
+          <li>
+            <a href="#est-inicio">
+              Início
+            </a>
+          </li>
+
+          <li>
+            <a href="#est-perfil">
+              Meu perfil
+            </a>
+          </li>
+
+          <li>
+            <a href="#est-documentos">
+              Documentos
+            </a>
+          </li>
+
+          <li>
+            <a href="#est-acompanhamento">
+              Acompanhamento
+            </a>
+          </li>
+
+        </ul>
+
+      </nav>
+
+    </div>
+
+
+    <!-- Copyright -->
+    <div class="rodape-fim">
+      © 2026 Multitel · Portal de Estágios
+    </div>
+
+  </footer>
+
+</div>

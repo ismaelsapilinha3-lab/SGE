@@ -1,0 +1,95 @@
+/* =========================================
+   SECÇÃO SOBRE O ESTÁGIO
+   Estilo baseado no documento de referência
+========================================= */
+
+.internship-section {
+  margin: 70px 0;
+}
+
+.internship-section .section-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  color: #1A3D6B;
+  margin-bottom: 14px;
+}
+
+.internship-section h2 {
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #0A2540;
+  max-width: 700px;
+  margin-bottom: 32px;
+  letter-spacing: -0.6px;
+}
+
+.internship-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.internship-grid > div {
+  background: #FFFFFF;
+  border: 1px solid #E3E8EE;
+  padding: 26px;
+  border-radius: 6px;
+  min-width: 0;
+  transition: border-color 0.25s ease,
+              box-shadow 0.25s ease,
+              transform 0.25s ease;
+}
+
+.internship-grid > div:hover {
+  border-color: #D8E1EC;
+  box-shadow: 0 8px 22px rgba(10, 37, 64, 0.07);
+  transform: translateY(-3px);
+}
+
+.internship-grid h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0A2540;
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.internship-grid p {
+  font-size: 13px;
+  font-weight: 400;
+  color: #4F566B;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* Ajuste para tablets e telemóveis */
+
+@media (max-width: 950px) {
+  .internship-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .internship-section {
+    margin: 50px 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .internship-section {
+    margin: 40px 0;
+  }
+
+  .internship-section h2 {
+    font-size: 25px;
+    line-height: 1.3;
+    margin-bottom: 24px;
+  }
+
+  .internship-grid > div {
+    padding: 22px;
+  }
+}

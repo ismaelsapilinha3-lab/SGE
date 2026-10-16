@@ -288,4 +288,157 @@ class AdminController extends Controller
             ]);
         });
     }
+
+    public function estagiarios(Request $request)
+    {
+        $query = DB::table('candidaturas as c')
+            ->leftJoin('estagios as e', 'e.id_candidatura', '=', 'c.id_candidatura')
+            ->leftJoin('utilizadores as u', 'u.email', '=', 'c.email')
+            ->leftJoin('departamentos as d', 'd.id_departamento', '=', 'c.id_departamento_selecionado')
+            ->where(function ($q) {
+                $q->where('c.estado', 'aprovada')
+                  ->orWhereNotNull('e.id_estagio');
+            })
+            ->select(
+                'e.id_estagio',
+                'c.id_candidatura',
+                'e.data_inicio',
+                'e.data_fim_prevista',
+                'e.data_fim_real',
+              'e.motivo_suspensao',
+                DB::raw('COALESCE(e.estado, c.estado) as estado_estagio'),
+                'u.id_utilizador as id_estagiario',
+                DB::raw('COALESCE(u.nome, c.nome) as nome'),
+                DB::raw('COALESCE(u.email, c.email) as email'),
+                DB::raw('COALESCE(u.telefone, c.contacto) as telefone'),
+                'c.curso',
+                'c.universidade',
+                'd.nome as departamento'
+            );
+
+        if ($request->filled('pesquisa')) {
+            $pesquisa = $request->input('pesquisa');
+
+            $query->where(function ($q) use ($pesquisa) {
+                $q->where('c.nome', 'like', "%{$pesquisa}%")
+                  ->orWhere('c.email', 'like', "%{$pesquisa}%")
+                  ->orWhere('c.curso', 'like', "%{$pesquisa}%");
+            });
+        }
+
+        if ($request->filled('estado')) {
+            $estado = $request->input('estado');
+
+            if ($estado === 'aprovada') {
+                $query->where('c.estado', 'aprovada')
+                      ->whereNull('e.id_estagio');
+            } else {
+                $query->where('e.estado', $estado);
+            }
+        }
+
+        return response()->json(
+            $query->orderByDesc('c.data_decisao')
+                  ->paginate($request->integer('por_pagina', 15))
+        );
+    }
+
+    public function atualizarEstadoEstagio(Request $request, int $idCandidatura)
+    {
+        $dados = $request->validate([
+            'estado' => 'required|in:ativo,suspenso,concluido,cancelado',
+            'data_inicio' => 'nullable|date',
+            'data_fim_prevista' => 'nullable|date|after_or_equal:data_inicio',
+            'motivo_suspensao' => 'nullable|string|required_if:estado,suspenso|max:5000',
+        ]);
+
+        return DB::transaction(function () use ($dados, $idCandidatura) {
+            $candidatura = DB::table('candidaturas')
+                ->where('id_candidatura', $idCandidatura)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$candidatura) {
+                return response()->json([
+                    'message' => 'Candidatura não encontrada.'
+                ], 404);
+            }
+
+            $estagio = DB::table('estagios')
+                ->where('id_candidatura', $idCandidatura)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$estagio && $candidatura->estado !== 'aprovada') {
+                return response()->json([
+                    'message' => 'Só é possível iniciar um estágio para uma candidatura aprovada.'
+                ], 422);
+            }
+
+            // A conta é resolvida no servidor pelo e-mail da candidatura.
+            // O cliente não pode escolher livremente o ID do estagiário.
+            $utilizador = DB::table('utilizadores')
+                ->where('email', $candidatura->email)
+                ->first();
+
+            if (!$utilizador) {
+                return response()->json([
+                    'message' => 'Esta candidatura ainda não tem uma conta de estagiário. Cria a conta antes de iniciar o estágio.'
+                ], 422);
+            }
+
+            $inicio = $dados['data_inicio']
+                ?? ($estagio->data_inicio ?? null);
+            $fimPrevisto = $dados['data_fim_prevista']
+                ?? ($estagio->data_fim_prevista ?? null);
+
+            if (!$estagio && (!$inicio || !$fimPrevisto)) {
+                return response()->json([
+                    'message' => 'Indica a data de início e a data prevista de fim.'
+                ], 422);
+            }
+
+            if ($inicio && $fimPrevisto && $fimPrevisto < $inicio) {
+                return response()->json([
+                    'message' => 'A data prevista de fim não pode ser anterior à data de início.'
+                ], 422);
+            }
+
+            $agora = now();
+            $valores = [
+                'id_candidatura' => $idCandidatura,
+                'id_estagiario' => $utilizador->id_utilizador,
+                'data_inicio' => $inicio,
+                'data_fim_prevista' => $fimPrevisto,
+                'estado' => $dados['estado'],
+                'motivo_suspensao' => $dados['estado'] === 'suspenso'
+                    ? trim($dados['motivo_suspensao'] ?? '')
+                    : null,
+                'data_fim_real' => $dados['estado'] === 'concluido'
+                    ? ($estagio->data_fim_real ?? $agora->toDateString())
+                    : ($estagio->data_fim_real ?? null),
+                'updated_at' => $agora,
+            ];
+
+            if ($estagio) {
+                DB::table('estagios')
+                    ->where('id_estagio', $estagio->id_estagio)
+                    ->update($valores);
+                $idEstagio = $estagio->id_estagio;
+            } else {
+                $valores['created_at'] = $agora;
+                $idEstagio = DB::table('estagios')->insertGetId(
+                    $valores,
+                    'id_estagio'
+                );
+            }
+
+            return response()->json([
+                'message' => 'Estado do estágio atualizado com sucesso.',
+                'data' => DB::table('estagios')
+                    ->where('id_estagio', $idEstagio)
+                    ->first(),
+            ]);
+        });
+    }
 }

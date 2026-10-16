@@ -1,0 +1,192 @@
+/* Painel do estagiário — versão Angular baseada no layout original */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+#pagina-estagiario{background:#F7F9FC;min-height:100vh;color:#24324A}
+    #pagina-estagiario .est-topbar{background:#0A2540;color:#fff;padding:8px 6%;font-size:11px;display:flex;justify-content:space-between;gap:15px;align-items:center}
+    #pagina-estagiario .est-navbar{height:74px;background:#fff;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;padding:0 6%;position:sticky;top:0;z-index:30;box-shadow:0 4px 18px rgba(3,27,78,.05)}
+    #pagina-estagiario .est-brand{display:flex;align-items:center;gap:10px}.est-brand-logo{width:42px;height:42px;border-radius:10px;object-fit:cover;display:block;box-shadow:0 2px 8px rgba(3,27,78,.12)}.est-brand-mark{width:38px;height:38px;border-radius:10px;background:#0A2540;color:#fff;display:grid;place-items:center;font-weight:800;font-size:11px}.est-brand strong{display:block;font-size:17px;color:#0A2540;letter-spacing:.5px}.est-brand small{font-size:8px;color:#687386;letter-spacing:1px}
+    #pagina-estagiario .est-navlinks{display:flex;gap:4px}.est-navlinks a{border:0;background:transparent;color:#526174;font:600 11px Inter,sans-serif;padding:10px 12px;border-radius:8px;cursor:pointer}.est-navlinks a:hover{background:#EEF3F9;color:#0A2540}
+    #pagina-estagiario .est-user{display:flex;align-items:center;gap:12px}.est-user-name{font-size:11px;font-weight:700;color:#334155}.est-avatar{width:34px;height:34px;border-radius:50%;background:#1A3D6B;color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px}.est-logout{border:1px solid #D8E1EC;background:#fff;color:#0A2540;padding:9px 12px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer}.est-logout:hover{background:#0A2540;color:#fff}
+    #pagina-estagiario .est-hero{background:linear-gradient(120deg,#0A2540 0%,#1A3D6B 58%,#2D5683 100%);padding:55px 6% 60px;color:#fff;position:relative;overflow:hidden}.est-hero:after{content:'';position:absolute;width:420px;height:420px;border:1px solid rgba(255,255,255,.1);border-radius:50%;right:-120px;top:-180px}.est-hero-inner{max-width:1180px;margin:auto;position:relative;z-index:1}.est-kicker{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#C9D8EA;font-weight:700}.est-hero h1{font-size:38px;line-height:1.12;margin:10px 0 12px;font-weight:800}.est-hero p{max-width:650px;color:#D9E4F1;font-size:13px;line-height:1.8}.est-hero-actions{display:flex;gap:10px;margin-top:24px}.est-btn-primary,.est-btn-light{border:0;border-radius:9px;padding:12px 16px;font-size:11px;font-weight:800;cursor:pointer}.est-btn-primary{background:#fff;color:#0A2540}.est-btn-light{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25)}
+    #pagina-estagiario .est-main{max-width:1180px;margin:-25px auto 60px;padding:0 20px;position:relative;z-index:2}.est-status{background:#fff;border:1px solid #E1E7EF;border-radius:16px;padding:24px;box-shadow:0 15px 40px rgba(3,27,78,.08);display:grid;grid-template-columns:1.1fr 2fr;gap:28px;align-items:center}.est-status-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#7A8798;font-weight:800}.est-status h2{font-size:23px;color:#0A2540;margin:7px 0}.est-status p{font-size:11px;color:#687386;line-height:1.6}.est-badge{display:inline-flex;align-items:center;gap:7px;background:#EEF3F9;color:#1A3D6B;border-radius:999px;padding:7px 11px;font-size:10px;font-weight:800}.est-dot{width:7px;height:7px;border-radius:50%;background:#1A3D6B}.est-progress{display:grid;grid-template-columns:repeat(3,1fr);position:relative;gap:10px}.est-progress:before{content:'';height:3px;background:#D8E1EC;position:absolute;top:18px;left:10%;right:10%;z-index:0}.est-step{text-align:center;position:relative;z-index:1}.est-step-circle{width:36px;height:36px;border-radius:50%;margin:auto;background:#fff;border:2px solid #D8E1EC;color:#8793A4;display:grid;place-items:center;font-size:11px;font-weight:800}.est-step.done .est-step-circle,.est-step.active .est-step-circle{background:#0A2540;border-color:#0A2540;color:#fff}.est-step.active .est-step-circle{box-shadow:0 0 0 6px #EEF3F9}.est-step span{display:block;margin-top:8px;font-size:10px;font-weight:700;color:#687386}.est-step.active span,.est-step.done span{color:#0A2540}
+    #pagina-estagiario .est-section{margin-top:38px}.est-section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:16px}.est-section-head h2{font-size:22px;color:#0A2540;margin:0}.est-section-head p{font-size:11px;color:#7A8798;margin:5px 0 0}.est-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.est-card{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:22px;box-shadow:0 8px 25px rgba(3,27,78,.04)}.est-card h3{font-size:14px;color:#0A2540;margin:0 0 17px}.est-card-icon{width:38px;height:38px;border-radius:9px;background:#EEF3F9;display:grid;place-items:center;color:#1A3D6B;font-weight:800;margin-bottom:13px}.est-data{display:grid;grid-template-columns:1fr 1fr;gap:0 25px}.est-data-row{padding:12px 0;border-bottom:1px solid #EEF1F5}.est-data-row span{display:block;color:#8994A5;font-size:9px;margin-bottom:4px}.est-data-row strong{font-size:11px;color:#26354D;word-break:break-word}
+    .est-docs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.est-doc{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:18px;transition:.2s}.est-doc:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(3,27,78,.07)}.est-doc-top{display:flex;justify-content:space-between;gap:10px}.est-doc-icon{width:34px;height:34px;border-radius:8px;background:#EEF3F9;display:grid;place-items:center;color:#1A3D6B;font-size:12px;font-weight:800}.est-doc h3{font-size:11px;color:#26354D;margin:12px 0 7px}.est-doc p{font-size:9px;color:#7A8798;line-height:1.6;min-height:29px}.est-doc-status{display:inline-block;margin-top:12px;background:#EEF3F9;color:#1A3D6B;border-radius:999px;padding:5px 8px;font-size:8px;font-weight:800}.est-doc-status.pending{background:#F4F6F8;color:#687386}
+    .est-info{display:grid;grid-template-columns:1.4fr .6fr;gap:18px}.est-note{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:22px}.est-note h3{font-size:14px;color:#0A2540;margin-bottom:10px}.est-note p{font-size:11px;color:#687386;line-height:1.8}.est-date{background:#0A2540;color:#fff;border-radius:14px;padding:22px}.est-date small{font-size:9px;color:#BFD0E3}.est-date strong{display:block;font-size:22px;margin:7px 0}.est-date span{font-size:10px;color:#D5E2F3}
+    #pagina-estagiario .est-footer{background:#0A2540;color:#C9D8EA;padding:25px 6%;display:flex;justify-content:space-between;gap:20px;font-size:9px}.est-footer strong{color:#fff}
+    @media(max-width:950px){.est-navlinks{display:none!important}.est-status{grid-template-columns:1fr}.est-docs{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:650px){#pagina-estagiario .est-topbar{display:none}.est-navbar{padding:0 18px!important}.est-user-name{display:none}.est-hero{padding:40px 20px!important}.est-hero h1{font-size:30px}.est-main{padding:0 12px!important}.est-grid,.est-data,.est-docs,.est-info{grid-template-columns:1fr}.est-status{padding:18px}.est-footer{flex-direction:column;padding:22px 20px!important}.est-progress:before{left:12%;right:12%}}
+
+#pagina-estagiario .est-doc-file{display:block;margin-top:7px;font-size:9px;color:#526174;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pagina-estagiario .est-doc-size{display:block;margin-top:3px;font-size:8.5px;color:#98A2B3}
+#pagina-estagiario .est-doc-open{display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:7px 12px;border:1px solid #D8E1EC;background:#fff;color:#1A3D6B;border-radius:8px;font:700 9px Inter,sans-serif;cursor:pointer;text-decoration:none}
+#pagina-estagiario .est-doc-open:hover{background:#0A2540;color:#fff;border-color:#0A2540}
+#pagina-estagiario .est-doc-open.disabled{color:#98A2B3;background:#F7F9FC;border-color:#E7ECF2;cursor:not-allowed}
+#pagina-estagiario .est-doc-status{display:inline-block;margin-top:10px;background:#EEF3F9;color:#1A3D6B;border-radius:999px;padding:5px 8px;font-size:8px;font-weight:800}
+#pagina-estagiario .est-doc-status.guardado{background:#ECFDF3;color:#137A47}
+#pagina-estagiario .est-doc-status.pendente{background:#F4F6F8;color:#687386}
+#pagina-estagiario .est-doc-empty{grid-column:1/-1;padding:22px;border:1px dashed #D8E1EC;border-radius:12px;background:#fff;color:#687386;font-size:10px;text-align:center}
+
+/* Ajustes de integração Angular e comportamento dos controlos */
+#pagina-estagiario {
+  font-family: Inter, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  --est-azul: #0A2540;
+  --est-azul-medio: #1A3D6B;
+  --est-borda: #D8E1EC;
+  overflow-wrap: anywhere;
+}
+#pagina-estagiario * { box-sizing: border-box; }
+#pagina-estagiario a { text-decoration: none; }
+#pagina-estagiario a:focus-visible,
+#pagina-estagiario button:focus-visible { outline: 3px solid #FF6B00; outline-offset: 3px; }
+#pagina-estagiario .est-brand { color: #0A2540; text-decoration: none; flex-shrink: 0; }
+#pagina-estagiario .est-brand-text { display: block; }
+#pagina-estagiario .est-navlinks { align-items: center; flex-wrap: wrap; }
+#pagina-estagiario .est-navlinks a {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 38px; padding: 9px 12px; border-radius: 8px;
+  border: 1px solid transparent; color: #526174; font: 600 11px Inter, Arial, sans-serif;
+  transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+#pagina-estagiario .est-navlinks a:hover,
+#pagina-estagiario .est-navlinks a:focus-visible { background: #EEF3F9; color: #0A2540; border-color: #D8E1EC; }
+#pagina-estagiario .est-user { flex-shrink: 0; }
+#pagina-estagiario .est-logout,
+#pagina-estagiario .est-btn-primary,
+#pagina-estagiario .est-btn-light,
+#pagina-estagiario .est-btn-outline,
+#pagina-estagiario .est-doc-open {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 10px 16px; border-radius: 8px;
+  font-family: Inter, Arial, sans-serif; font-size: 12px; font-weight: 700;
+  line-height: 1.3; text-align: center; text-decoration: none;
+  cursor: pointer; transition: background .18s ease, color .18s ease,
+    border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+#pagina-estagiario .est-btn-primary { background: #fff; color: #0A2540; border: 1px solid #fff; box-shadow: 0 3px 10px rgba(0,0,0,.08); }
+#pagina-estagiario .est-btn-primary:hover { color: #0A2540; background: #EAF1F8; border-color: #EAF1F8; transform: translateY(-1px); }
+#pagina-estagiario .est-btn-light { background: rgba(255,255,255,.10); color: #fff; border: 1px solid rgba(255,255,255,.4); }
+#pagina-estagiario .est-btn-light:hover { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.7); transform: translateY(-1px); }
+#pagina-estagiario .est-logout { min-width: 70px; min-height: 36px; padding: 8px 13px; border: 1px solid #D8E1EC; background: #fff; color: #0A2540; }
+#pagina-estagiario .est-logout:hover { background: #0A2540; color: #fff; border-color: #0A2540; }
+#pagina-estagiario .est-btn-outline { background: #fff; color: #0A2540; border: 1px solid #C9D5E3; }
+#pagina-estagiario .est-btn-outline:hover { background: #0A2540; color: #fff; border-color: #0A2540; }
+#pagina-estagiario button:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+#pagina-estagiario .est-hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+#pagina-estagiario .est-status-summary { min-width: 0; }
+#pagina-estagiario .est-status-summary h2 { line-height: 1.25; }
+#pagina-estagiario .est-progress-wrap { min-width: 0; }
+#pagina-estagiario .est-progress-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 15px; color: #0A2540; font-size: 11px; }
+#pagina-estagiario .est-progress-heading span { color: #8793A4; font-size: 10px; }
+#pagina-estagiario .est-progress-note { margin-top: 16px; text-align: center; }
+#pagina-estagiario .est-status[data-estado="aceite"] { border-color: #9ED8B8; }
+#pagina-estagiario .est-status[data-estado="aceite"] .est-badge { background: #ECFDF3; color: #137A47; }
+#pagina-estagiario .est-status[data-estado="aceite"] .est-dot { background: #137A47; }
+#pagina-estagiario .est-status[data-estado="recusado"] { border-color: #F1B5AE; }
+#pagina-estagiario .est-status[data-estado="recusado"] .est-badge { background: #FEF3F2; color: #B42318; }
+#pagina-estagiario .est-status[data-estado="recusado"] .est-dot { background: #B42318; }
+#pagina-estagiario .est-step.bad .est-step-circle { background: #B42318; border-color: #B42318; color: #fff; }
+#pagina-estagiario .est-section-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+#pagina-estagiario .est-section-head h2 { line-height: 1.25; }
+#pagina-estagiario .est-grid { align-items: stretch; }
+#pagina-estagiario .est-card-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+#pagina-estagiario .est-card-heading .est-card-icon { flex: 0 0 38px; margin: 0; }
+#pagina-estagiario .est-card-heading h3 { margin: 0 0 4px; }
+#pagina-estagiario .est-card-heading p { color: #7A8798; font-size: 10px; }
+#pagina-estagiario .est-card-icon svg,
+#pagina-estagiario .est-bloqueio svg,
+#pagina-estagiario .est-note-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#pagina-estagiario .est-data { margin: 0; padding: 0; }
+#pagina-estagiario .est-data-row { min-width: 0; }
+#pagina-estagiario .est-data-row dt { display: block; margin-bottom: 4px; color: #8994A5; font-size: 9px; font-weight: 500; }
+#pagina-estagiario .est-data-row dd { margin: 0; color: #26354D; font-size: 11px; font-weight: 700; line-height: 1.55; overflow-wrap: anywhere; }
+#pagina-estagiario .est-card-note { display: flex; align-items: flex-start; gap: 9px; margin-top: 16px; padding: 11px 12px; background: #F7F9FC; border-radius: 8px; color: #687386; font-size: 10px; line-height: 1.6; }
+#pagina-estagiario .est-note-mark { width: 18px; height: 18px; flex: 0 0 18px; display: grid; place-items: center; border-radius: 50%; background: #E7EDF5; color: #1A3D6B; font-size: 11px; font-weight: 800; }
+#pagina-estagiario .est-section-head-inline { align-items: center; }
+#pagina-estagiario .est-count-pill { flex-shrink: 0; border: 1px solid #D8E1EC; border-radius: 999px; background: #fff; padding: 7px 12px; color: #1A3D6B; font-size: 10px; font-weight: 800; }
+#pagina-estagiario .est-bloqueio { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; padding: 14px 16px; border: 1px solid #D8E1EC; border-radius: 12px; background: #F3F6FB; color: #4F566B; font-size: 11px; line-height: 1.7; }
+#pagina-estagiario .est-bloqueio svg { flex: 0 0 18px; width: 18px; height: 18px; margin-top: 2px; color: #1A3D6B; }
+#pagina-estagiario .est-bloqueio strong { color: #0A2540; }
+#pagina-estagiario .est-doc { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+#pagina-estagiario .est-doc:hover { transform: translateY(-2px); }
+#pagina-estagiario .est-doc h3 { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+#pagina-estagiario .est-doc-file { width: 100%; font-size: 10px; }
+#pagina-estagiario .est-doc-size { font-size: 9px; }
+#pagina-estagiario .est-doc-status { margin-top: 0; white-space: nowrap; }
+#pagina-estagiario .est-doc-status[data-estado="aprovado"],
+#pagina-estagiario .est-doc-status[data-estado="aceite"],
+#pagina-estagiario .est-doc-status.guardado { background: #ECFDF3; color: #137A47; }
+#pagina-estagiario .est-doc-status[data-estado="recusado"] { background: #FEF3F2; color: #B42318; }
+#pagina-estagiario .est-doc-open { margin-top: 14px; min-height: 38px; padding: 9px 13px; font-size: 10px; }
+#pagina-estagiario .est-doc-open:disabled { color: #98A2B3; background: #F7F9FC; border-color: #E7ECF2; }
+#pagina-estagiario .est-doc-empty,
+#pagina-estagiario .est-empty-history { padding: 22px; border: 1px dashed #D8E1EC; border-radius: 12px; background: #fff; color: #687386; font-size: 11px; text-align: center; }
+#pagina-estagiario .est-doc-empty p { margin-top: 5px; }
+#pagina-estagiario .est-hist { list-style: none; margin: 0; padding: 0; position: relative; }
+#pagina-estagiario .est-hist::before { content: ""; position: absolute; left: 18px; top: 22px; bottom: 22px; width: 2px; background: #E2E8F0; }
+#pagina-estagiario .est-hist li { display: grid; grid-template-columns: 38px minmax(0,1fr) auto; align-items: start; gap: 12px; position: relative; padding: 13px 0; border-bottom: 1px solid #EEF1F5; }
+#pagina-estagiario .est-hist li:last-child { border-bottom: 0; }
+#pagina-estagiario .est-hist-icon { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid #D8E1EC; border-radius: 50%; background: #fff; color: #8793A4; font-size: 13px; font-weight: 800; z-index: 1; }
+#pagina-estagiario .est-hist li.feito .est-hist-icon { background: #0A2540; color: #fff; border-color: #0A2540; }
+#pagina-estagiario .est-hist li.bad .est-hist-icon { background: #B42318; color: #fff; border-color: #B42318; }
+#pagina-estagiario .est-hist-content strong { display: block; padding-top: 2px; color: #0A2540; font-size: 11px; }
+#pagina-estagiario .est-hist-content p { margin-top: 4px; color: #687386; font-size: 10px; line-height: 1.65; }
+#pagina-estagiario .est-hist time { padding-top: 3px; color: #8793A4; font-size: 9px; white-space: nowrap; }
+#pagina-estagiario .est-info { margin-top: 38px; }
+#pagina-estagiario .est-note { min-width: 0; }
+#pagina-estagiario .est-note h3 { margin-bottom: 10px; }
+#pagina-estagiario .est-help-link { display: inline-flex; margin-top: 14px; color: #1A3D6B; font-size: 11px; font-weight: 800; }
+#pagina-estagiario .est-help-link:hover { color: #0A2540; text-decoration: underline; }
+#pagina-estagiario .est-date-status { display: flex; align-items: center; gap: 8px; }
+#pagina-estagiario .est-date-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #D9A441; }
+#pagina-estagiario .est-date-dot[data-estado="aceite"] { background: #53D99A; }
+#pagina-estagiario .est-date-dot[data-estado="recusado"] { background: #FF8B82; }
+#pagina-estagiario .est-feedback { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 0 0 20px; padding: 20px 22px; border: 1px solid #D8E1EC; border-radius: 12px; background: #fff; box-shadow: 0 5px 18px rgba(3,27,78,.04); }
+#pagina-estagiario .est-feedback strong { display: block; color: #0A2540; font-size: 13px; }
+#pagina-estagiario .est-feedback p { margin-top: 5px; color: #687386; font-size: 11px; line-height: 1.7; }
+#pagina-estagiario .est-feedback-error { border-color: #F1B5AE; background: #FFF9F8; }
+#pagina-estagiario .est-feedback-error strong { color: #B42318; }
+#pagina-estagiario .est-spinner { width: 26px; height: 26px; flex: 0 0 26px; border: 3px solid #E1E7EF; border-top-color: #1A3D6B; border-radius: 50%; animation: est-spin .8s linear infinite; }
+@keyframes est-spin { to { transform: rotate(360deg); } }
+#pagina-estagiario .est-footer a { color: #C9D8EA; font-size: 10px; font-weight: 700; }
+#pagina-estagiario .est-footer a:hover { color: #fff; text-decoration: underline; }
+
+@media (max-width: 950px) {
+  #pagina-estagiario .est-navbar { gap: 14px; }
+  #pagina-estagiario .est-status { grid-template-columns: 1fr; gap: 24px; }
+  #pagina-estagiario .est-navlinks { display: none; }
+  #pagina-estagiario .est-docs { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 650px) {
+  #pagina-estagiario .est-topbar { display: none; }
+  #pagina-estagiario .est-navbar { height: auto; min-height: 66px; padding: 10px 16px !important; gap: 10px; }
+  #pagina-estagiario .est-brand-logo { width: 36px; height: 36px; }
+  #pagina-estagiario .est-brand strong { font-size: 14px; }
+  #pagina-estagiario .est-brand small { font-size: 7px; }
+  #pagina-estagiario .est-user { gap: 8px; }
+  #pagina-estagiario .est-user-name { display: none; }
+  #pagina-estagiario .est-avatar { width: 30px; height: 30px; }
+  #pagina-estagiario .est-logout { min-height: 34px; padding: 7px 10px; }
+  #pagina-estagiario .est-hero { padding: 40px 20px !important; }
+  #pagina-estagiario .est-hero h1 { font-size: 30px; }
+  #pagina-estagiario .est-main { padding: 0 12px !important; margin-bottom: 36px; }
+  #pagina-estagiario .est-hero-actions { align-items: stretch; flex-direction: column; }
+  #pagina-estagiario .est-hero-actions a { width: 100%; }
+  #pagina-estagiario .est-grid,
+  #pagina-estagiario .est-data,
+  #pagina-estagiario .est-docs,
+  #pagina-estagiario .est-info { grid-template-columns: 1fr; }
+  #pagina-estagiario .est-status { padding: 18px; }
+  #pagina-estagiario .est-card,
+  #pagina-estagiario .est-note,
+  #pagina-estagiario .est-date { padding: 18px; }
+  #pagina-estagiario .est-section-head-inline { align-items: flex-start; flex-direction: column; }
+  #pagina-estagiario .est-footer { flex-direction: column; padding: 22px 20px !important; }
+  #pagina-estagiario .est-progress:before { left: 12%; right: 12%; }
+  #pagina-estagiario .est-hist li { grid-template-columns: 36px minmax(0,1fr); }
+  #pagina-estagiario .est-hist time { grid-column: 2; padding-top: 0; }
+  #pagina-estagiario .est-feedback { align-items: flex-start; flex-direction: column; padding: 17px; }
+}
+

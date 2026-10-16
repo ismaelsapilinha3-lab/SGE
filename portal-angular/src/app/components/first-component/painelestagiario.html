@@ -1,11 +1,4 @@
-<a
-  class="skip-link"
-  href="#conteudo-principal"
->
-  Saltar para o conteúdo principal
-</a>
-
-<div id="pagina-estagiario">
+﻿<div id="pagina-estagiario">
 
   <!-- =========================================================
        BARRA INSTITUCIONAL
@@ -43,7 +36,7 @@
         <!-- Marca -->
         <a
           class="marca"
-          href="#est-inicio"
+          href="#est-inicio" (click)="$event.preventDefault(); navegarSecao('est-inicio')"
           aria-label="Multitel — Portal de Estágios"
         >
 
@@ -65,7 +58,7 @@
 
           <li>
             <a
-              href="#est-inicio"
+              href="#est-inicio" (click)="$event.preventDefault(); navegarSecao('est-inicio')"
               class="nav-link"
               aria-label="Ir para o início"
             >
@@ -87,7 +80,7 @@
 
           <li>
             <a
-              href="#est-perfil"
+              href="#est-perfil" (click)="$event.preventDefault(); navegarSecao('est-perfil')"
               class="nav-link"
               aria-label="Ver meu perfil"
             >
@@ -115,7 +108,7 @@
 
           <li>
             <a
-              href="#est-documentos"
+              href="#est-documentos" (click)="$event.preventDefault(); navegarSecao('est-documentos')"
               class="nav-link"
               aria-label="Ver documentos"
             >
@@ -138,7 +131,7 @@
 
           <li>
             <a
-              href="#est-acompanhamento"
+              href="#est-acompanhamento" (click)="$event.preventDefault(); navegarSecao('est-acompanhamento')"
               class="nav-link"
               aria-label="Acompanhar candidatura"
             >
@@ -235,7 +228,7 @@
         <button
           type="button"
           class="est-btn-primary"
-          (click)="irPara('est-acompanhamento')"
+          (click)="navegarSecao('est-acompanhamento')"
         >
           <span>Acompanhar candidatura</span>
 
@@ -254,7 +247,7 @@
         <button
           type="button"
           class="est-btn-light"
-          (click)="irPara('est-perfil')"
+          (click)="navegarSecao('est-perfil')"
         >
           Ver meu perfil
         </button>
@@ -1158,25 +1151,25 @@
         <ul>
 
           <li>
-            <a href="#est-inicio">
+            <a href="#est-inicio" (click)="$event.preventDefault(); navegarSecao('est-inicio')">
               Início
             </a>
           </li>
 
           <li>
-            <a href="#est-perfil">
+            <a href="#est-perfil" (click)="$event.preventDefault(); navegarSecao('est-perfil')">
               Meu perfil
             </a>
           </li>
 
           <li>
-            <a href="#est-documentos">
+            <a href="#est-documentos" (click)="$event.preventDefault(); navegarSecao('est-documentos')">
               Documentos
             </a>
           </li>
 
           <li>
-            <a href="#est-acompanhamento">
+            <a href="#est-acompanhamento" (click)="$event.preventDefault(); navegarSecao('est-acompanhamento')">
               Acompanhamento
             </a>
           </li>
@@ -1196,3 +1189,4 @@
   </footer>
 
 </div>
+

@@ -1,0 +1,368 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap');
+
+/* Estilos extraídos do HTML de referência, isolados neste componente Angular. */
+:host {
+  display: block;
+  min-height: 100vh;
+  font-family: Inter, Arial, sans-serif;
+  background: #F7F9FC;
+  color: #1A1F36;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  --azul: #0A2540;
+  --azul-medio: #1A3D6B;
+  --azul-claro: #EEF3F9;
+  --azul-linha: #D8E1EC;
+  --laranja: #FF6B00;
+  --laranja-hover: #E85F00;
+  --texto: #1A1F36;
+  --texto-suave: #4F566B;
+  --cinza: #8792A2;
+  --borda: #E3E8EE;
+  --fundo: #F7F9FC;
+  --branco: #FFFFFF;
+  --verde: #137A47;
+  --verde-fundo: #ECFDF3;
+  --radius: 6px;
+  --radius-sm: 4px;
+  --sombra: 0 1px 2px rgba(16,24,40,.05);
+}
+
+:host *, :host *::before, :host *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+:host button, :host input, :host select {
+  font: inherit;
+  font-family: inherit;
+}
+:host button { cursor: pointer; }
+:host button:focus-visible, :host a:focus-visible,
+:host input:focus-visible, :host select:focus-visible {
+  outline: 2px solid var(--azul-medio);
+  outline-offset: 2px;
+}
+
+/* Regras específicas do portal (ordem original preservada). */
+#pagina-estagiario{min-height:100vh;background:var(--fundo)}
+#pagina-estagiario footer{background:var(--azul);
+  color:#B9C7DB;
+  padding:22px 6%;
+  display:flex;
+  justify-content:space-between;
+  font-size:11.5px;}
+#pagina-estagiario footer strong{color:#fff}
+@media (max-width:600px){
+#pagina-estagiario footer{flex-direction:column;gap:6px;text-align:center}
+}
+.est-brand-logo{display:block;vertical-align:middle;}
+#pagina-estagiario .est-bloqueio{display:flex;align-items:flex-start;gap:12px;background:#F3F6FB;border:1px solid #D8E1EC;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:12px;line-height:1.6;color:#4F566B}
+#pagina-estagiario .est-bloqueio svg{flex:none;width:18px;height:18px;margin-top:1px;fill:none;stroke:#182895;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#pagina-estagiario .est-bloqueio strong{color:#0A2540}
+#pagina-estagiario .est-doc{display:flex;flex-direction:column;gap:2px}
+#pagina-estagiario .est-doc:hover{transform:none;box-shadow:none}
+#pagina-estagiario .est-doc p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pagina-estagiario .est-doc-ver{margin-top:12px;align-self:flex-start;border:1px solid #D5DCF5;background:#fff;color:#182895;border-radius:99px;padding:7px 16px;font-size:12px;font-weight:600;transition:background .2s,color .2s}
+#pagina-estagiario .est-doc-ver:hover{background:#182895;color:#fff}
+#pagina-estagiario .est-vazio{grid-column:1/-1;font-size:12px;color:#66758a}
+#pagina-estagiario .est-status[data-estado=aceite]{border-color:#9ED8B8}
+#pagina-estagiario .est-status[data-estado=aceite] .est-badge{background:#ECFDF3;color:#137A47}
+#pagina-estagiario .est-status[data-estado=aceite] .est-dot{background:#137A47}
+#pagina-estagiario .est-status[data-estado=recusado]{border-color:#F1B5AE}
+#pagina-estagiario .est-status[data-estado=recusado] .est-badge{background:#FEF3F2;color:#B42318}
+#pagina-estagiario .est-status[data-estado=recusado] .est-dot{background:#B42318}
+#pagina-estagiario .est-step.bad .est-step-circle{background:#B42318;border-color:#B42318;color:#fff}
+#pagina-estagiario .est-demo{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1px dashed #C9D5E3;border-radius:12px;padding:12px 16px;font-size:11.5px;color:#66758a}
+#pagina-estagiario .est-demo select{border:1px solid #D8E1EC;border-radius:8px;padding:7px 10px;background:#fff;font-size:12px}
+#pagina-estagiario .est-card-icon{display:flex;align-items:center;justify-content:center}
+#pagina-estagiario .est-doc-prev{height:116px;border-radius:10px;background:#EEF3F9;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#1A3D6B;overflow:hidden;margin-bottom:14px}
+#pagina-estagiario .est-doc-prev img{width:100%;height:100%;object-fit:cover;display:block}
+#pagina-estagiario .est-doc-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#pagina-estagiario .est-doc-head h3{margin:0}
+#pagina-estagiario .est-hist{list-style:none;background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:6px 24px}
+#pagina-estagiario .est-hist li{display:grid;grid-template-columns:24px 1fr auto;gap:16px;align-items:start;padding:16px 0;border-bottom:1px solid #EEF2F6}
+#pagina-estagiario .est-hist li:last-child{border-bottom:0}
+#pagina-estagiario .est-hist i{width:24px;height:24px;border-radius:50%;border:2px solid #D8E1EC;background:#fff;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;color:#8792A2}
+#pagina-estagiario .est-hist li.feito i{background:#137A47;border-color:#137A47;color:#fff}
+#pagina-estagiario .est-hist li.atual i{background:#0A2540;border-color:#0A2540;color:#fff}
+#pagina-estagiario .est-hist li.bad i{background:#B42318;border-color:#B42318;color:#fff}
+#pagina-estagiario .est-hist strong{display:block;font-size:13.5px;color:#0A2540}
+#pagina-estagiario .est-hist span{font-size:12px;color:#66758a}
+#pagina-estagiario .est-hist time{font-size:11.5px;color:#8792A2;white-space:nowrap}
+#pagina-estagiario{display:block!important}
+#pagina-estagiario .est-navlinks a{display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:9px 13px;
+  border:1px solid transparent;
+  border-radius:9px;
+  color:#526174;
+  background:transparent;
+  font:600 11px Inter,sans-serif;
+  text-decoration:none;
+  transition:all .18s ease;}
+#pagina-estagiario .est-navlinks a:hover{background:#EEF3F9;
+  color:#0A2540;
+  border-color:#DCE5EF;
+  transform:translateY(-1px);}
+#pagina-estagiario .est-navlinks a:focus-visible{outline:2px solid #1A3D6B;
+  outline-offset:2px;}
+#pagina-estagiario .est-btn-primary,
+#pagina-estagiario .est-btn-light,
+#pagina-estagiario .est-logout,
+#pagina-estagiario .est-doc-open{transition:transform .18s ease,box-shadow .18s ease,background .18s ease,border-color .18s ease,color .18s ease;}
+#pagina-estagiario .est-btn-primary{display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:150px;
+  min-height:44px;
+  padding:11px 18px;
+  background:#FFFFFF;
+  color:#0A2540;
+  border:1px solid rgba(255,255,255,.75);
+  border-radius:10px;
+  box-shadow:0 6px 18px rgba(0,0,0,.12);
+  text-decoration:none;}
+#pagina-estagiario .est-btn-primary:hover{transform:translateY(-2px);
+  box-shadow:0 10px 24px rgba(0,0,0,.16);
+  background:#F8FBFF;}
+#pagina-estagiario .est-btn-light{display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:180px;
+  min-height:44px;
+  padding:11px 18px;
+  background:rgba(255,255,255,.10);
+  color:#FFFFFF;
+  border:1px solid rgba(255,255,255,.35);
+  border-radius:10px;
+  text-decoration:none;
+  box-shadow:0 4px 14px rgba(0,0,0,.08);}
+#pagina-estagiario .est-btn-light:hover{transform:translateY(-2px);
+  background:rgba(255,255,255,.18);
+  border-color:rgba(255,255,255,.55);
+  box-shadow:0 9px 22px rgba(0,0,0,.12);}
+#pagina-estagiario .est-logout{min-width:72px;
+  min-height:38px;
+  padding:9px 13px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #D8E1EC;
+  background:#FFFFFF;
+  color:#0A2540;
+  border-radius:9px;
+  font-size:10px;
+  font-weight:800;
+  text-decoration:none;}
+#pagina-estagiario .est-logout:hover{transform:translateY(-1px);
+  background:#0A2540;
+  color:#FFFFFF;
+  border-color:#0A2540;
+  box-shadow:0 6px 14px rgba(10,37,64,.16);}
+#pagina-estagiario .est-doc-open{min-height:36px;
+  padding:8px 13px;
+  margin-top:12px;
+  border:1px solid #C8D6E6;
+  background:#F8FAFD;
+  color:#1A3D6B;
+  border-radius:9px;
+  font:800 9px Inter,sans-serif;
+  text-decoration:none;}
+#pagina-estagiario .est-doc-open:hover{transform:translateY(-1px);
+  background:#0A2540;
+  color:#FFFFFF;
+  border-color:#0A2540;
+  box-shadow:0 6px 14px rgba(10,37,64,.14);}
+#pagina-estagiario .est-doc-open.disabled:hover{transform:none;
+  box-shadow:none;}
+@media (max-width:650px){
+#pagina-estagiario .est-hero-actions{flex-direction:column;align-items:stretch}
+#pagina-estagiario .est-btn-primary,
+#pagina-estagiario .est-btn-light{width:100%;min-width:0}
+}
+#pagina-estagiario{background:#F7F9FC;min-height:100vh;color:#24324A}
+#pagina-estagiario .est-topbar{background:#0A2540;color:#fff;padding:8px 6%;font-size:11px;display:flex;justify-content:space-between;gap:15px;align-items:center}
+#pagina-estagiario .est-navbar{height:74px;background:#fff;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;padding:0 6%;position:sticky;top:0;z-index:30;box-shadow:0 4px 18px rgba(3,27,78,.05)}
+#pagina-estagiario .est-brand{display:flex;align-items:center;gap:10px}
+.est-brand-logo{width:42px;height:42px;border-radius:10px;object-fit:cover;display:block;box-shadow:0 2px 8px rgba(3,27,78,.12)}
+.est-brand-mark{width:38px;height:38px;border-radius:10px;background:#0A2540;color:#fff;display:grid;place-items:center;font-weight:800;font-size:11px}
+.est-brand strong{display:block;font-size:17px;color:#0A2540;letter-spacing:.5px}
+.est-brand small{font-size:8px;color:#687386;letter-spacing:1px}
+#pagina-estagiario .est-navlinks{display:flex;gap:4px}
+.est-navlinks button{border:0;background:transparent;color:#526174;font:600 11px Inter,sans-serif;padding:10px 12px;border-radius:8px;cursor:pointer}
+.est-navlinks button:hover{background:#EEF3F9;color:#0A2540}
+#pagina-estagiario .est-user{display:flex;align-items:center;gap:12px}
+.est-user-name{font-size:11px;font-weight:700;color:#334155}
+.est-avatar{width:34px;height:34px;border-radius:50%;background:#1A3D6B;color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px}
+.est-logout{border:1px solid #D8E1EC;background:#fff;color:#0A2540;padding:9px 12px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer}
+.est-logout:hover{background:#0A2540;color:#fff}
+#pagina-estagiario .est-hero{background:linear-gradient(120deg,#0A2540 0%,#1A3D6B 58%,#2D5683 100%);padding:55px 6% 60px;color:#fff;position:relative;overflow:hidden}
+.est-hero:after{content:"";position:absolute;width:420px;height:420px;border:1px solid rgba(255,255,255,.1);border-radius:50%;right:-120px;top:-180px}
+.est-hero-inner{max-width:1180px;margin:auto;position:relative;z-index:1}
+.est-kicker{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#C9D8EA;font-weight:700}
+.est-hero h1{font-size:38px;line-height:1.12;margin:10px 0 12px;font-weight:800}
+.est-hero p{max-width:650px;color:#D9E4F1;font-size:13px;line-height:1.8}
+.est-hero-actions{display:flex;gap:10px;margin-top:24px}
+.est-btn-primary,
+.est-btn-light{border:0;border-radius:9px;padding:12px 16px;font-size:11px;font-weight:800;cursor:pointer}
+.est-btn-primary{background:#fff;color:#0A2540}
+.est-btn-light{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25)}
+#pagina-estagiario .est-main{max-width:1180px;margin:-25px auto 60px;padding:0 20px;position:relative;z-index:2}
+.est-status{background:#fff;border:1px solid #E1E7EF;border-radius:16px;padding:24px;box-shadow:0 15px 40px rgba(3,27,78,.08);display:grid;grid-template-columns:1.1fr 2fr;gap:28px;align-items:center}
+.est-status-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#7A8798;font-weight:800}
+.est-status h2{font-size:23px;color:#0A2540;margin:7px 0}
+.est-status p{font-size:11px;color:#687386;line-height:1.6}
+.est-badge{display:inline-flex;align-items:center;gap:7px;background:#EEF3F9;color:#1A3D6B;border-radius:999px;padding:7px 11px;font-size:10px;font-weight:800}
+.est-dot{width:7px;height:7px;border-radius:50%;background:#1A3D6B}
+.est-progress{display:grid;grid-template-columns:repeat(3,1fr);position:relative;gap:10px}
+.est-progress:before{content:"";height:3px;background:#D8E1EC;position:absolute;top:18px;left:10%;right:10%;z-index:0}
+.est-step{text-align:center;position:relative;z-index:1}
+.est-step-circle{width:36px;height:36px;border-radius:50%;margin:auto;background:#fff;border:2px solid #D8E1EC;color:#8793A4;display:grid;place-items:center;font-size:11px;font-weight:800}
+.est-step.done .est-step-circle,
+.est-step.active .est-step-circle{background:#0A2540;border-color:#0A2540;color:#fff}
+.est-step.active .est-step-circle{box-shadow:0 0 0 6px #EEF3F9}
+.est-step span{display:block;margin-top:8px;font-size:10px;font-weight:700;color:#687386}
+.est-step.active span,
+.est-step.done span{color:#0A2540}
+#pagina-estagiario .est-section{margin-top:38px}
+.est-section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:16px}
+.est-section-head h2{font-size:22px;color:#0A2540;margin:0}
+.est-section-head p{font-size:11px;color:#7A8798;margin:5px 0 0}
+.est-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.est-card{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:22px;box-shadow:0 8px 25px rgba(3,27,78,.04)}
+.est-card h3{font-size:14px;color:#0A2540;margin:0 0 17px}
+.est-card-icon{width:38px;height:38px;border-radius:9px;background:#EEF3F9;display:grid;place-items:center;color:#1A3D6B;font-weight:800;margin-bottom:13px}
+.est-data{display:grid;grid-template-columns:1fr 1fr;gap:0 25px}
+.est-data-row{padding:12px 0;border-bottom:1px solid #EEF1F5}
+.est-data-row span{display:block;color:#8994A5;font-size:9px;margin-bottom:4px}
+.est-data-row strong{font-size:11px;color:#26354D;word-break:break-word}
+.est-docs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.est-doc{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:18px;transition:.2s}
+.est-doc:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(3,27,78,.07)}
+.est-doc-top{display:flex;justify-content:space-between;gap:10px}
+.est-doc-icon{width:34px;height:34px;border-radius:8px;background:#EEF3F9;display:grid;place-items:center;color:#1A3D6B;font-size:12px;font-weight:800}
+.est-doc h3{font-size:11px;color:#26354D;margin:12px 0 7px}
+.est-doc p{font-size:9px;color:#7A8798;line-height:1.6;min-height:29px}
+.est-doc-status{display:inline-block;margin-top:12px;background:#EEF3F9;color:#1A3D6B;border-radius:999px;padding:5px 8px;font-size:8px;font-weight:800}
+.est-doc-status.pending{background:#F4F6F8;color:#687386}
+.est-info{display:grid;grid-template-columns:1.4fr .6fr;gap:18px}
+.est-note{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:22px}
+.est-note h3{font-size:14px;color:#0A2540;margin-bottom:10px}
+.est-note p{font-size:11px;color:#687386;line-height:1.8}
+.est-date{background:#0A2540;color:#fff;border-radius:14px;padding:22px}
+.est-date small{font-size:9px;color:#BFD0E3}
+.est-date strong{display:block;font-size:22px;margin:7px 0}
+.est-date span{font-size:10px;color:#D5E2F3}
+#pagina-estagiario .est-footer{background:#0A2540;color:#C9D8EA;padding:25px 6%;display:flex;justify-content:space-between;gap:20px;font-size:9px}
+.est-footer strong{color:#fff}
+@media (max-width:950px){
+.est-navlinks{display:none!important}
+.est-status{grid-template-columns:1fr}
+.est-docs{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:650px){
+#pagina-estagiario .est-topbar{display:none}
+.est-navbar{padding:0 18px!important}
+.est-user-name{display:none}
+.est-hero{padding:40px 20px!important}
+.est-hero h1{font-size:30px}
+.est-main{padding:0 12px!important}
+.est-grid,
+.est-data,
+.est-docs,
+.est-info{grid-template-columns:1fr}
+.est-status{padding:18px}
+.est-footer{flex-direction:column;padding:22px 20px!important}
+.est-progress:before{left:12%;right:12%}
+}
+#pagina-estagiario .est-doc-file{display:block;margin-top:7px;font-size:9px;color:#526174;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pagina-estagiario .est-doc-size{display:block;margin-top:3px;font-size:8.5px;color:#98A2B3}
+#pagina-estagiario .est-doc-open{display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:7px 12px;border:1px solid #D8E1EC;background:#fff;color:#1A3D6B;border-radius:8px;font:700 9px Inter,sans-serif;cursor:pointer;text-decoration:none}
+#pagina-estagiario .est-doc-open:hover{background:#0A2540;color:#fff;border-color:#0A2540}
+#pagina-estagiario .est-doc-open.disabled{color:#98A2B3;background:#F7F9FC;border-color:#E7ECF2;cursor:not-allowed}
+#pagina-estagiario .est-doc-status{display:inline-block;margin-top:10px;background:#EEF3F9;color:#1A3D6B;border-radius:999px;padding:5px 8px;font-size:8px;font-weight:800}
+#pagina-estagiario .est-doc-status.guardado{background:#ECFDF3;color:#137A47}
+#pagina-estagiario .est-doc-status.pendente{background:#F4F6F8;color:#687386}
+#pagina-estagiario .est-doc-empty{grid-column:1/-1;padding:22px;border:1px dashed #D8E1EC;border-radius:12px;background:#fff;color:#687386;font-size:10px;text-align:center}
+
+/* Correcção das acções: botões reais Angular, sempre acima de elementos decorativos. */
+#pagina-estagiario a,
+#pagina-estagiario button {
+  pointer-events: auto;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  -webkit-tap-highlight-color: transparent;
+}
+#pagina-estagiario button {
+  font-family: inherit;
+  line-height: 1.25;
+  appearance: none;
+}
+#pagina-estagiario .est-hero-actions a { text-decoration: none; }
+#pagina-estagiario .est-navlinks a { text-decoration: none; }
+#pagina-estagiario .est-logout {
+  font-family: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+  appearance: none;
+}
+#pagina-estagiario .est-doc-open {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.25;
+  appearance: none;
+}
+#pagina-estagiario .est-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 24px;
+  padding: 18px 20px;
+  border: 1px solid #D8E1EC;
+  border-radius: 12px;
+  background: #FFFFFF;
+  color: #1A1F36;
+  box-shadow: 0 8px 24px rgba(10,37,64,.05);
+}
+#pagina-estagiario .est-feedback strong { display: block; color: #0A2540; font-size: 13px; }
+#pagina-estagiario .est-feedback p { margin-top: 4px; color: #66758A; font-size: 12px; line-height: 1.6; }
+#pagina-estagiario .est-feedback-error { border-color: #F1B5AE; }
+#pagina-estagiario .est-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 9px 14px;
+  border: 1px solid #D8E1EC;
+  border-radius: 9px;
+  background: #FFFFFF;
+  color: #0A2540;
+  font: 700 11px Inter, Arial, sans-serif;
+  white-space: nowrap;
+  transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+#pagina-estagiario .est-btn-outline:hover { background: #0A2540; border-color: #0A2540; color: #FFFFFF; }
+#pagina-estagiario .est-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #D8E1EC;
+  border-top-color: #0A2540;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  animation: est-spinner-girar .8s linear infinite;
+}
+@keyframes est-spinner-girar { to { transform: rotate(360deg); } }
+@media (max-width: 650px) {
+  #pagina-estagiario .est-feedback { align-items: stretch; flex-direction: column; }
+  #pagina-estagiario .est-btn-outline { width: 100%; }
+}

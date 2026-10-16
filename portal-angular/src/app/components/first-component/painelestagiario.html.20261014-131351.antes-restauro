@@ -1,0 +1,181 @@
+<section id="pagina-estagiario" class="est-shell">
+  <div class="est-topbar">
+    <span>Portal de Estágios Multitel</span>
+    <span>Linha de apoio: 223 530 000 <span class="est-separador">·</span> Dias úteis</span>
+  </div>
+
+  <nav class="est-navbar" aria-label="Navegação do portal do estagiário">
+    <a class="est-brand" href="#est-inicio" aria-label="Multitel — início do portal">
+      <img class="est-brand-logo" src="assets/img/multitel.png" alt="Logo Multitel" />
+      <span class="est-brand-text"><strong>MULTITEL</strong><small>PORTAL DE ESTÁGIOS</small></span>
+    </a>
+
+    <div class="est-navlinks" aria-label="Secções do portal">
+      <a href="#est-inicio">Início</a>
+      <a href="#est-perfil">Meu perfil</a>
+      <a href="#est-documentos">Documentos</a>
+      <a href="#est-acompanhamento">Acompanhamento</a>
+    </div>
+
+    <div class="est-user">
+      <span class="est-user-name">Bem-vindo, {{ primeiroNome() }}</span>
+      <span class="est-avatar" aria-label="Inicial do estagiário">{{ inicial() }}</span>
+      <button type="button" class="est-logout" (click)="sair()">Sair</button>
+    </div>
+  </nav>
+
+  <header class="est-hero" id="est-inicio">
+    <div class="est-hero-inner">
+      <span class="est-kicker">Área pessoal do estagiário</span>
+      <h1>Bem-vindo, {{ primeiroNome() }}!</h1>
+      <p>Acompanha num único espaço o teu processo de estágio, consulta os teus dados, verifica os documentos enviados e acompanha a evolução da candidatura.</p>
+      <div class="est-hero-actions">
+        <a class="est-btn-primary" href="#est-documentos">Ver documentos</a>
+        <a class="est-btn-light" href="#est-acompanhamento">Acompanhar candidatura</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="est-main">
+    <div *ngIf="carregando()" class="est-feedback est-feedback-loading" role="status" aria-live="polite">
+      <span class="est-spinner" aria-hidden="true"></span>
+      <div><strong>A carregar o teu processo</strong><p>Estamos a consultar os dados da candidatura.</p></div>
+    </div>
+
+    <div *ngIf="erro() as mensagemErro" class="est-feedback est-feedback-error" role="alert">
+      <div><strong>Não foi possível apresentar o processo</strong><p>{{ mensagemErro }}</p></div>
+      <button type="button" class="est-btn-outline" (click)="recarregar()">Tentar novamente</button>
+    </div>
+
+    <div *ngIf="!carregando() && !erro() && !candidatura()" class="est-feedback" role="status">
+      <div><strong>Não encontrámos uma candidatura</strong><p>Quando existir uma candidatura associada à tua conta, os dados serão apresentados aqui.</p></div>
+      <button type="button" class="est-btn-outline" (click)="recarregar()">Verificar novamente</button>
+    </div>
+
+    <ng-container *ngIf="candidatura() as dados">
+      <section class="est-status" id="est-acompanhamento" [attr.data-estado]="dados.estado || 'analise'" aria-labelledby="est-estado-titulo">
+        <div class="est-status-summary">
+          <span class="est-status-label">Estado atual</span>
+          <h2 id="est-estado-titulo">{{ estado().titulo }}</h2>
+          <p>{{ texto() }}</p>
+          <span class="est-badge"><span class="est-dot" aria-hidden="true"></span>{{ estado().badge }}</span>
+        </div>
+
+        <div class="est-progress-wrap">
+          <div class="est-progress-heading"><strong>Etapas do processo</strong><span>1–3</span></div>
+          <div class="est-progress" aria-label="Etapas da candidatura">
+            <div class="est-step done">
+              <span class="est-step-circle" aria-hidden="true">✓</span>
+              <span class="est-step-label">Candidatura<br />submetida</span>
+            </div>
+            <div class="est-step" [class.active]="estado().p2 === 'active'" [class.done]="estado().p2 === 'done'">
+              <span class="est-step-circle" aria-hidden="true">{{ estado().p2 === 'done' ? '✓' : '2' }}</span>
+              <span class="est-step-label">Em análise</span>
+            </div>
+            <div class="est-step" [class.done]="estado().p3 === 'done'" [class.bad]="estado().p3 === 'bad'">
+              <span class="est-step-circle" aria-hidden="true">{{ estado().c3 }}</span>
+              <span class="est-step-label">{{ estado().l3 }}</span>
+            </div>
+          </div>
+          <p class="est-progress-note" *ngIf="dados.estado === 'analise'">A candidatura está a aguardar a decisão da equipa responsável.</p>
+          <p class="est-progress-note" *ngIf="dados.estado === 'aceite'">A equipa registou a aceitação da candidatura.</p>
+          <p class="est-progress-note" *ngIf="dados.estado === 'recusado'">A decisão da equipa foi registada no processo.</p>
+        </div>
+      </section>
+
+      <section class="est-section" id="est-perfil" aria-labelledby="est-perfil-titulo">
+        <div class="est-section-head">
+          <div><h2 id="est-perfil-titulo">O teu perfil</h2><p>Dados associados à tua candidatura.</p></div>
+        </div>
+        <div class="est-grid">
+          <article class="est-card">
+            <div class="est-card-heading">
+              <span class="est-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"></path></svg></span>
+              <div><h3>Dados pessoais</h3><p>Identificação e contactos</p></div>
+            </div>
+            <dl class="est-data">
+              <div class="est-data-row"><dt>Nome completo</dt><dd>{{ dados.nome || 'Não informado' }}</dd></div>
+              <div class="est-data-row"><dt>Bilhete de identidade</dt><dd>{{ dados.bi || 'Não informado' }}</dd></div>
+              <div class="est-data-row"><dt>Contacto telefónico</dt><dd>{{ dados.contacto || 'Não informado' }}</dd></div>
+              <div class="est-data-row"><dt>E-mail</dt><dd>{{ dados.email || 'Não informado' }}</dd></div>
+              <div class="est-data-row"><dt>Data de nascimento</dt><dd>{{ formatarData(dados.nascimento) }}</dd></div>
+              <div class="est-data-row"><dt>Sexo</dt><dd>{{ dados.sexo || 'Não informado' }}</dd></div>
+            </dl>
+          </article>
+
+          <article class="est-card">
+            <div class="est-card-heading">
+              <span class="est-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m2 9 10-5 10 5-10 5z"></path><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"></path><path d="M22 9v6"></path></svg></span>
+              <div><h3>Dados académicos</h3><p>Formação e área de interesse</p></div>
+            </div>
+            <dl class="est-data">
+              <div class="est-data-row"><dt>Curso</dt><dd>{{ dados.curso || 'Não informado' }}</dd></div>
+              <div class="est-data-row"><dt>Instituição de ensino</dt><dd>{{ dados.universidade || 'Não informado' }}</dd></div>
+              <div class="est-data-row"><dt>Departamento</dt><dd>{{ dados.departamento || 'A definir' }}</dd></div>
+              <div class="est-data-row"><dt>Data de submissão</dt><dd>{{ formatarData(dados.data_submissao) }}</dd></div>
+            </dl>
+            <div class="est-card-note"><span class="est-note-mark" aria-hidden="true">i</span><span>Os dados apresentados correspondem à informação registada na candidatura.</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="est-section" id="est-documentos" aria-labelledby="est-documentos-titulo">
+        <div class="est-section-head est-section-head-inline">
+          <div><h2 id="est-documentos-titulo">Os teus documentos</h2><p>Documentos associados ao processo de candidatura.</p></div>
+          <span class="est-count-pill">{{ dados.documentos?.length || 0 }} documento(s)</span>
+        </div>
+
+        <div class="est-bloqueio">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect height="9" rx="2" width="14" x="5" y="11"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+          <span>Os documentos já foram submetidos e <strong>não podem ser alterados</strong>. Podes consultá-los sempre que precisares. Se houver algum erro, contacta a linha de apoio: 223 530 000.</span>
+        </div>
+
+        <div class="est-docs" *ngIf="dados.documentos?.length; else semDocumentos">
+          <article class="est-doc" *ngFor="let documento of dados.documentos">
+            <div class="est-doc-top"><span class="est-doc-icon">{{ extensao(documento) }}</span><span class="est-doc-status" [attr.data-estado]="documento.estado || 'recebido'">{{ rotuloEstadoDocumento(documento) }}</span></div>
+            <h3>{{ tituloDocumento(documento) }}</h3>
+            <p class="est-doc-file" [title]="documento.nome_arquivo">{{ documento.nome_arquivo || 'Ficheiro sem nome' }}</p>
+            <span class="est-doc-size">Enviado: {{ formatarData(documento.data_upload) }}</span>
+            <button type="button" class="est-doc-open" [disabled]="!documento.id_documento" (click)="ver(documento)" [attr.aria-label]="'Abrir documento: ' + tituloDocumento(documento)">
+              Abrir documento <span aria-hidden="true">→</span>
+            </button>
+          </article>
+        </div>
+        <ng-template #semDocumentos>
+          <div class="est-doc-empty"><strong>Não existem documentos para apresentar</strong><p>Os ficheiros aparecerão aqui quando estiverem associados à tua candidatura.</p></div>
+        </ng-template>
+      </section>
+
+      <section class="est-section" id="est-historico" aria-labelledby="est-historico-titulo">
+        <div class="est-section-head"><div><h2 id="est-historico-titulo">Histórico do processo</h2><p>Registo das principais etapas da candidatura.</p></div></div>
+        <ol class="est-hist" *ngIf="historico().length; else semHistorico">
+          <li *ngFor="let etapa of historico()" [class.feito]="etapa.classe === 'done'" [class.atual]="etapa.classe === 'active'" [class.bad]="etapa.classe === 'bad'">
+            <span class="est-hist-icon" aria-hidden="true">{{ etapa.icone }}</span>
+            <div class="est-hist-content"><strong>{{ etapa.titulo }}</strong><p>{{ etapa.texto }}</p></div>
+            <time>{{ formatarData(etapa.data) }}</time>
+          </li>
+        </ol>
+        <ng-template #semHistorico><div class="est-empty-history">O histórico será apresentado quando existirem etapas registadas.</div></ng-template>
+      </section>
+
+      <section class="est-section est-info" aria-label="Informação sobre a candidatura">
+        <article class="est-note">
+          <h3>Informação sobre a candidatura</h3>
+          <p>A candidatura foi submetida. O resultado — aceite ou não aceite — aparece nesta área assim que a equipa terminar a análise. Os documentos enviados ficam disponíveis para consulta.</p>
+          <a class="est-help-link" href="tel:223530000">Contactar linha de apoio: 223 530 000</a>
+        </article>
+        <article class="est-date">
+          <small>DATA DA CANDIDATURA</small>
+          <strong>{{ formatarData(dados.data_submissao) }}</strong>
+          <span class="est-date-status"><span class="est-date-dot" [attr.data-estado]="dados.estado"></span>{{ estado().badge }}</span>
+        </article>
+      </section>
+    </ng-container>
+  </main>
+
+  <footer class="est-footer">
+    <span>© 2026 <strong>Multitel, S.A.</strong> Todos os direitos reservados.</span>
+    <span>Portal de Estágios</span>
+    <a href="https://www.multitel.co.ao" target="_blank" rel="noopener noreferrer">Site institucional <span aria-hidden="true">↗</span></a>
+  </footer>
+</section>
