@@ -6,7 +6,6 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
-
 /* =========================================================
    DOCUMENTO DO ESTAGIÁRIO
    ========================================================= */
@@ -23,7 +22,6 @@ export interface DocumentoEstagiario {
   estado?: string | null;
   descricao?: string | null;
 }
-
 
 /* =========================================================
    CANDIDATURA DO ESTAGIÁRIO
@@ -45,7 +43,6 @@ export interface CandidaturaEstagiario {
   documentos: DocumentoEstagiario[];
 }
 
-
 /* =========================================================
    SERVIÇO DE ACOMPANHAMENTO DO ESTAGIÁRIO
    ========================================================= */
@@ -54,13 +51,11 @@ export interface CandidaturaEstagiario {
   providedIn: 'root'
 })
 export class CandidaturaEstagiarioService {
-
   private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
 
   private readonly url =
     `${environment.apiUrl}/estagiario/candidatura`;
-
 
   /* =======================================================
      CABEÇALHOS DE AUTENTICAÇÃO
@@ -83,7 +78,6 @@ export class CandidaturaEstagiarioService {
     return headers;
   }
 
-
   /* =======================================================
      CARREGAR A CANDIDATURA DO ESTAGIÁRIO
      ======================================================= */
@@ -96,7 +90,6 @@ export class CandidaturaEstagiarioService {
       }
     );
   }
-
 
   /* =======================================================
      VISUALIZAR OU DESCARREGAR UM DOCUMENTO
@@ -112,4 +105,24 @@ export class CandidaturaEstagiarioService {
     );
   }
 
+  /* =======================================================
+     SUBSTITUIR DOCUMENTO POR UMA NOVA VERSÃO
+     ======================================================= */
+
+  substituirDocumento(
+    idDocumento: number,
+    ficheiro: File
+  ): Observable<unknown> {
+    const formData = new FormData();
+
+    formData.append('ficheiro', ficheiro);
+
+    return this.http.post(
+      `${environment.apiUrl}/documentos/${idDocumento}/substituir`,
+      formData,
+      {
+        headers: this.obterCabecalhos()
+      }
+    );
+  }
 }
