@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CandidaturaController;
+use App\Http\Controllers\CoordenadorController;
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\DocumentoController;
 use Illuminate\Http\Request;
@@ -110,26 +111,31 @@ Route::middleware('auth:sanctum')->group(function () {
         ->prefix('admin')
         ->group(function () {
 
+            // Indicadores do painel administrativo.
             Route::get('/dashboard', [
                 AdminController::class,
                 'dashboard'
             ]);
 
+            // Listar e pesquisar candidaturas.
             Route::get('/candidaturas', [
                 AdminController::class,
                 'candidaturas'
             ]);
 
+            // Consultar os detalhes de uma candidatura.
             Route::get('/candidaturas/{id}', [
                 AdminController::class,
                 'show'
             ]);
 
+            // Aprovar candidatura.
             Route::patch('/candidaturas/{id}/aprovar', [
                 AdminController::class,
                 'aprovar'
             ]);
 
+            // Recusar candidatura.
             Route::patch('/candidaturas/{id}/recusar', [
                 AdminController::class,
                 'recusar'
@@ -137,4 +143,48 @@ Route::middleware('auth:sanctum')->group(function () {
 
         });
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rotas exclusivas do coordenador
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('coordenador')
+        ->prefix('coordenador')
+        ->group(function () {
+
+            // Indicadores do painel do coordenador.
+            Route::get('/dashboard', [
+                CoordenadorController::class,
+                'dashboard'
+            ]);
+
+            // Listar, pesquisar e filtrar candidaturas atribuídas.
+            Route::get('/candidaturas', [
+                CoordenadorController::class,
+                'candidaturas'
+            ]);
+
+            // Consultar os detalhes de uma candidatura atribuída.
+            Route::get('/candidaturas/{id}', [
+                CoordenadorController::class,
+                'show'
+            ]);
+
+            // Aprovar candidatura.
+            Route::patch('/candidaturas/{id}/aprovar', [
+                CoordenadorController::class,
+                'aprovar'
+            ]);
+
+            // Recusar candidatura com motivo.
+            Route::patch('/candidaturas/{id}/recusar', [
+                CoordenadorController::class,
+                'recusar'
+            ]);
+
+        });
+
 });
+
