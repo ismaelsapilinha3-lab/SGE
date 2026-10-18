@@ -26,3 +26,32 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /SGE/
+
+# Backups locais do SGE — preservar no computador, não enviar ao GitHub
+*.bak
+*.backup
+*.antes-restauro
+*.antes-restauro-*
+*.antes-restauro_*
+*.antes-correcao-*
+*.antes-ajuste-*
+*.antes-da-correcao*
+*.antes-da-referencia-*
+*.antes-do-botao-*
+*.antes-do-fluxo*
+*.antes-secoes*
+*.antes-navegacao*
+*.antes-voltar-versao*
+*.antes-recuperacao*
+
+# Pastas de backups locais
+/backups-painel-admin/
+/portal-angular/backup-painel-*/
+
+# Outras variantes de backups locais
+*.antes-botoes
+*.backup-*
+*.backup-antes-*
+*.backup-final
+*.backup-visual
+*.backup-com-*
