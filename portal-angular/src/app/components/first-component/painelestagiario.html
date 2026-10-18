@@ -1,7 +1,4 @@
-<a
-  class="skip-link"
-  href="#conteudo-principal"
->
+<a class="skip-link" href="#conteudo-principal">
   Saltar para o conteúdo principal
 </a>
 
@@ -12,30 +9,32 @@
        ========================================================= -->
   <div class="topo">
     <div class="topo-conteudo">
-      <span>Portal de Estágios Multitel</span>
+      <span>Portal de EstÃ¡gios Multitel</span>
 
       <span class="topo-direita">
-        Linha de apoio · 223 530 000
+        Linha de apoio Â· 223 530 000
+
         <span
           class="topo-separador"
           aria-hidden="true"
         >
-          •
+          â€¢
         </span>
-        Dias úteis
+
+        Dias Ãºteis
       </span>
     </div>
   </div>
 
 
   <!-- =========================================================
-       NAVEGAÇÃO PRINCIPAL
+       NAVEGAÃ‡ÃƒO PRINCIPAL
        ========================================================= -->
   <header class="cabecalho-principal">
 
     <nav
       class="barra"
-      aria-label="Navegação principal"
+      aria-label="NavegaÃ§Ã£o principal"
     >
 
       <div class="barra-conteudo">
@@ -43,18 +42,18 @@
         <!-- Marca -->
         <a
           class="marca"
-          href="#est-inicio"
-          aria-label="Multitel — Portal de Estágios"
+          href="#est-inicio" (click)="$event.preventDefault(); navegarSecao('est-inicio')"
+          aria-label="Multitel â€” Portal de EstÃ¡gios"
         >
 
           <img
             src="assets/img/multitel.png"
-            alt="Logótipo Multitel"
+            alt="LogÃ³tipo Multitel"
           >
 
           <div class="marca-texto">
             <strong>MULTITEL</strong>
-            <small>PORTAL DE ESTÁGIOS</small>
+            <small>PORTAL DE ESTÃGIOS</small>
           </div>
 
         </a>
@@ -65,9 +64,9 @@
 
           <li>
             <a
-              href="#est-inicio"
+              href="#est-inicio" (click)="$event.preventDefault(); navegarSecao('est-inicio')"
               class="nav-link"
-              aria-label="Ir para o início"
+              aria-label="Ir para o inÃ­cio"
             >
               <svg
                 class="ic"
@@ -80,14 +79,14 @@
                 <path d="M9.5 20v-5.5h5V20"></path>
               </svg>
 
-              <span>Início</span>
+              <span>InÃ­cio</span>
             </a>
           </li>
 
 
           <li>
             <a
-              href="#est-perfil"
+              href="#est-perfil" (click)="$event.preventDefault(); navegarSecao('est-perfil')"
               class="nav-link"
               aria-label="Ver meu perfil"
             >
@@ -115,7 +114,7 @@
 
           <li>
             <a
-              href="#est-documentos"
+              href="#est-documentos" (click)="$event.preventDefault(); navegarSecao('est-documentos')"
               class="nav-link"
               aria-label="Ver documentos"
             >
@@ -138,7 +137,7 @@
 
           <li>
             <a
-              href="#est-acompanhamento"
+              href="#est-acompanhamento" (click)="$event.preventDefault(); navegarSecao('est-acompanhamento')"
               class="nav-link"
               aria-label="Acompanhar candidatura"
             >
@@ -165,8 +164,8 @@
         <div class="user">
 
           <div class="user-info">
-            <strong>Olá, {{ primeiroNome() }}</strong>
-            <span>Candidato a estágio</span>
+            <strong>OlÃ¡, {{ primeiroNome() }}</strong>
+            <span>Candidato a estÃ¡gio</span>
           </div>
 
           <div
@@ -180,7 +179,7 @@
             type="button"
             class="sair"
             (click)="sair()"
-            aria-label="Encerrar sessão"
+            aria-label="Encerrar sessÃ£o"
           >
             <svg
               class="ic"
@@ -206,7 +205,7 @@
 
 
   <!-- =========================================================
-       CABEÇALHO / HERO
+       CABEÃ‡ALHO / HERO
        ========================================================= -->
   <header
     id="est-inicio"
@@ -216,7 +215,7 @@
     <div class="cab-conteudo">
 
       <span class="cab-label">
-        ÁREA DO CANDIDATO
+        ÃREA DO CANDIDATO
       </span>
 
       <h1>
@@ -225,9 +224,9 @@
 
       <p>
         Consulta o estado do teu processo, os teus dados,
-        documentos enviados e todas as atualizações
+        documentos enviados e todas as atualizaÃ§Ãµes
         relacionadas com a candidatura ao programa
-        de estágio da Multitel.
+        de estÃ¡gio da Multitel.
       </p>
 
       <div class="est-hero-actions">
@@ -235,7 +234,7 @@
         <button
           type="button"
           class="est-btn-primary"
-          (click)="irPara('est-acompanhamento')"
+          (click)="navegarSecao('est-acompanhamento')"
         >
           <span>Acompanhar candidatura</span>
 
@@ -254,7 +253,7 @@
         <button
           type="button"
           class="est-btn-light"
-          (click)="irPara('est-perfil')"
+          (click)="navegarSecao('est-perfil')"
         >
           Ver meu perfil
         </button>
@@ -267,7 +266,7 @@
 
 
   <!-- =========================================================
-       CONTEÚDO PRINCIPAL
+       CONTEÃšDO PRINCIPAL
        ========================================================= -->
   <main
     id="conteudo-principal"
@@ -296,7 +295,7 @@
           <strong>A carregar o teu painel</strong>
 
           <span>
-            Estamos a preparar as informações da candidatura.
+            Estamos a preparar as informaÃ§Ãµes da candidatura.
           </span>
         </div>
 
@@ -341,7 +340,7 @@
 
         <div>
           <strong>
-            Não foi possível carregar o painel
+            NÃ£o foi possÃ­vel carregar o painel
           </strong>
 
           <span>
@@ -367,6 +366,7 @@
          ======================================================= -->
     @if (candidatura(); as c) {
 
+      
 
       <!-- =====================================================
            ESTADO DA CANDIDATURA
@@ -390,15 +390,8 @@
               {{ estado().titulo }}
             </h2>
 
-            <span
-              class="est-badge"
-              role="status"
-            >
-              <i
-                class="est-dot"
-                aria-hidden="true"
-              ></i>
-
+            <span class="est-badge">
+              <i class="est-dot" aria-hidden="true"></i>
               {{ estado().badge }}
             </span>
 
@@ -411,31 +404,29 @@
         </div>
 
 
-        <!-- Progresso -->
-        <ol
+        <!-- Progresso da candidatura -->
+        <div
           class="est-progress"
           aria-label="Progresso da candidatura"
         >
 
           <!-- Etapa 1 -->
-          <li class="est-step done">
+          <div class="est-step done">
 
             <div
               class="est-step-circle"
               aria-hidden="true"
             >
-              ✓
+              âœ“
             </div>
 
-            <span>
-              Candidatura
-            </span>
+            <span>Candidatura</span>
 
-          </li>
+          </div>
 
 
           <!-- Etapa 2 -->
-          <li
+          <div
             id="est-passo2"
             [class]="'est-step ' + estado().p2"
           >
@@ -444,24 +435,20 @@
               class="est-step-circle"
               aria-hidden="true"
             >
-
               @if (estado().p2 === 'done') {
-                ✓
+                âœ“
               } @else {
                 2
               }
-
             </div>
 
-            <span>
-              Análise
-            </span>
+            <span>AnÃ¡lise</span>
 
-          </li>
+          </div>
 
 
           <!-- Etapa 3 -->
-          <li
+          <div
             id="est-passo3"
             [class]="'est-step ' + estado().p3"
           >
@@ -477,15 +464,15 @@
               {{ estado().l3 }}
             </span>
 
-          </li>
+          </div>
 
-        </ol>
+        </div>
 
       </section>
 
 
       <!-- =====================================================
-           PERFIL / DADOS DO CANDIDATO
+           PERFIL DO CANDIDATO
            ===================================================== -->
       <section
         id="est-perfil"
@@ -493,7 +480,7 @@
         aria-labelledby="titulo-perfil"
       >
 
-        <header class="est-section-head">
+        <div class="est-section-head">
 
           <div>
             <span class="section-kicker">
@@ -505,21 +492,17 @@
             </h2>
 
             <p>
-              Informações fornecidas durante a candidatura.
+              InformaÃ§Ãµes fornecidas durante a candidatura.
             </p>
           </div>
 
-        </header>
+        </div>
 
 
         <div class="est-grid">
 
-
           <!-- Dados pessoais -->
-          <article
-            class="est-card"
-            aria-labelledby="titulo-dados-pessoais"
-          >
+          <article class="est-card">
 
             <div class="est-card-top">
 
@@ -546,66 +529,57 @@
               </div>
 
               <div>
-
                 <span class="card-label">
-                  IDENTIFICAÇÃO
+                  IDENTIFICAÃ‡ÃƒO
                 </span>
 
-                <h3 id="titulo-dados-pessoais">
-                  Dados pessoais
-                </h3>
-
+                <h3>Dados pessoais</h3>
               </div>
 
             </div>
 
 
-            <dl class="est-data">
+            <div class="est-data">
 
               <div class="est-data-row">
-                <dt>Nome completo</dt>
-                <dd>{{ c.nome }}</dd>
+                <span>Nome completo</span>
+                <strong>{{ c.nome }}</strong>
               </div>
 
               <div class="est-data-row">
-                <dt>N.º de identificação</dt>
-                <dd>{{ c.bi }}</dd>
+                <span>N.Âº de identificaÃ§Ã£o</span>
+                <strong>{{ c.bi }}</strong>
               </div>
 
               <div class="est-data-row">
-                <dt>Contacto</dt>
-                <dd>{{ c.contacto }}</dd>
+                <span>Contacto</span>
+                <strong>{{ c.contacto }}</strong>
               </div>
 
               <div class="est-data-row">
-                <dt>E-mail</dt>
-                <dd>{{ c.email }}</dd>
+                <span>E-mail</span>
+                <strong>{{ c.email }}</strong>
               </div>
 
               <div class="est-data-row">
-                <dt>Data de nascimento</dt>
-                <dd>
-                  <time [attr.datetime]="c.nascimento">
-                    {{ c.nascimento | date:'dd/MM/yyyy' }}
-                  </time>
-                </dd>
+                <span>Data de nascimento</span>
+                <strong>
+                  {{ c.nascimento | date:'dd/MM/yyyy' }}
+                </strong>
               </div>
 
               <div class="est-data-row">
-                <dt>Sexo</dt>
-                <dd>{{ c.sexo }}</dd>
+                <span>Sexo</span>
+                <strong>{{ c.sexo }}</strong>
               </div>
 
-            </dl>
+            </div>
 
           </article>
 
 
-          <!-- Formação -->
-          <article
-            class="est-card"
-            aria-labelledby="titulo-dados-academicos"
-          >
+          <!-- FormaÃ§Ã£o acadÃ©mica -->
+          <article class="est-card">
 
             <div class="est-card-top">
 
@@ -626,40 +600,37 @@
               </div>
 
               <div>
-
                 <span class="card-label">
-                  FORMAÇÃO
+                  FORMAÃ‡ÃƒO
                 </span>
 
-                <h3 id="titulo-dados-academicos">
-                  Dados académicos
-                </h3>
-
+                <h3>Dados acadÃ©micos</h3>
               </div>
 
             </div>
 
 
-            <dl class="est-data">
+            <div class="est-data">
 
               <div class="est-data-row">
-                <dt>Curso</dt>
-                <dd>{{ c.curso }}</dd>
+                <span>Curso</span>
+                <strong>{{ c.curso }}</strong>
               </div>
 
               <div class="est-data-row">
-                <dt>Instituição</dt>
-                <dd>{{ c.universidade }}</dd>
+                <span>InstituiÃ§Ã£o</span>
+                <strong>{{ c.universidade }}</strong>
               </div>
 
               <div class="est-data-row est-data-full">
-                <dt>Direção pretendida</dt>
-                <dd>
-                  {{ c.departamento ?? 'A definir' }}
-                </dd>
+                <span>DireÃ§Ã£o pretendida</span>
+
+                <strong>
+                  {{ c.departamento || 'A definir' }}
+                </strong>
               </div>
 
-            </dl>
+            </div>
 
           </article>
 
@@ -669,7 +640,7 @@
 
 
       <!-- =====================================================
-           DOCUMENTOS
+           DOCUMENTOS DO CANDIDATO
            ===================================================== -->
       <section
         id="est-documentos"
@@ -677,38 +648,32 @@
         aria-labelledby="titulo-documentos"
       >
 
-        <header class="est-section-head">
+        <div class="est-section-head">
 
           <div>
-
             <span class="section-kicker">
-              DOCUMENTAÇÃO
+              DOCUMENTAÃ‡ÃƒO
             </span>
 
             <h2 id="titulo-documentos">
               Os meus documentos
             </h2>
 
-            <p id="descricao-documentos">
-              Documentos associados à tua candidatura.
+            <p>
+              Consulta os documentos associados Ã  tua candidatura.
             </p>
-
           </div>
 
-        </header>
+        </div>
 
 
-        <!-- Informação de segurança -->
-        <aside
-          class="est-bloqueio"
-          aria-label="Informação de segurança dos documentos"
-        >
+        <!-- InformaÃ§Ã£o de seguranÃ§a -->
+        <div class="est-bloqueio">
 
           <div
             class="bloqueio-icon"
             aria-hidden="true"
           >
-
             <svg
               class="ic"
               viewBox="0 0 24 24"
@@ -721,101 +686,124 @@
 
               <path d="M9 12l2 2 4-4"></path>
             </svg>
-
           </div>
 
           <div>
-
-            <strong>
-              Documentação protegida
-            </strong>
+            <strong>DocumentaÃ§Ã£o protegida</strong>
 
             <span>
-              Os documentos são armazenados de forma segura
-              e apenas ficam disponíveis ao utilizador autorizado.
+              Os documentos sÃ£o armazenados de forma segura
+              e apenas ficam disponÃ­veis ao utilizador autorizado.
+            </span>
+          </div>
+
+        </div>
+
+
+        <!-- Mensagem de sucesso -->
+        @if (sucessoDocumento()) {
+
+          <div
+            class="est-aviso est-aviso--sucesso"
+            role="status"
+            aria-live="polite"
+          >
+
+            <strong>Documento atualizado</strong>
+
+            <span>
+              {{ sucessoDocumento() }}
             </span>
 
           </div>
 
-        </aside>
+        }
+
+
+        <!-- Mensagem de erro -->
+        @if (erroDocumento()) {
+
+          <div
+            class="est-aviso est-aviso--erro"
+            role="alert"
+            aria-live="assertive"
+          >
+
+            <strong>
+              NÃ£o foi possÃ­vel substituir o documento
+            </strong>
+
+            <span>
+              {{ erroDocumento() }}
+            </span>
+
+          </div>
+
+        }
 
 
         <!-- Lista de documentos -->
-        <ul
-          class="est-docs"
-          aria-describedby="descricao-documentos"
-        >
+        <div class="est-docs">
 
           @for (
             d of c.documentos;
             track d.id_documento
           ) {
 
-            <li class="est-doc-list-item">
+            <article class="est-doc">
 
-              <article
-                class="est-doc"
-                [attr.aria-labelledby]="'documento-' + d.id_documento"
-              >
+              <!-- IdentificaÃ§Ã£o do documento -->
+              <div class="est-doc-prev">
 
-                <!-- Tipo -->
-                <div
-                  class="est-doc-prev"
-                  aria-hidden="true"
-                >
+                <div class="doc-type">
+                  {{ extensao(d) }}
+                </div>
 
-                  <div class="doc-type">
-                    {{ extensao(d) }}
+              </div>
+
+
+              <!-- InformaÃ§Ã£o e aÃ§Ãµes -->
+              <div class="est-doc-content">
+
+                <div class="est-doc-head">
+
+                  <div>
+                    <span class="doc-label">
+                      DOCUMENTO
+                    </span>
+
+                    <h3>
+                      {{ tituloDocumento(d) }}
+                    </h3>
                   </div>
+
+
+                  <span
+                    class="est-doc-status"
+                    [class.rejeitado]="d.estado === 'rejeitado'"
+                  >
+                    {{ rotuloEstadoDocumento(d) }}
+                  </span>
 
                 </div>
 
 
-                <!-- Conteúdo -->
-                <div class="est-doc-content">
-
-                  <div class="est-doc-head">
-
-                    <div>
-
-                      <span class="doc-label">
-                        DOCUMENTO
-                      </span>
-
-                      <h3
-                        [id]="'documento-' + d.id_documento"
-                      >
-                        {{ tituloDocumento(d) }}
-                      </h3>
-
-                    </div>
+                <p>
+                  {{ d.nome_arquivo || 'Documento enviado' }}
+                </p>
 
 
-                    <span class="est-doc-status">
-                      {{ rotuloEstadoDocumento(d) }}
-                    </span>
-
-                  </div>
-
-
-                  <p>
-                    {{ d.nome_arquivo || 'Documento enviado' }}
-                  </p>
-
+                <!-- Visualizar documento -->
+                <div class="est-doc-actions">
 
                   <button
                     type="button"
                     class="est-doc-ver"
+                    [disabled]="documentoEmSubstituicao() !== null"
                     (click)="ver(d)"
-                    [attr.aria-label]="
-                      'Ver documento ' +
-                      (d.nome_arquivo || tituloDocumento(d))
-                    "
                   >
 
-                    <span>
-                      Ver documento
-                    </span>
+                    <span>Ver documento</span>
 
                     <svg
                       class="ic"
@@ -836,21 +824,105 @@
 
                   </button>
 
+
+                  <!-- Substituir documento -->
+                  <div class="est-doc-substituicao">
+
+                    <input
+                      type="file"
+                      [id]="'ficheiro-documento-' + d.id_documento"
+                      [attr.aria-label]="'Selecionar novo ficheiro para ' + tituloDocumento(d)"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      [disabled]="
+                        c.estado !== 'analise' ||
+                        documentoEmSubstituicao() !== null
+                      "
+                      (change)="substituirDocumento(d, $event)"
+                      hidden
+                    >
+
+                    <label
+                      [for]="'ficheiro-documento-' + d.id_documento"
+                      class="est-doc-substituir"
+                      [class.is-disabled]="
+                        c.estado !== 'analise' ||
+                        documentoEmSubstituicao() !== null
+                      "
+                      [attr.aria-disabled]="
+                        c.estado !== 'analise' ||
+                        documentoEmSubstituicao() !== null
+                      "
+                    >
+
+                      @if (
+                        documentoEmSubstituicao() === d.id_documento
+                      ) {
+
+                        <span>
+                          A enviar...
+                        </span>
+
+                      } @else {
+
+                        <span>
+                          Substituir documento
+                        </span>
+
+                      }
+
+                    </label>
+
+                  </div>
+
                 </div>
 
-              </article>
 
-            </li>
+                <!-- ExplicaÃ§Ã£o da substituiÃ§Ã£o -->
+                @if (c.estado === 'analise') {
+
+                  <small class="est-doc-ajuda">
+                    Formatos aceites: PDF, JPG e PNG.
+                    Tamanho mÃ¡ximo: 5 MB.
+                  </small>
+
+                } @else {
+
+                  <small class="est-doc-ajuda">
+                    A substituiÃ§Ã£o sÃ³ estÃ¡ disponÃ­vel
+                    enquanto a candidatura estiver em anÃ¡lise.
+                  </small>
+
+                }
+
+              </div>
+
+            </article>
+
+          } @empty {
+
+            <div class="est-vazio">
+
+              <strong>
+                Ainda nÃ£o existem documentos
+              </strong>
+
+              <p>
+                NÃ£o foram encontrados documentos associados
+                Ã  tua candidatura.
+              </p>
+
+            </div>
 
           }
 
-        </ul>
+        </div>
 
       </section>
 
 
+
       <!-- =====================================================
-           HISTÓRICO
+           HISTÃ“RICO DA CANDIDATURA
            ===================================================== -->
       <section
         id="est-historico"
@@ -858,38 +930,33 @@
         aria-labelledby="titulo-historico"
       >
 
-        <header class="est-section-head">
+        <div class="est-section-head">
 
           <div>
-
             <span class="section-kicker">
               PROCESSO
             </span>
 
             <h2 id="titulo-historico">
-              Histórico da candidatura
+              HistÃ³rico da candidatura
             </h2>
 
             <p>
               Acompanha os principais momentos do teu processo.
             </p>
-
           </div>
 
-        </header>
+        </div>
 
 
-        <ol
-          class="est-hist"
-          aria-label="Histórico da candidatura"
-        >
+        <div class="est-hist">
 
           @for (
             h of historico();
             track $index
           ) {
 
-            <li
+            <div
               class="hist-item"
               [class.hist-bad]="h.classe === 'bad'"
             >
@@ -913,33 +980,45 @@
 
               </div>
 
-              <time
-                [attr.datetime]="h.data"
-              >
+              <time>
                 {{ formatarData(h.data) }}
               </time>
 
-            </li>
+            </div>
+
+          } @empty {
+
+            <div class="est-vazio">
+
+              <strong>
+                Sem histÃ³rico disponÃ­vel
+              </strong>
+
+              <p>
+                Ainda nÃ£o existem atualizaÃ§Ãµes registadas
+                para apresentar.
+              </p>
+
+            </div>
 
           }
 
-        </ol>
+        </div>
 
       </section>
 
 
       <!-- =====================================================
-           INFORMAÇÕES ADICIONAIS
+           INFORMAÃ‡Ã•ES ADICIONAIS
            ===================================================== -->
       <section
         class="est-section"
-        aria-labelledby="titulo-informacao"
+        aria-labelledby="titulo-informacoes"
       >
 
         <div class="est-info">
 
-
-          <!-- Próximos passos -->
+          <!-- PrÃ³ximos passos -->
           <article class="est-note">
 
             <div
@@ -969,19 +1048,20 @@
             <div>
 
               <span class="section-kicker">
-                INFORMAÇÃO
+                INFORMAÃ‡ÃƒO
               </span>
 
-              <h2 id="titulo-informacao">
+              <h2 id="titulo-informacoes">
                 O que acontece a seguir?
               </h2>
 
               <p>
-                Mantém os teus contactos atualizados
-                e acompanha regularmente este painel.
-                Caso a candidatura seja aceite,
-                receberás informações sobre os próximos
-                passos do processo de estágio.
+                MantÃ©m os teus contactos atualizados e
+                acompanha regularmente este painel.
+
+                Caso a candidatura seja aceite, receberÃ¡s
+                informaÃ§Ãµes sobre os prÃ³ximos passos
+                do processo de estÃ¡gio.
               </p>
 
             </div>
@@ -989,26 +1069,22 @@
           </article>
 
 
-          <!-- Resumo -->
-          <article
-            class="est-date"
-            aria-label="Resumo da candidatura"
-          >
+          <!-- Resumo da candidatura -->
+          <article class="est-date">
 
             <span>
               DATA DA CANDIDATURA
             </span>
 
-            <time
-              [attr.datetime]="c.data_submissao"
-            >
+            <strong>
               {{ formatarData(c.data_submissao) }}
-            </time>
+            </strong>
 
             <small>
-              Direção:
+              DireÃ§Ã£o:
+
               <b>
-                {{ c.departamento ?? 'A definir' }}
+                {{ c.departamento || 'A definir' }}
               </b>
             </small>
 
@@ -1020,53 +1096,47 @@
 
     }
 
+
+    <!-- =======================================================
+         FIM DOS DADOS DA CANDIDATURA
+         ======================================================= -->
+
   </main>
 
 
   <!-- =========================================================
-       RODAPÉ
+       RODAPÃ‰
        ========================================================= -->
   <footer class="rodape">
 
     <div class="rodape-in">
 
-
-      <!-- Marca -->
-      <section
-        class="rodape-brand"
-        aria-labelledby="titulo-rodape"
-      >
+      <!-- Marca institucional -->
+      <div class="rodape-brand">
 
         <div class="rodape-logo">
 
           <img
             src="assets/img/multitel.png"
-            alt="Logótipo Multitel"
+            alt="LogÃ³tipo Multitel"
           >
 
-          <span id="titulo-rodape">
-            MULTITEL
-          </span>
+          <span>MULTITEL</span>
 
         </div>
 
         <p>
-          Portal de gestão e acompanhamento
-          de candidaturas ao programa de estágios.
+          Portal de gestÃ£o e acompanhamento
+          de candidaturas ao programa de estÃ¡gios.
         </p>
 
-      </section>
+      </div>
 
 
       <!-- Contactos -->
-      <section
-        class="rodape-contactos"
-        aria-labelledby="titulo-contactos"
-      >
+      <div class="rodape-contactos">
 
-        <h2 id="titulo-contactos">
-          Contactos
-        </h2>
+        <h4>CONTACTOS</h4>
 
 
         <div class="rodape-contacto">
@@ -1090,15 +1160,8 @@
           </div>
 
           <div>
-            <strong>
-              <a href="tel:+244223530000">
-                223 530 000
-              </a>
-            </strong>
-
-            <span>
-              Linha de apoio
-            </span>
+            <strong>223 530 000</strong>
+            <span>Linha de apoio</span>
           </div>
 
         </div>
@@ -1131,57 +1194,42 @@
           </div>
 
           <div>
-            <strong>
-              Multitel
-            </strong>
-
-            <span>
-              Contacto institucional
-            </span>
+            <strong>Multitel</strong>
+            <span>Contacto institucional</span>
           </div>
 
         </div>
 
-      </section>
+      </div>
 
 
-      <!-- Links -->
+      <!-- NavegaÃ§Ã£o do rodapÃ© -->
       <nav
         class="rodape-links"
-        aria-label="Navegação complementar"
+        aria-label="Links do portal"
       >
 
-        <h2>
-          Portal
-        </h2>
+        <h4>PORTAL</h4>
 
-        <ul>
+        <a href="#est-inicio">
+          InÃ­cio
+        </a>
 
-          <li>
-            <a href="#est-inicio">
-              Início
-            </a>
-          </li>
+        <a href="#est-inicio" (click)="$event.preventDefault(); navegarSecao('est-inicio')">
+          Início
+        </a>
 
-          <li>
-            <a href="#est-perfil">
-              Meu perfil
-            </a>
-          </li>
+        <a href="#est-perfil" (click)="$event.preventDefault(); navegarSecao('est-perfil')">
+          Meu perfil
+        </a>
 
-          <li>
-            <a href="#est-documentos">
-              Documentos
-            </a>
-          </li>
+        <a href="#est-documentos" (click)="$event.preventDefault(); navegarSecao('est-documentos')">
+          Documentos
+        </a>
 
-          <li>
-            <a href="#est-acompanhamento">
-              Acompanhamento
-            </a>
-          </li>
-
-        </ul>
+        <a href="#est-acompanhamento" (click)="$event.preventDefault(); navegarSecao('est-acompanhamento')">
+          Acompanhamento
+        </a>
 
       </nav>
 
@@ -1190,9 +1238,10 @@
 
     <!-- Copyright -->
     <div class="rodape-fim">
-      © 2026 Multitel · Portal de Estágios
+      Â© 2026 Multitel Â· Portal de EstÃ¡gios
     </div>
 
   </footer>
 
 </div>
+

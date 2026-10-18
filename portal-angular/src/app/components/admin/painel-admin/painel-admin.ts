@@ -14,14 +14,9 @@ import {
   SafeResourceUrl
 } from '@angular/platform-browser';
 
-import {
-  Router,
-  RouterLink
-} from '@angular/router';
+import { Router } from '@angular/router';
 
-import {
-  Subscription
-} from 'rxjs';
+import { Subscription } from 'rxjs';
 
 import {
   AdminService,
@@ -29,206 +24,238 @@ import {
   Candidatura,
   CandidaturasResponse,
   Departamento,
-  Documento
+  DepartamentoDados,
+  Documento,
+  Estagiario,
+  EstagiariosResponse
 } from '../../../services/admin.service';
 
-import {
-  AuthService
-} from '../../../core/auth.service';
+import { AuthService } from '../../../core/auth.service';
+
+
+type SecaoAdmin =
+  | 'dashboard'
+  | 'candidaturas'
+  | 'departamentos'
+  | 'estagiarios'
+  | 'utilizadores';
+
+
+type EstadoEstagio =
+  | 'ativo'
+  | 'suspenso'
+  | 'concluido'
+  | 'cancelado';
 
 
 @Component({
   selector: 'app-painel-admin',
-
   standalone: true,
 
   imports: [
-    CommonModule,
-    RouterLink
+    CommonModule
   ],
 
   templateUrl: './painel-admin.html',
-
   styleUrl: './painel-admin.css'
 })
 export class PainelAdmin implements OnInit, OnDestroy {
 
   // ============================================================
+  // SECÇÃO ATIVA
+  // ============================================================
+
+  secaoAtiva = signal<SecaoAdmin>('dashboard');
+
+
+  // ============================================================
   // SERVIÇOS
   // ============================================================
 
-  private readonly adminService =
-    inject(AdminService);
+  private readonly adminService = inject(AdminService);
 
-  private readonly authService =
-    inject(AuthService);
+  private readonly authService = inject(AuthService);
 
-  private readonly router =
-    inject(Router);
+  private readonly router = inject(Router);
 
-  private readonly sanitizer =
-    inject(DomSanitizer);
+  private readonly sanitizer = inject(DomSanitizer);
 
-  private readonly platformId =
-    inject(PLATFORM_ID);
+  private readonly platformId = inject(PLATFORM_ID);
 
-  private readonly subscriptions =
-    new Subscription();
+  private readonly subscriptions = new Subscription();
 
 
   // ============================================================
   // DASHBOARD
   // ============================================================
 
-  dashboard =
-    signal<DashboardAdmin>({
-      total_candidaturas: 0,
-      em_analise: 0,
-      aprovadas: 0,
-      recusadas: 0
-    });
+  dashboard = signal<DashboardAdmin>({
+    total_candidaturas: 0,
+    em_analise: 0,
+    aprovadas: 0,
+    recusadas: 0
+  });
 
 
   // ============================================================
   // CANDIDATURAS
   // ============================================================
 
-  candidaturas =
-    signal<Candidatura[]>([]);
+  candidaturas = signal<Candidatura[]>([]);
 
-  candidaturaSelecionada =
-    signal<Candidatura | null>(null);
+  candidaturaSelecionada = signal<Candidatura | null>(null);
 
 
   // ============================================================
-  // DEPARTAMENTOS / DIREÇÕES
+  // ESTAGIÁRIOS
   // ============================================================
 
-  departamentos =
-    signal<Departamento[]>([]);
+  estagiarios = signal<Estagiario[]>([]);
+
+  pesquisaEstagiarios = signal('');
+
+  estadoEstagiarios = signal('');
+
+  carregandoEstagiarios = signal(false);
+
+  erroEstagiarios = signal('');
+
+
+  // ============================================================
+  // DEPARTAMENTOS
+  // ============================================================
+
+  departamentos = signal<Departamento[]>([]);
+
+  mostrarFormularioDepartamento = signal(false);
+
+  departamentoEmEdicao = signal<Departamento | null>(null);
+
+  nomeDepartamento = signal('');
+
+  descricaoDepartamento = signal('');
+
+  ativoDepartamento = signal(true);
+
+  guardandoDepartamento = signal(false);
+
+  erroFormularioDepartamento = signal('');
+
+  sucessoDepartamento = signal('');
 
 
   // ============================================================
   // PESQUISA E FILTROS
   // ============================================================
 
-  pesquisa =
-    signal('');
+  pesquisa = signal('');
 
-  estadoSelecionado =
-    signal('');
+  estadoSelecionado = signal('');
 
-  departamentoSelecionado =
-    signal<number | null>(null);
+  departamentoSelecionado = signal<number | null>(null);
 
 
   // ============================================================
   // PAGINAÇÃO
   // ============================================================
 
-  paginaAtual =
-    signal(1);
+  paginaAtual = signal(1);
 
-  ultimaPagina =
-    signal(1);
+  ultimaPagina = signal(1);
 
-  totalCandidaturas =
-    signal(0);
+  totalCandidaturas = signal(0);
 
-  porPagina =
-    signal(15);
+  porPagina = signal(15);
 
 
   // ============================================================
   // CARREGAMENTOS
   // ============================================================
 
-  carregandoDashboard =
-    signal(false);
+  carregandoDashboard = signal(false);
 
-  carregandoCandidaturas =
-    signal(false);
+  carregandoCandidaturas = signal(false);
 
-  carregandoDepartamentos =
-    signal(false);
+  carregandoDepartamentos = signal(false);
 
-  carregandoDetalhes =
-    signal(false);
+  carregandoDetalhes = signal(false);
 
-  processandoDecisao =
-    signal(false);
+  processandoDecisao = signal(false);
 
-  abrindoDocumento =
-    signal(false);
+  abrindoDocumento = signal(false);
 
 
   // ============================================================
   // ERROS
   // ============================================================
 
-  erroDashboard =
-    signal('');
+  erroDashboard = signal('');
 
-  erroCandidaturas =
-    signal('');
+  erroCandidaturas = signal('');
 
-  erroDepartamentos =
-    signal('');
+  erroDepartamentos = signal('');
 
-  erroDetalhes =
-    signal('');
+  erroDetalhes = signal('');
 
-  erroDecisao =
-    signal('');
+  erroDecisao = signal('');
 
-  erroDocumento =
-    signal('');
+  erroDocumento = signal('');
 
 
   // ============================================================
   // SUCESSO
   // ============================================================
 
-  sucessoDecisao =
-    signal('');
+  sucessoDecisao = signal('');
 
 
   // ============================================================
   // RECUSA
   // ============================================================
 
-  mostrarRecusa =
-    signal(false);
+  mostrarRecusa = signal(false);
 
-  motivoRecusa =
-    signal('');
+  motivoRecusa = signal('');
 
 
   // ============================================================
   // PREVIEW DE DOCUMENTO
   // ============================================================
 
-  documentoPreviewAberto =
-    signal(false);
+  documentoPreviewAberto = signal(false);
 
-  documentoPreviewUrl =
-    signal<string | null>(null);
+  documentoPreviewUrl = signal<string | null>(null);
 
-  documentoPreviewPdfUrl =
-    signal<SafeResourceUrl | null>(null);
+  documentoPreviewPdfUrl = signal<SafeResourceUrl | null>(null);
 
-  documentoPreviewTipo =
-    signal('');
+  documentoPreviewTipo = signal('');
 
-  documentoPreviewNome =
-    signal('');
+  documentoPreviewNome = signal('');
 
-  /*
-   * Guardamos o Blob URL original do PDF para
-   * poder revogá-lo corretamente.
-   */
-  private documentoPreviewBlobUrl:
-    string | null = null;
+  private documentoPreviewBlobUrl: string | null = null;
+
+
+  // ============================================================
+  // GESTÃO DO ESTÁGIO
+  // ============================================================
+
+  estagioEmGestao = signal<Estagiario | null>(null);
+
+  estadoEstagioFormulario = signal<EstadoEstagio>('ativo');
+
+  inicioEstagioFormulario = signal('');
+
+  fimEstagioFormulario = signal('');
+
+  motivoSuspensaoFormulario = signal('');
+
+  aGuardarEstadoEstagio = signal(false);
+
+  erroGestaoEstagio = signal('');
+
+  sucessoGestaoEstagio = signal('');
+
+  duracaoMesesFormulario = signal(2);
 
 
   // ============================================================
@@ -236,7 +263,6 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   ngOnInit(): void {
-
     this.carregarDashboard();
 
     this.carregarDepartamentos();
@@ -246,7 +272,6 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
 
   ngOnDestroy(): void {
-
     this.fecharPreviewDocumento();
 
     this.subscriptions.unsubscribe();
@@ -258,86 +283,332 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   carregarDashboard(): void {
-
     this.carregandoDashboard.set(true);
 
     this.erroDashboard.set('');
 
-    const sub =
-      this.adminService
-        .dashboard()
-        .subscribe({
+    const sub = this.adminService.dashboard().subscribe({
+      next: (dados) => {
+        this.dashboard.set(dados);
 
-          next: (dados) => {
+        this.carregandoDashboard.set(false);
+      },
 
-            this.dashboard.set(dados);
+      error: (erro: unknown) => {
+        console.error('Erro ao carregar dashboard:', erro);
 
-            this.carregandoDashboard.set(false);
-          },
+        this.carregandoDashboard.set(false);
 
-          error: (erro: unknown) => {
-
-            console.error(
-              'Erro ao carregar dashboard:',
-              erro
-            );
-
-            this.carregandoDashboard.set(false);
-
-            this.erroDashboard.set(
-              'Não foi possível carregar os indicadores.'
-            );
-          }
-
-        });
+        this.erroDashboard.set(
+          'Não foi possível carregar os indicadores.'
+        );
+      }
+    });
 
     this.subscriptions.add(sub);
   }
 
 
   // ============================================================
-  // CARREGAR DEPARTAMENTOS / DIREÇÕES
+  // CARREGAR DEPARTAMENTOS
   // ============================================================
 
   carregarDepartamentos(): void {
-
     this.carregandoDepartamentos.set(true);
 
     this.erroDepartamentos.set('');
 
-    const sub =
-      this.adminService
-        .listarDepartamentos()
+    const sub = this.adminService.listarDepartamentos().subscribe({
+      next: (dados) => {
+        const ordenados = [...(dados ?? [])].sort((a, b) => {
+          const totalA = Number(a.estagiarios_ativos ?? 0);
+
+          const totalB = Number(b.estagiarios_ativos ?? 0);
+
+          return totalB - totalA ||
+            a.nome.localeCompare(b.nome, 'pt');
+        });
+
+        this.departamentos.set(ordenados);
+
+        this.carregandoDepartamentos.set(false);
+      },
+
+      error: (erro: unknown) => {
+        console.error('Erro ao carregar departamentos:', erro);
+
+        this.departamentos.set([]);
+
+        this.carregandoDepartamentos.set(false);
+
+        this.erroDepartamentos.set(
+          'Não foi possível carregar os departamentos.'
+        );
+      }
+    });
+
+    this.subscriptions.add(sub);
+  }
+
+
+  // ============================================================
+  // NOVO DEPARTAMENTO
+  // ============================================================
+
+  novoDepartamento(): void {
+    this.departamentoEmEdicao.set(null);
+
+    this.nomeDepartamento.set('');
+
+    this.descricaoDepartamento.set('');
+
+    this.ativoDepartamento.set(true);
+
+    this.erroFormularioDepartamento.set('');
+
+    this.sucessoDepartamento.set('');
+
+    this.mostrarFormularioDepartamento.set(true);
+  }
+
+
+  // ============================================================
+  // EDITAR DEPARTAMENTO
+  // ============================================================
+
+  editarDepartamento(departamento: Departamento): void {
+    this.departamentoEmEdicao.set(departamento);
+
+    this.nomeDepartamento.set(departamento.nome);
+
+    this.descricaoDepartamento.set(
+      departamento.descricao ?? ''
+    );
+
+    this.ativoDepartamento.set(
+      departamento.ativo ?? true
+    );
+
+    this.erroFormularioDepartamento.set('');
+
+    this.sucessoDepartamento.set('');
+
+    this.mostrarFormularioDepartamento.set(true);
+  }
+
+
+  // ============================================================
+  // ALTERAR NOME DO DEPARTAMENTO
+  // ============================================================
+
+  alterarNomeDepartamento(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    this.nomeDepartamento.set(input.value);
+  }
+
+
+  // ============================================================
+  // ALTERAR DESCRIÇÃO DO DEPARTAMENTO
+  // ============================================================
+
+  alterarDescricaoDepartamento(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+
+    this.descricaoDepartamento.set(textarea.value);
+  }
+
+
+  // ============================================================
+  // ALTERAR ESTADO DO DEPARTAMENTO
+  // ============================================================
+
+  alterarAtivoDepartamento(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    this.ativoDepartamento.set(input.checked);
+  }
+
+
+  // ============================================================
+  // CANCELAR FORMULÁRIO DE DEPARTAMENTO
+  // ============================================================
+
+  cancelarFormularioDepartamento(): void {
+    this.mostrarFormularioDepartamento.set(false);
+
+    this.departamentoEmEdicao.set(null);
+
+    this.nomeDepartamento.set('');
+
+    this.descricaoDepartamento.set('');
+
+    this.ativoDepartamento.set(true);
+
+    this.erroFormularioDepartamento.set('');
+  }
+
+
+  // ============================================================
+  // GUARDAR DEPARTAMENTO
+  // ============================================================
+
+  guardarDepartamento(): void {
+    if (this.guardandoDepartamento()) {
+      return;
+    }
+
+    const nome = this.nomeDepartamento().trim();
+
+    const descricao = this.descricaoDepartamento().trim();
+
+    this.erroFormularioDepartamento.set('');
+
+    this.sucessoDepartamento.set('');
+
+    if (!nome) {
+      this.erroFormularioDepartamento.set(
+        'Introduz o nome do departamento.'
+      );
+
+      return;
+    }
+
+    if (nome.length > 255) {
+      this.erroFormularioDepartamento.set(
+        'O nome não pode ultrapassar 255 caracteres.'
+      );
+
+      return;
+    }
+
+    const dados: DepartamentoDados = {
+      nome,
+      descricao: descricao || null
+    };
+
+    const departamento = this.departamentoEmEdicao();
+
+    this.guardandoDepartamento.set(true);
+
+    if (departamento) {
+      dados.ativo = this.ativoDepartamento();
+
+      const sub = this.adminService
+        .atualizarDepartamento(
+          departamento.id_departamento,
+          dados
+        )
         .subscribe({
+          next: (resposta) => {
+            this.guardandoDepartamento.set(false);
 
-          next: (dados) => {
+            this.mostrarFormularioDepartamento.set(false);
 
-            this.departamentos.set(
-              dados ?? []
+            this.departamentoEmEdicao.set(null);
+
+            this.sucessoDepartamento.set(
+              resposta.mensagem ||
+              'Departamento atualizado com sucesso.'
             );
 
-            this.carregandoDepartamentos.set(false);
+            this.carregarDepartamentos();
           },
 
           error: (erro: unknown) => {
-
             console.error(
-              'Erro ao carregar direções:',
+              'Erro ao editar departamento:',
               erro
             );
 
-            this.departamentos.set([]);
+            this.guardandoDepartamento.set(false);
 
-            this.carregandoDepartamentos.set(false);
-
-            this.erroDepartamentos.set(
-              'Não foi possível carregar as direções.'
+            this.erroFormularioDepartamento.set(
+              this.mensagemErroDepartamento(
+                erro,
+                'Não foi possível atualizar o departamento.'
+              )
             );
           }
-
         });
 
+      this.subscriptions.add(sub);
+
+      return;
+    }
+
+    const sub = this.adminService.criarDepartamento(dados).subscribe({
+      next: (resposta) => {
+        this.guardandoDepartamento.set(false);
+
+        this.mostrarFormularioDepartamento.set(false);
+
+        this.departamentoEmEdicao.set(null);
+
+        this.sucessoDepartamento.set(
+          resposta.mensagem ||
+          'Departamento criado com sucesso.'
+        );
+
+        this.carregarDepartamentos();
+      },
+
+      error: (erro: unknown) => {
+        console.error('Erro ao criar departamento:', erro);
+
+        this.guardandoDepartamento.set(false);
+
+        this.erroFormularioDepartamento.set(
+          this.mensagemErroDepartamento(
+            erro,
+            'Não foi possível criar o departamento.'
+          )
+        );
+      }
+    });
+
     this.subscriptions.add(sub);
+  }
+
+
+  // ============================================================
+  // MENSAGEM DE ERRO DO LARAVEL
+  // ============================================================
+
+  private mensagemErroDepartamento(
+    erro: unknown,
+    mensagemPadrao: string
+  ): string {
+    if (
+      typeof erro !== 'object' ||
+      erro === null ||
+      !('error' in erro)
+    ) {
+      return mensagemPadrao;
+    }
+
+    const resposta = (
+      erro as {
+        error?: {
+          message?: string;
+          errors?: Record<string, string[]>;
+        };
+      }
+    ).error;
+
+    const errosValidacao = resposta?.errors;
+
+    if (errosValidacao) {
+      const primeiroErro = Object.values(errosValidacao)
+        .flat()
+        .find((mensagem) => typeof mensagem === 'string');
+
+      if (primeiroErro) {
+        return primeiroErro;
+      }
+    }
+
+    return resposta?.message || mensagemPadrao;
   }
 
 
@@ -346,82 +617,123 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   carregarCandidaturas(): void {
-
     this.carregandoCandidaturas.set(true);
 
     this.erroCandidaturas.set('');
 
-    const sub =
-      this.adminService
-        .listarCandidaturas(
+    const sub = this.adminService.listarCandidaturas(
+      this.pesquisa(),
+      this.estadoSelecionado(),
+      this.departamentoSelecionado() ?? undefined,
+      this.paginaAtual(),
+      this.porPagina()
+    ).subscribe({
+      next: (resposta: CandidaturasResponse) => {
+        this.candidaturas.set(resposta.data ?? []);
 
-          this.pesquisa(),
+        this.totalCandidaturas.set(resposta.total ?? 0);
 
-          this.estadoSelecionado(),
+        this.ultimaPagina.set(
+          Math.max(resposta.last_page ?? 1, 1)
+        );
 
-          this.departamentoSelecionado()
-            ?? undefined,
+        this.paginaAtual.set(
+          resposta.current_page ?? 1
+        );
 
-          this.paginaAtual(),
+        this.carregandoCandidaturas.set(false);
+      },
 
-          this.porPagina()
+      error: (erro: unknown) => {
+        console.error('Erro ao carregar candidaturas:', erro);
 
-        )
-        .subscribe({
+        this.candidaturas.set([]);
 
-          next: (
-            resposta: CandidaturasResponse
-          ) => {
+        this.totalCandidaturas.set(0);
 
-            this.candidaturas.set(
-              resposta.data ?? []
-            );
+        this.ultimaPagina.set(1);
 
-            this.totalCandidaturas.set(
-              resposta.total ?? 0
-            );
+        this.carregandoCandidaturas.set(false);
 
-            this.ultimaPagina.set(
-              Math.max(
-                resposta.last_page ?? 1,
-                1
-              )
-            );
-
-            this.paginaAtual.set(
-              resposta.current_page ?? 1
-            );
-
-            this.carregandoCandidaturas.set(
-              false
-            );
-          },
-
-          error: (erro: unknown) => {
-
-            console.error(
-              'Erro ao carregar candidaturas:',
-              erro
-            );
-
-            this.candidaturas.set([]);
-
-            this.totalCandidaturas.set(0);
-
-            this.ultimaPagina.set(1);
-
-            this.carregandoCandidaturas.set(
-              false
-            );
-
-            this.erroCandidaturas.set(
-              'Não foi possível carregar as candidaturas.'
-            );
-          }
-
-        });
+        this.erroCandidaturas.set(
+          'Não foi possível carregar as candidaturas.'
+        );
+      }
+    });
 
     this.subscriptions.add(sub);
+  }
+
+
+  // ============================================================
+  // CARREGAR ESTAGIÁRIOS
+  // ============================================================
+
+  carregarEstagiarios(): void {
+    this.carregandoEstagiarios.set(true);
+
+    this.erroEstagiarios.set('');
+
+    const sub = this.adminService.listarEstagiarios(
+      this.pesquisaEstagiarios(),
+      this.estadoEstagiarios()
+    ).subscribe({
+      next: (resposta: EstagiariosResponse) => {
+        this.estagiarios.set(resposta.data ?? []);
+
+        this.carregandoEstagiarios.set(false);
+      },
+
+      error: (erro: unknown) => {
+        console.error('Erro ao carregar estagiários:', erro);
+
+        this.estagiarios.set([]);
+
+        this.erroEstagiarios.set(
+          'Não foi possível carregar os estagiários. Confirma a API Laravel.'
+        );
+
+        this.carregandoEstagiarios.set(false);
+      }
+    });
+
+    this.subscriptions.add(sub);
+  }
+
+
+  // ============================================================
+  // DIAS RESTANTES DO ESTÁGIO
+  // ============================================================
+
+  diasRestantes(estagiario: Estagiario): number | null {
+    if (!estagiario.data_fim_prevista) {
+      return null;
+    }
+
+    const hoje = new Date();
+
+    hoje.setHours(0, 0, 0, 0);
+
+    const fim = new Date(
+      estagiario.data_fim_prevista + 'T00:00:00'
+    );
+
+    if (Number.isNaN(fim.getTime())) {
+      return null;
+    }
+
+    return Math.ceil(
+      (fim.getTime() - hoje.getTime()) / 86400000
+    );
+  }
+
+
+  // ============================================================
+  // PESQUISAR ESTAGIÁRIOS
+  // ============================================================
+
+  pesquisarEstagiarios(): void {
+    this.carregarEstagiarios();
   }
 
 
@@ -430,7 +742,6 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   atualizarPainel(): void {
-
     this.erroDashboard.set('');
 
     this.erroCandidaturas.set('');
@@ -442,15 +753,18 @@ export class PainelAdmin implements OnInit, OnDestroy {
     this.carregarDepartamentos();
 
     this.carregarCandidaturas();
+
+    if (this.secaoAtiva() === 'estagiarios') {
+      this.carregarEstagiarios();
+    }
   }
 
 
   // ============================================================
-  // PESQUISAR
+  // PESQUISAR CANDIDATURAS
   // ============================================================
 
   pesquisar(): void {
-
     this.paginaAtual.set(1);
 
     this.carregarCandidaturas();
@@ -458,17 +772,13 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
 
   // ============================================================
-  // ALTERAR ESTADO
+  // ALTERAR ESTADO DA CANDIDATURA
   // ============================================================
 
   alterarEstado(event: Event): void {
+    const select = event.target as HTMLSelectElement;
 
-    const select =
-      event.target as HTMLSelectElement;
-
-    this.estadoSelecionado.set(
-      select.value
-    );
+    this.estadoSelecionado.set(select.value);
 
     this.paginaAtual.set(1);
 
@@ -477,23 +787,16 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
 
   // ============================================================
-  // ALTERAR DIREÇÃO
+  // ALTERAR DEPARTAMENTO DO FILTRO
   // ============================================================
 
-  alterarDepartamento(
-    event: Event
-  ): void {
+  alterarDepartamento(event: Event): void {
+    const select = event.target as HTMLSelectElement;
 
-    const select =
-      event.target as HTMLSelectElement;
-
-    const valor =
-      select.value;
+    const valor = select.value;
 
     this.departamentoSelecionado.set(
-      valor
-        ? Number(valor)
-        : null
+      valor ? Number(valor) : null
     );
 
     this.paginaAtual.set(1);
@@ -507,14 +810,11 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   limparFiltros(): void {
-
     this.pesquisa.set('');
 
     this.estadoSelecionado.set('');
 
-    this.departamentoSelecionado.set(
-      null
-    );
+    this.departamentoSelecionado.set(null);
 
     this.paginaAtual.set(1);
 
@@ -526,12 +826,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // NOME DO ESTADO
   // ============================================================
 
-  nomeEstado(
-    estado: Candidatura['estado']
-  ): string {
-
+  nomeEstado(estado: Candidatura['estado']): string {
     switch (estado) {
-
       case 'em_analise':
         return 'Em análise';
 
@@ -554,12 +850,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // CLASSE DO ESTADO
   // ============================================================
 
-  classeEstado(
-    estado: Candidatura['estado']
-  ): string {
-
+  classeEstado(estado: Candidatura['estado']): string {
     switch (estado) {
-
       case 'em_analise':
         return 'estado-em-analise';
 
@@ -582,26 +874,15 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // INICIAIS DO CANDIDATO
   // ============================================================
 
-  iniciais(
-    nome: string
-  ): string {
-
+  iniciais(nome: string): string {
     if (!nome?.trim()) {
-
       return 'U';
     }
 
-    const partes =
-      nome
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean);
+    const partes = nome.trim().split(/\s+/).filter(Boolean);
 
     if (partes.length === 1) {
-
-      return partes[0]
-        .substring(0, 2)
-        .toUpperCase();
+      return partes[0].substring(0, 2).toUpperCase();
     }
 
     return (
@@ -612,108 +893,66 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
 
   // ============================================================
-  // PAGINA ANTERIOR
+  // PAGINAÇÃO
   // ============================================================
 
   paginaAnterior(): void {
-
-    const pagina =
-      this.paginaAtual();
+    const pagina = this.paginaAtual();
 
     if (pagina <= 1) {
-
       return;
     }
 
-    this.paginaAtual.set(
-      pagina - 1
-    );
+    this.paginaAtual.set(pagina - 1);
 
     this.carregarCandidaturas();
   }
 
-
-  // ============================================================
-  // PRÓXIMA PÁGINA
-  // ============================================================
 
   proximaPagina(): void {
+    const pagina = this.paginaAtual();
 
-    const pagina =
-      this.paginaAtual();
-
-    if (
-      pagina >= this.ultimaPagina()
-    ) {
-
+    if (pagina >= this.ultimaPagina()) {
       return;
     }
 
-    this.paginaAtual.set(
-      pagina + 1
-    );
+    this.paginaAtual.set(pagina + 1);
 
     this.carregarCandidaturas();
   }
 
 
-  // ============================================================
-  // IR PARA PÁGINA
-  // ============================================================
-
-  irParaPagina(
-    pagina: number
-  ): void {
-
+  irParaPagina(pagina: number): void {
     if (
       pagina < 1 ||
       pagina > this.ultimaPagina() ||
       pagina === this.paginaAtual()
     ) {
-
       return;
     }
 
-    this.paginaAtual.set(
-      pagina
-    );
+    this.paginaAtual.set(pagina);
 
     this.carregarCandidaturas();
   }
 
 
-  // ============================================================
-  // PÁGINAS VISÍVEIS
-  // ============================================================
-
   paginasVisiveis(): number[] {
+    const total = this.ultimaPagina();
 
-    const total =
-      this.ultimaPagina();
-
-    const atual =
-      this.paginaAtual();
+    const atual = this.paginaAtual();
 
     const paginas: number[] = [];
 
-    const inicio =
-      Math.max(
-        1,
-        atual - 2
-      );
+    const inicio = Math.max(1, atual - 2);
 
-    const fim =
-      Math.min(
-        total,
-        atual + 2
-      );
+    const fim = Math.min(total, atual + 2);
 
     for (
       let pagina = inicio;
       pagina <= fim;
       pagina++
     ) {
-
       paginas.push(pagina);
     }
 
@@ -725,13 +964,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // VISUALIZAR CANDIDATURA
   // ============================================================
 
-  visualizarCandidatura(
-    candidatura: Candidatura
-  ): void {
-
-    this.abrirDetalhes(
-      candidatura
-    );
+  visualizarCandidatura(candidatura: Candidatura): void {
+    this.abrirDetalhes(candidatura);
   }
 
 
@@ -739,18 +973,12 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ABRIR DETALHES
   // ============================================================
 
-  abrirDetalhes(
-    candidatura: Candidatura | number
-  ): void {
+  abrirDetalhes(candidatura: Candidatura | number): void {
+    const id = typeof candidatura === 'number'
+      ? candidatura
+      : candidatura.id_candidatura;
 
-    const id =
-      typeof candidatura === 'number'
-        ? candidatura
-        : candidatura.id_candidatura;
-
-    this.carregandoDetalhes.set(
-      true
-    );
+    this.carregandoDetalhes.set(true);
 
     this.erroDetalhes.set('');
 
@@ -764,43 +992,23 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
     this.motivoRecusa.set('');
 
-    /*
-     * Mantemos o modal aberto quando já existe
-     * uma candidatura selecionada.
-     */
-    const sub =
-      this.adminService
-        .obterCandidatura(id)
-        .subscribe({
+    const sub = this.adminService.obterCandidatura(id).subscribe({
+      next: (dados) => {
+        this.candidaturaSelecionada.set(dados);
 
-          next: (dados) => {
+        this.carregandoDetalhes.set(false);
+      },
 
-            this.candidaturaSelecionada.set(
-              dados
-            );
+      error: (erro: unknown) => {
+        console.error('Erro ao carregar detalhes:', erro);
 
-            this.carregandoDetalhes.set(
-              false
-            );
-          },
+        this.carregandoDetalhes.set(false);
 
-          error: (erro: unknown) => {
-
-            console.error(
-              'Erro ao carregar detalhes:',
-              erro
-            );
-
-            this.carregandoDetalhes.set(
-              false
-            );
-
-            this.erroDetalhes.set(
-              'Não foi possível carregar os detalhes da candidatura.'
-            );
-          }
-
-        });
+        this.erroDetalhes.set(
+          'Não foi possível carregar os detalhes da candidatura.'
+        );
+      }
+    });
 
     this.subscriptions.add(sub);
   }
@@ -811,38 +1019,21 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   fecharDetalhes(): void {
+    this.candidaturaSelecionada.set(null);
 
-    this.candidaturaSelecionada.set(
-      null
-    );
+    this.carregandoDetalhes.set(false);
 
-    this.carregandoDetalhes.set(
-      false
-    );
+    this.mostrarRecusa.set(false);
 
-    this.mostrarRecusa.set(
-      false
-    );
+    this.motivoRecusa.set('');
 
-    this.motivoRecusa.set(
-      ''
-    );
+    this.erroDetalhes.set('');
 
-    this.erroDetalhes.set(
-      ''
-    );
+    this.erroDecisao.set('');
 
-    this.erroDecisao.set(
-      ''
-    );
+    this.sucessoDecisao.set('');
 
-    this.sucessoDecisao.set(
-      ''
-    );
-
-    this.erroDocumento.set(
-      ''
-    );
+    this.erroDocumento.set('');
   }
 
 
@@ -851,19 +1042,13 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   abrirRecusa(): void {
-
-    const candidatura =
-      this.candidaturaSelecionada();
+    const candidatura = this.candidaturaSelecionada();
 
     if (!candidatura) {
-
       return;
     }
 
-    if (
-      candidatura.estado !== 'em_analise'
-    ) {
-
+    if (candidatura.estado !== 'em_analise') {
       this.erroDecisao.set(
         'Esta candidatura já não está em análise.'
       );
@@ -877,9 +1062,7 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
     this.motivoRecusa.set('');
 
-    this.mostrarRecusa.set(
-      true
-    );
+    this.mostrarRecusa.set(true);
   }
 
 
@@ -888,18 +1071,11 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   cancelarRecusa(): void {
+    this.mostrarRecusa.set(false);
 
-    this.mostrarRecusa.set(
-      false
-    );
+    this.motivoRecusa.set('');
 
-    this.motivoRecusa.set(
-      ''
-    );
-
-    this.erroDecisao.set(
-      ''
-    );
+    this.erroDecisao.set('');
   }
 
 
@@ -907,16 +1083,10 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ALTERAR MOTIVO DA RECUSA
   // ============================================================
 
-  alterarMotivoRecusa(
-    event: Event
-  ): void {
+  alterarMotivoRecusa(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
 
-    const textarea =
-      event.target as HTMLTextAreaElement;
-
-    this.motivoRecusa.set(
-      textarea.value
-    );
+    this.motivoRecusa.set(textarea.value);
   }
 
 
@@ -925,19 +1095,13 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   aprovarSelecionada(): void {
-
-    const candidatura =
-      this.candidaturaSelecionada();
+    const candidatura = this.candidaturaSelecionada();
 
     if (!candidatura) {
-
       return;
     }
 
-    if (
-      candidatura.estado !== 'em_analise'
-    ) {
-
+    if (candidatura.estado !== 'em_analise') {
       this.erroDecisao.set(
         'Esta candidatura já não está em análise.'
       );
@@ -945,71 +1109,53 @@ export class PainelAdmin implements OnInit, OnDestroy {
       return;
     }
 
-    const confirmar =
-      window.confirm(
-        `Tem certeza que deseja aprovar a candidatura de ${candidatura.nome}?`
-      );
-
-    if (!confirmar) {
-
+    if (!isPlatformBrowser(this.platformId)) {
       return;
     }
 
-    this.processandoDecisao.set(
-      true
+    const confirmar = window.confirm(
+      `Tem certeza que deseja aprovar a candidatura de ${candidatura.nome}?`
     );
+
+    if (!confirmar) {
+      return;
+    }
+
+    this.processandoDecisao.set(true);
 
     this.erroDecisao.set('');
 
     this.sucessoDecisao.set('');
 
-    const sub =
-      this.adminService
-        .aprovarCandidatura(
-          candidatura.id_candidatura
-        )
-        .subscribe({
+    const sub = this.adminService
+      .aprovarCandidatura(candidatura.id_candidatura)
+      .subscribe({
+        next: () => {
+          this.processandoDecisao.set(false);
 
-          next: () => {
+          this.sucessoDecisao.set(
+            'Candidatura aprovada com sucesso.'
+          );
 
-            this.processandoDecisao.set(
-              false
-            );
+          this.mostrarRecusa.set(false);
 
-            this.sucessoDecisao.set(
-              'Candidatura aprovada com sucesso.'
-            );
+          this.atualizarCandidaturaLocal('aprovada');
 
-            this.mostrarRecusa.set(
-              false
-            );
+          this.carregarDashboard();
 
-            this.atualizarCandidaturaLocal(
-              'aprovada'
-            );
+          this.carregarCandidaturas();
+        },
 
-            this.carregarDashboard();
+        error: (erro: unknown) => {
+          console.error('Erro ao aprovar candidatura:', erro);
 
-            this.carregarCandidaturas();
-          },
+          this.processandoDecisao.set(false);
 
-          error: (erro: unknown) => {
-
-            console.error(
-              'Erro ao aprovar candidatura:',
-              erro
-            );
-
-            this.processandoDecisao.set(
-              false
-            );
-
-            this.erroDecisao.set(
-              'Não foi possível aprovar a candidatura.'
-            );
-          }
-
-        });
+          this.erroDecisao.set(
+            'Não foi possível aprovar a candidatura.'
+          );
+        }
+      });
 
     this.subscriptions.add(sub);
   }
@@ -1020,19 +1166,13 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   recusarSelecionada(): void {
-
-    const candidatura =
-      this.candidaturaSelecionada();
+    const candidatura = this.candidaturaSelecionada();
 
     if (!candidatura) {
-
       return;
     }
 
-    if (
-      candidatura.estado !== 'em_analise'
-    ) {
-
+    if (candidatura.estado !== 'em_analise') {
       this.erroDecisao.set(
         'Esta candidatura já não está em análise.'
       );
@@ -1040,14 +1180,9 @@ export class PainelAdmin implements OnInit, OnDestroy {
       return;
     }
 
-    const motivo =
-      this.motivoRecusa()
-        .trim();
+    const motivo = this.motivoRecusa().trim();
 
-    if (
-      motivo.length < 5
-    ) {
-
+    if (motivo.length < 5) {
       this.erroDecisao.set(
         'O motivo da recusa deve ter pelo menos 5 caracteres.'
       );
@@ -1055,10 +1190,7 @@ export class PainelAdmin implements OnInit, OnDestroy {
       return;
     }
 
-    if (
-      motivo.length > 1000
-    ) {
-
+    if (motivo.length > 1000) {
       this.erroDecisao.set(
         'O motivo da recusa não pode ultrapassar 1000 caracteres.'
       );
@@ -1066,63 +1198,47 @@ export class PainelAdmin implements OnInit, OnDestroy {
       return;
     }
 
-    this.processandoDecisao.set(
-      true
-    );
+    this.processandoDecisao.set(true);
 
     this.erroDecisao.set('');
 
     this.sucessoDecisao.set('');
 
-    const sub =
-      this.adminService
-        .recusarCandidatura(
-          candidatura.id_candidatura,
-          motivo
-        )
-        .subscribe({
+    const sub = this.adminService
+      .recusarCandidatura(
+        candidatura.id_candidatura,
+        motivo
+      )
+      .subscribe({
+        next: () => {
+          this.processandoDecisao.set(false);
 
-          next: () => {
+          this.mostrarRecusa.set(false);
 
-            this.processandoDecisao.set(
-              false
-            );
+          this.sucessoDecisao.set(
+            'Candidatura recusada com sucesso.'
+          );
 
-            this.mostrarRecusa.set(
-              false
-            );
+          this.atualizarCandidaturaLocal(
+            'recusada',
+            motivo
+          );
 
-            this.sucessoDecisao.set(
-              'Candidatura recusada com sucesso.'
-            );
+          this.carregarDashboard();
 
-            this.atualizarCandidaturaLocal(
-              'recusada',
-              motivo
-            );
+          this.carregarCandidaturas();
+        },
 
-            this.carregarDashboard();
+        error: (erro: unknown) => {
+          console.error('Erro ao recusar candidatura:', erro);
 
-            this.carregarCandidaturas();
-          },
+          this.processandoDecisao.set(false);
 
-          error: (erro: unknown) => {
-
-            console.error(
-              'Erro ao recusar candidatura:',
-              erro
-            );
-
-            this.processandoDecisao.set(
-              false
-            );
-
-            this.erroDecisao.set(
-              'Não foi possível recusar a candidatura.'
-            );
-          }
-
-        });
+          this.erroDecisao.set(
+            'Não foi possível recusar a candidatura.'
+          );
+        }
+      });
 
     this.subscriptions.add(sub);
   }
@@ -1136,29 +1252,22 @@ export class PainelAdmin implements OnInit, OnDestroy {
     estado: 'aprovada' | 'recusada',
     motivo?: string
   ): void {
-
-    const atual =
-      this.candidaturaSelecionada();
+    const atual = this.candidaturaSelecionada();
 
     if (!atual) {
-
       return;
     }
 
     this.candidaturaSelecionada.set({
-
       ...atual,
 
       estado,
 
-      motivo_recusa:
-        estado === 'recusada'
-          ? motivo ?? null
-          : null,
+      motivo_recusa: estado === 'recusada'
+        ? motivo ?? null
+        : null,
 
-      data_decisao:
-        new Date().toISOString()
-
+      data_decisao: new Date().toISOString()
     });
   }
 
@@ -1167,125 +1276,72 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // VISUALIZAR DOCUMENTO
   // ============================================================
 
-  visualizarDocumento(
-    documento: Documento
-  ): void {
-
-    if (
-      this.abrindoDocumento()
-    ) {
-
+  visualizarDocumento(documento: Documento): void {
+    if (this.abrindoDocumento()) {
       return;
     }
 
-    this.abrindoDocumento.set(
-      true
-    );
+    this.abrindoDocumento.set(true);
 
     this.erroDocumento.set('');
 
     this.limparPreviewDocumento();
 
-    const sub =
-      this.adminService
-        .visualizarDocumento(
-          documento.id_documento
-        )
-        .subscribe({
+    const sub = this.adminService
+      .visualizarDocumento(documento.id_documento)
+      .subscribe({
+        next: (blob: Blob) => {
+          try {
+            const tipo = this.inferirMimeType(documento, blob);
 
-          next: (blob: Blob) => {
+            const url = URL.createObjectURL(blob);
 
-            try {
+            this.documentoPreviewBlobUrl = url;
 
-              const tipo =
-                this.inferirMimeType(
-                  documento,
-                  blob
-                );
+            this.documentoPreviewTipo.set(tipo);
 
-              const url =
-                URL.createObjectURL(
-                  blob
-                );
+            this.documentoPreviewNome.set(
+              documento.nome_arquivo
+            );
 
-              this.documentoPreviewBlobUrl =
-                url;
-
-              this.documentoPreviewTipo.set(
-                tipo
+            if (tipo === 'application/pdf') {
+              this.documentoPreviewPdfUrl.set(
+                this.sanitizer
+                  .bypassSecurityTrustResourceUrl(url)
               );
 
-              this.documentoPreviewNome.set(
-                documento.nome_arquivo
-              );
+              this.documentoPreviewUrl.set(null);
+            } else {
+              this.documentoPreviewUrl.set(url);
 
-              if (
-                tipo === 'application/pdf'
-              ) {
-
-                const safeUrl =
-                  this.sanitizer
-                    .bypassSecurityTrustResourceUrl(
-                      url
-                    );
-
-                this.documentoPreviewPdfUrl.set(
-                  safeUrl
-                );
-
-                this.documentoPreviewUrl.set(
-                  null
-                );
-
-              } else {
-
-                this.documentoPreviewUrl.set(
-                  url
-                );
-
-                this.documentoPreviewPdfUrl.set(
-                  null
-                );
-              }
-
-              this.documentoPreviewAberto.set(
-                true
-              );
-
-            } catch (erro: unknown) {
-
-              console.error(
-                'Erro ao preparar documento:',
-                erro
-              );
-
-              this.erroDocumento.set(
-                'Não foi possível preparar o documento para visualização.'
-              );
+              this.documentoPreviewPdfUrl.set(null);
             }
 
-            this.abrindoDocumento.set(
-              false
-            );
-          },
-
-          error: (erro: unknown) => {
-
+            this.documentoPreviewAberto.set(true);
+          } catch (erro: unknown) {
             console.error(
-              'Erro ao visualizar documento:',
+              'Erro ao preparar documento:',
               erro
             );
 
-            this.abrindoDocumento.set(
-              false
-            );
-
             this.erroDocumento.set(
-              'Não foi possível abrir o documento.'
+              'Não foi possível preparar o documento para visualização.'
             );
           }
 
-        });
+          this.abrindoDocumento.set(false);
+        },
+
+        error: (erro: unknown) => {
+          console.error('Erro ao visualizar documento:', erro);
+
+          this.abrindoDocumento.set(false);
+
+          this.erroDocumento.set(
+            'Não foi possível abrir o documento.'
+          );
+        }
+      });
 
     this.subscriptions.add(sub);
   }
@@ -1299,58 +1355,36 @@ export class PainelAdmin implements OnInit, OnDestroy {
     documento: Documento,
     blob: Blob
   ): string {
-
     if (
       blob.type &&
-      blob.type !==
-        'application/octet-stream'
+      blob.type !== 'application/octet-stream'
     ) {
-
       return blob.type;
     }
 
-    const nome =
-      documento.nome_arquivo
-        .toLowerCase();
+    const nome = documento.nome_arquivo.toLowerCase();
 
-    if (
-      nome.endsWith('.pdf')
-    ) {
-
+    if (nome.endsWith('.pdf')) {
       return 'application/pdf';
     }
 
-    if (
-      nome.endsWith('.png')
-    ) {
-
+    if (nome.endsWith('.png')) {
       return 'image/png';
     }
 
-    if (
-      nome.endsWith('.jpg') ||
-      nome.endsWith('.jpeg')
-    ) {
-
+    if (nome.endsWith('.jpg') || nome.endsWith('.jpeg')) {
       return 'image/jpeg';
     }
 
-    if (
-      nome.endsWith('.gif')
-    ) {
-
+    if (nome.endsWith('.gif')) {
       return 'image/gif';
     }
 
-    if (
-      nome.endsWith('.webp')
-    ) {
-
+    if (nome.endsWith('.webp')) {
       return 'image/webp';
     }
 
-    return blob.type ||
-      'application/octet-stream';
+    return blob.type || 'application/octet-stream';
   }
 
 
@@ -1359,24 +1393,15 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   fecharPreviewDocumento(): void {
-
-    this.documentoPreviewAberto.set(
-      false
-    );
+    this.documentoPreviewAberto.set(false);
 
     this.limparPreviewDocumento();
 
-    this.documentoPreviewTipo.set(
-      ''
-    );
+    this.documentoPreviewTipo.set('');
 
-    this.documentoPreviewNome.set(
-      ''
-    );
+    this.documentoPreviewNome.set('');
 
-    this.abrindoDocumento.set(
-      false
-    );
+    this.abrindoDocumento.set(false);
   }
 
 
@@ -1385,26 +1410,45 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   private limparPreviewDocumento(): void {
+    if (this.documentoPreviewBlobUrl) {
+      URL.revokeObjectURL(this.documentoPreviewBlobUrl);
 
-    if (
-      this.documentoPreviewBlobUrl
-    ) {
-
-      URL.revokeObjectURL(
-        this.documentoPreviewBlobUrl
-      );
-
-      this.documentoPreviewBlobUrl =
-        null;
+      this.documentoPreviewBlobUrl = null;
     }
 
-    this.documentoPreviewUrl.set(
-      null
-    );
+    this.documentoPreviewUrl.set(null);
 
-    this.documentoPreviewPdfUrl.set(
-      null
-    );
+    this.documentoPreviewPdfUrl.set(null);
+  }
+
+
+  // ============================================================
+  // NAVEGAÇÃO ENTRE SECÇÕES
+  // ============================================================
+
+  irParaSecao(secao: SecaoAdmin): void {
+
+    // A gestão de utilizadores é uma página independente.
+    if (secao === 'utilizadores') {
+      this.router.navigate(['/admin/utilizadores']);
+
+      return;
+    }
+
+    this.secaoAtiva.set(secao);
+
+    if (secao === 'estagiarios') {
+      this.carregarEstagiarios();
+    }
+
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    document.getElementById(secao)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
   }
 
 
@@ -1413,43 +1457,245 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   sair(): void {
+    const sub = this.authService.logout().subscribe({
+      next: () => {
+        this.router.navigate(['/acesso']);
+      },
 
-    this.authService
-      .logout()
-      .subscribe({
+      error: (erro: unknown) => {
+        console.error('Erro ao encerrar sessão:', erro);
 
-        next: () => {
+        this.router.navigate(['/acesso']);
+      }
+    });
 
-          this.router.navigate([
-            '/acesso'
-          ]);
-        },
-
-        error: (erro: unknown) => {
-
-          console.error(
-            'Erro ao encerrar sessão:',
-            erro
-          );
-
-          this.router.navigate([
-            '/acesso'
-          ]);
-        }
-
-      });
+    this.subscriptions.add(sub);
   }
 
 
   // ============================================================
-  // AUXILIAR — BROWSER
+  // CALCULAR DURAÇÃO DO ESTÁGIO
   // ============================================================
 
-  private noBrowser(): boolean {
+  calcularDuracaoMeses(inicio: string, fim: string): number {
+    if (!inicio || !fim) {
+      return 2;
+    }
 
-    return isPlatformBrowser(
-      this.platformId
+    const [ai, mi, di] = inicio.split('-').map(Number);
+
+    const [af, mf, df] = fim.split('-').map(Number);
+
+    let meses = (af - ai) * 12 + (mf - mi);
+
+    if (df < di) {
+      meses--;
+    }
+
+    return Math.max(1, Math.min(60, meses || 1));
+  }
+
+
+  // ============================================================
+  // CALCULAR DATA DE FIM DO ESTÁGIO
+  // ============================================================
+
+  calcularDataFimEstagio(
+    inicio: string,
+    meses: number
+  ): string {
+    if (
+      !inicio ||
+      !Number.isFinite(meses) ||
+      meses < 1
+    ) {
+      return '';
+    }
+
+    const [ano, mes, dia] = inicio.split('-').map(Number);
+
+    const data = new Date(ano, mes - 1, 1);
+
+    data.setMonth(data.getMonth() + Math.floor(meses));
+
+    const ultimoDia = new Date(
+      data.getFullYear(),
+      data.getMonth() + 1,
+      0
+    ).getDate();
+
+    data.setDate(Math.min(dia, ultimoDia));
+
+    const a = data.getFullYear();
+
+    const m = String(data.getMonth() + 1).padStart(2, '0');
+
+    const d = String(data.getDate()).padStart(2, '0');
+
+    return `${a}-${m}-${d}`;
+  }
+
+
+  // ============================================================
+  // ABRIR GESTÃO DO ESTÁGIO
+  // ============================================================
+
+  abrirGestaoEstagio(estagiario: Estagiario): void {
+    this.estagioEmGestao.set(estagiario);
+
+    const estados: readonly EstadoEstagio[] = [
+      'ativo',
+      'suspenso',
+      'concluido',
+      'cancelado'
+    ];
+
+    const estadoRecebido = estagiario.estado_estagio;
+
+    const estado: EstadoEstagio = estados.includes(
+      estadoRecebido as EstadoEstagio
+    )
+      ? estadoRecebido as EstadoEstagio
+      : 'ativo';
+
+    this.estadoEstagioFormulario.set(estado);
+
+    this.inicioEstagioFormulario.set(
+      estagiario.data_inicio ?? ''
     );
+
+    this.fimEstagioFormulario.set(
+      estagiario.data_fim_prevista ?? ''
+    );
+
+    this.duracaoMesesFormulario.set(
+      this.calcularDuracaoMeses(
+        estagiario.data_inicio ?? '',
+        estagiario.data_fim_prevista ?? ''
+      )
+    );
+
+    this.motivoSuspensaoFormulario.set(
+      estagiario.motivo_suspensao ?? ''
+    );
+
+    this.erroGestaoEstagio.set('');
+
+    this.sucessoGestaoEstagio.set('');
+  }
+
+
+  // ============================================================
+  // FECHAR GESTÃO DO ESTÁGIO
+  // ============================================================
+
+  fecharGestaoEstagio(): void {
+    if (!this.aGuardarEstadoEstagio()) {
+      this.estagioEmGestao.set(null);
+
+      this.erroGestaoEstagio.set('');
+    }
+  }
+
+
+  // ============================================================
+  // GUARDAR ESTADO DO ESTÁGIO
+  // ============================================================
+
+  guardarEstadoEstagio(): void {
+    const estagiario = this.estagioEmGestao();
+
+    if (
+      !estagiario ||
+      this.aGuardarEstadoEstagio()
+    ) {
+      return;
+    }
+
+    const estado = this.estadoEstagioFormulario();
+
+    const inicio = this.inicioEstagioFormulario();
+
+    const fim = this.calcularDataFimEstagio(
+      inicio,
+      this.duracaoMesesFormulario()
+    );
+
+    const motivo = this.motivoSuspensaoFormulario().trim();
+
+    if (!estagiario.id_estagio && (!inicio || !fim)) {
+      this.erroGestaoEstagio.set(
+        'Indica a data de início e a data prevista de fim.'
+      );
+
+      return;
+    }
+
+    if (inicio && fim && fim < inicio) {
+      this.erroGestaoEstagio.set(
+        'A data prevista de fim não pode ser anterior à data de início.'
+      );
+
+      return;
+    }
+
+    if (estado === 'suspenso' && !motivo) {
+      this.erroGestaoEstagio.set(
+        'Indica o motivo da suspensão.'
+      );
+
+      return;
+    }
+
+    this.aGuardarEstadoEstagio.set(true);
+
+    this.erroGestaoEstagio.set('');
+
+    const sub = this.adminService
+      .atualizarEstadoEstagio(
+        estagiario.id_candidatura,
+        {
+          estado,
+
+          data_inicio: inicio || undefined,
+
+          data_fim_prevista: fim || undefined,
+
+          motivo_suspensao: estado === 'suspenso'
+            ? motivo
+            : undefined
+        }
+      )
+      .subscribe({
+        next: (resposta) => {
+          this.sucessoGestaoEstagio.set(
+            resposta.message || 'Estado atualizado.'
+          );
+
+          this.aGuardarEstadoEstagio.set(false);
+
+          this.estagioEmGestao.set(null);
+
+          this.carregarEstagiarios();
+        },
+
+        error: (erro: unknown) => {
+          const resposta = erro as {
+            error?: {
+              message?: string;
+            };
+          };
+
+          this.erroGestaoEstagio.set(
+            resposta.error?.message ||
+            'Não foi possível atualizar o estágio. Verifica a API e as permissões.'
+          );
+
+          this.aGuardarEstadoEstagio.set(false);
+        }
+      });
+
+    this.subscriptions.add(sub);
   }
 
 }
