@@ -1,0 +1,415 @@
+<div class="utilizadores-page">
+
+  <header class="pagina-header">
+    <div>
+      <span class="etiqueta">ADMINISTRAÇÃO DO SGE</span>
+      <h1>Gestão de utilizadores</h1>
+      <p>Gere as contas e os acessos ao sistema de estágios.</p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="abrirCriacao()"
+    >
+      <span aria-hidden="true">＋</span>
+      Novo utilizador
+    </button>
+  </header>
+
+  @if (erro()) {
+    <div class="alerta alerta-erro" role="alert">
+      {{ erro() }}
+    </div>
+  }
+
+  @if (sucesso()) {
+    <div class="alerta alerta-sucesso" role="status">
+      {{ sucesso() }}
+    </div>
+  }
+
+  <section class="resumo">
+    <div class="resumo-item">
+      <span>Total de utilizadores</span>
+      <strong>{{ totalRegistos() }}</strong>
+    </div>
+
+    <div class="resumo-item">
+      <span>Página actual</span>
+      <strong>{{ paginaAtual() }} / {{ totalPaginas() }}</strong>
+    </div>
+  </section>
+
+  <section class="filtros">
+    <form class="filtros-form" (ngSubmit)="pesquisar()">
+
+      <div class="campo campo-pesquisa">
+        <label for="pesquisa">Pesquisar</label>
+        <input
+          id="pesquisa"
+          type="search"
+          name="pesquisa"
+          [(ngModel)]="pesquisa"
+          placeholder="Nome ou e-mail"
+        >
+      </div>
+
+      <div class="campo">
+        <label for="filtroTipo">Tipo de utilizador</label>
+        <select
+          id="filtroTipo"
+          name="filtroTipo"
+          [(ngModel)]="filtroTipo"
+        >
+          <option value="">Todos os tipos</option>
+          <option value="administrador">Administrador</option>
+          <option value="coordenador">Coordenador</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="estagiario">Estagiário</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="filtroEstado">Estado da conta</label>
+        <select
+          id="filtroEstado"
+          name="filtroEstado"
+          [(ngModel)]="filtroEstado"
+        >
+          <option value="">Todos os estados</option>
+          <option value="ativo">Activa</option>
+          <option value="inativo">Inactiva</option>
+        </select>
+      </div>
+
+      <div class="acoes-filtros">
+        <button type="submit" class="btn btn-primary">
+          Pesquisar
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="limparFiltros()"
+        >
+          Limpar
+        </button>
+      </div>
+
+    </form>
+  </section>
+
+  <section class="tabela-card">
+    <div class="tabela-titulo">
+      <div>
+        <h2>Utilizadores registados</h2>
+        <p>{{ totalRegistos() }} registo(s) encontrado(s)</p>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="carregarUtilizadores()"
+        [disabled]="carregando()"
+      >
+        Actualizar lista
+      </button>
+    </div>
+
+    @if (carregando()) {
+      <div class="estado-vazio">
+        <span class="spinner" aria-hidden="true"></span>
+        <p>A carregar utilizadores...</p>
+      </div>
+    } @else {
+      <div class="tabela-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Utilizador</th>
+              <th>Contacto</th>
+              <th>Tipo de conta</th>
+              <th>Estado</th>
+              <th class="coluna-acoes">Acções</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (u of utilizadores(); track u.id_utilizador) {
+              <tr>
+                <td>
+                  <div class="utilizador-identidade">
+                    <div class="avatar">
+                      {{ u.nome.charAt(0).toUpperCase() }}
+                    </div>
+
+                    <div class="identidade-texto">
+                      <strong>{{ u.nome }}</strong>
+                      <span>{{ u.email }}</span>
+                      <small>ID: {{ u.id_utilizador }}</small>
+                    </div>
+                  </div>
+                </td>
+
+                <td>{{ u.telefone || 'Não indicado' }}</td>
+
+                <td>
+                  <span class="tipo-badge">
+                    {{ nomeTipo(u.tipo_utilizador) }}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    class="estado-badge"
+                    [class.estado-activo]="u.ativo"
+                    [class.estado-inactivo]="!u.ativo"
+                  >
+                    <span class="estado-ponto"></span>
+                    {{ u.ativo ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="acoes-linha">
+                    <button
+                      type="button"
+                      class="btn-acao btn-editar"
+                      (click)="abrirEdicao(u)"
+                      [disabled]="u.tipo_utilizador === 'administrador'"
+                      title="Editar utilizador"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      class="btn-acao"
+                      [class.btn-activar]="!u.ativo"
+                      [class.btn-desactivar]="u.ativo"
+                      (click)="alterarEstado(u)"
+                      [disabled]="u.tipo_utilizador === 'administrador'"
+                    >
+                      {{ u.ativo ? 'Desactivar' : 'Activar' }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5">
+                  <div class="estado-vazio">
+                    <strong>Nenhum utilizador encontrado</strong>
+                    <p>Altera os filtros ou cria uma nova conta.</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="paginacao">
+        <span>
+          Página {{ paginaAtual() }} de {{ totalPaginas() }}
+        </span>
+
+        <div class="paginacao-botoes">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="irParaPagina(paginaAtual() - 1)"
+            [disabled]="paginaAtual() <= 1"
+          >
+            Anterior
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="irParaPagina(paginaAtual() + 1)"
+            [disabled]="paginaAtual() >= totalPaginas()"
+          >
+            Seguinte
+          </button>
+        </div>
+      </div>
+    }
+  </section>
+
+  @if (mostrarFormulario()) {
+    <div class="modal-fundo">
+      <section
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tituloFormulario"
+      >
+        <header class="modal-header">
+          <div>
+            <span class="etiqueta">GESTÃO DE ACESSOS</span>
+
+            <h2 id="tituloFormulario">
+              {{ utilizadorEditado() ? 'Editar utilizador' : 'Novo utilizador' }}
+            </h2>
+
+            <p>
+              Preenche os dados da conta abaixo.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="modal-fechar"
+            aria-label="Fechar formulário"
+            (click)="fecharFormulario()"
+            [disabled]="guardando()"
+          >
+            ×
+          </button>
+        </header>
+
+        <form class="formulario" (ngSubmit)="guardarUtilizador()">
+
+          <div class="campo">
+            <label for="nome">Nome completo *</label>
+            <input
+              id="nome"
+              name="nome"
+              type="text"
+              [(ngModel)]="nome"
+              maxlength="150"
+              required
+              autocomplete="name"
+              placeholder="Nome do utilizador"
+            >
+          </div>
+
+          <div class="campo">
+            <label for="email">E-mail *</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              [(ngModel)]="email"
+              maxlength="255"
+              required
+              autocomplete="email"
+              placeholder="nome@exemplo.com"
+            >
+          </div>
+
+          <div class="campo">
+            <label for="telefone">Telefone</label>
+            <input
+              id="telefone"
+              name="telefone"
+              type="tel"
+              [(ngModel)]="telefone"
+              maxlength="30"
+              autocomplete="tel"
+              placeholder="Contacto telefónico"
+            >
+          </div>
+
+          <div class="campo">
+            <label for="tipoUtilizador">Tipo de utilizador *</label>
+            <select
+              id="tipoUtilizador"
+              name="tipoUtilizador"
+              [(ngModel)]="tipoUtilizador"
+              required
+            >
+              <option value="estagiario">Estagiário</option>
+              <option value="coordenador">Coordenador</option>
+              <option value="supervisor">Supervisor</option>
+            </select>
+          </div>
+
+          @if (tipoUtilizador === 'coordenador' && !utilizadorEditado()) {
+            <div class="campo">
+              <label for="direcao">Direcção</label>
+              <select
+                id="direcao"
+                name="direcao"
+                [(ngModel)]="idDepartamento"
+              >
+                <option [ngValue]="null">Seleccionar direcção</option>
+
+                @for (d of departamentos(); track d.id_departamento) {
+                  <option [ngValue]="d.id_departamento">
+                    {{ d.nome }}
+                  </option>
+                }
+              </select>
+            </div>
+          }
+
+          <div class="campo">
+            <label for="password">
+              Palavra-passe
+              {{ utilizadorEditado() ? '(opcional)' : '*' }}
+            </label>
+
+            <input
+              id="password"
+              name="password"
+              type="password"
+              [(ngModel)]="password"
+              minlength="8"
+              [required]="!utilizadorEditado()"
+              autocomplete="new-password"
+              placeholder="Mínimo de 8 caracteres"
+            >
+          </div>
+
+          <div class="campo">
+            <label for="passwordConfirmation">
+              Confirmar palavra-passe
+              {{ utilizadorEditado() ? '(se alterares a palavra-passe)' : '*' }}
+            </label>
+
+            <input
+              id="passwordConfirmation"
+              name="passwordConfirmation"
+              type="password"
+              [(ngModel)]="passwordConfirmation"
+              minlength="8"
+              [required]="!utilizadorEditado()"
+              autocomplete="new-password"
+              placeholder="Repete a palavra-passe"
+            >
+          </div>
+
+          @if (erro()) {
+            <div class="alerta alerta-erro" role="alert">
+              {{ erro() }}
+            </div>
+          }
+
+          <div class="modal-acoes">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="fecharFormulario()"
+              [disabled]="guardando()"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="guardando()"
+            >
+              {{ guardando() ? 'A guardar...' : 'Guardar utilizador' }}
+            </button>
+          </div>
+
+        </form>
+      </section>
+    </div>
+  }
+
+</div>

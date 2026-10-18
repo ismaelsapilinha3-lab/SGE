@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\UtilizadorAdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CandidaturaController;
 use App\Http\Controllers\DepartamentoController;
@@ -99,10 +100,22 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('admin')->prefix('admin')->group(function () {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Dashboard
+        |--------------------------------------------------------------------------
+        */
+
         Route::get('/dashboard', [
             AdminController::class,
             'dashboard'
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Gestão de candidaturas
+        |--------------------------------------------------------------------------
+        */
 
         Route::get('/candidaturas', [
             AdminController::class,
@@ -122,6 +135,37 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/candidaturas/{id}/recusar', [
             AdminController::class,
             'recusar'
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Gestão de utilizadores
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/utilizadores', [
+            UtilizadorAdminController::class,
+            'index'
+        ]);
+
+        Route::post('/utilizadores', [
+            UtilizadorAdminController::class,
+            'store'
+        ]);
+
+        Route::get('/utilizadores/{id}', [
+            UtilizadorAdminController::class,
+            'show'
+        ]);
+
+        Route::put('/utilizadores/{id}', [
+            UtilizadorAdminController::class,
+            'update'
+        ]);
+
+        Route::patch('/utilizadores/{id}/estado', [
+            UtilizadorAdminController::class,
+            'alterarEstado'
         ]);
     });
 });

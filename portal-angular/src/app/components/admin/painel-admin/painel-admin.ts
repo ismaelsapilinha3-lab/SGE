@@ -1,4 +1,3 @@
-
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 
 import {
@@ -15,7 +14,10 @@ import {
   SafeResourceUrl
 } from '@angular/platform-browser';
 
-import { Router } from '@angular/router';
+import {
+  Router,
+  RouterLink
+} from '@angular/router';
 
 import {
   Subscription
@@ -41,7 +43,8 @@ import {
   standalone: true,
 
   imports: [
-    CommonModule
+    CommonModule,
+    RouterLink
   ],
 
   templateUrl: './painel-admin.html',
@@ -1450,4 +1453,3 @@ export class PainelAdmin implements OnInit, OnDestroy {
   }
 
 }
-
