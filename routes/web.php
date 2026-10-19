@@ -23,7 +23,7 @@ Route::post('/login', function (Request $request) {
     $request->session()->regenerate();
 
     return response()->json(['user' => Auth::user()]);
-});
+})->middleware('throttle:6,1');
 
 Route::post('/logout', function (Request $request) {
     Auth::guard('web')->logout();

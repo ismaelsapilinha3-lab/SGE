@@ -1,5 +1,5 @@
-
 import { Injectable, inject } from '@angular/core';
+
 import {
   HttpClient,
   HttpParams
@@ -73,79 +73,111 @@ export interface Documento {
    CANDIDATURA
    ========================================================= */
 
+export type EstadoCandidatura =
+  | 'em_analise'
+  | 'aprovada'
+  | 'recusada'
+  | 'encerrada';
+
+
 export interface Candidatura {
   id_candidatura: number;
+
   nome: string;
   email: string;
   curso: string;
   universidade: string;
+
   nascimento: string;
   sexo: string;
   bi: string;
   contacto: string;
+
   id_departamento_selecionado: number;
 
-  estado:
-    | 'em_analise'
-    | 'aprovada'
-    | 'recusada'
-    | 'encerrada';
+  estado: EstadoCandidatura;
 
   motivo_recusa?: string | null;
   data_decisao?: string | null;
+
   id_coordenador?: number | null;
   encaminhada_em?: string | null;
-  bi_ativo?: string | null;
+
+  bi_ativo?: boolean | null;
+
   created_at: string;
   updated_at: string;
+
   departamento?: Departamento;
   documentos?: Documento[];
 }
 
 
 /* =========================================================
-   RESPOSTA PAGINADA
+   ENCAMINHAMENTO
+   ========================================================= */
+
+export interface DadosEncaminhamento {
+  id_coordenador?: number;
+  observacao?: string | null;
+}
+
+
+export interface RespostaEncaminhamento {
+  message: string;
+  candidatura: Candidatura;
+}
+
+
+/* =========================================================
+   RESPOSTAS PAGINADAS
    ========================================================= */
 
 export interface CandidaturasResponse {
   current_page: number;
   data: Candidatura[];
+
   first_page_url: string;
   from: number | null;
+
   last_page: number;
   last_page_url: string;
+
   next_page_url: string | null;
+  prev_page_url: string | null;
+
   path: string;
   per_page: number;
-  prev_page_url: string | null;
+  to?: number | null;
   total: number;
 }
 
 
 /* =========================================================
-   SERVIÇO ADMINISTRATIVO
+   ESTAGIÁRIOS
    ========================================================= */
-
-/* =======================================================
-   ESTAGIARIOS
-   ======================================================= */
 
 export interface Estagiario {
   id_estagio: number | null;
   id_candidatura: number;
   id_estagiario: number | null;
+
   nome: string;
   email: string;
+
   telefone?: string | null;
   curso?: string | null;
   universidade?: string | null;
   departamento?: string | null;
+
   data_inicio?: string | null;
   data_fim_prevista?: string | null;
   data_fim_real?: string | null;
+
   estado_estagio?: string | null;
   motivo_suspensao?: string | null;
 }
+
 
 export interface EstagiariosResponse {
   data: Estagiario[];
@@ -153,6 +185,12 @@ export interface EstagiariosResponse {
   current_page: number;
   last_page: number;
 }
+
+
+/* =========================================================
+   SERVIÇO ADMINISTRATIVO
+   ========================================================= */
+
 @Injectable({
   providedIn: 'root'
 })
@@ -181,7 +219,7 @@ export class AdminService {
 
   listarDepartamentos(): Observable<Departamento[]> {
     return this.http.get<Departamento[]>(
-      `${environment.apiUrl}/departamentos`
+      `${this.apiUrl}/departamentos`
     );
   }
 
@@ -193,6 +231,7 @@ export class AdminService {
   criarDepartamento(
     dados: DepartamentoDados
   ): Observable<RespostaDepartamento> {
+
     return this.http.post<RespostaDepartamento>(
       `${this.apiUrl}/departamentos`,
       {
@@ -211,6 +250,7 @@ export class AdminService {
     id: number,
     dados: DepartamentoDados
   ): Observable<RespostaDepartamento> {
+
     return this.http.patch<RespostaDepartamento>(
       `${this.apiUrl}/departamentos/${id}`,
       dados
@@ -257,9 +297,7 @@ export class AdminService {
 
     return this.http.get<CandidaturasResponse>(
       `${this.apiUrl}/candidaturas`,
-      {
-        params
-      }
+      { params }
     );
   }
 
@@ -271,6 +309,7 @@ export class AdminService {
   obterCandidatura(
     id: number
   ): Observable<Candidatura> {
+
     return this.http.get<Candidatura>(
       `${this.apiUrl}/candidaturas/${id}`
     );
@@ -278,12 +317,34 @@ export class AdminService {
 
 
   /* =======================================================
+     ENCAMINHAR CANDIDATURA
+     ======================================================= */
+
+  encaminharCandidatura(
+    id: number,
+    dados: DadosEncaminhamento = {}
+  ): Observable<RespostaEncaminhamento> {
+
+    return this.http.patch<RespostaEncaminhamento>(
+      `${this.apiUrl}/candidaturas/${id}/encaminhar`,
+      dados
+    );
+  }
+
+
+  /* =======================================================
      APROVAR CANDIDATURA
+     =======================================================
+
+     Mantido temporariamente por compatibilidade.
+     No fluxo definitivo, a decisão deve ser feita
+     exclusivamente pelo coordenador.
      ======================================================= */
 
   aprovarCandidatura(
     id: number
-  ): Observable<any> {
+  ): Observable<unknown> {
+
     return this.http.patch(
       `${this.apiUrl}/candidaturas/${id}/aprovar`,
       {}
@@ -293,23 +354,27 @@ export class AdminService {
 
   /* =======================================================
      RECUSAR CANDIDATURA
+     =======================================================
+
+     Mantido temporariamente por compatibilidade.
+     No fluxo definitivo, a decisão deve ser feita
+     exclusivamente pelo coordenador.
      ======================================================= */
 
   recusarCandidatura(
     id: number,
     motivo: string
-  ): Observable<any> {
+  ): Observable<unknown> {
+
     return this.http.patch(
       `${this.apiUrl}/candidaturas/${id}/recusar`,
-      {
-        motivo
-      }
+      { motivo }
     );
   }
 
 
   /* =======================================================
-     VISUALIZAR DOCUMENTO
+     LISTAR ESTAGIÁRIOS
      ======================================================= */
 
   listarEstagiarios(
@@ -318,16 +383,23 @@ export class AdminService {
     pagina: number = 1,
     porPagina: number = 15
   ): Observable<EstagiariosResponse> {
+
     let params = new HttpParams()
       .set('page', pagina)
       .set('por_pagina', porPagina);
 
     if (pesquisa.trim()) {
-      params = params.set('pesquisa', pesquisa.trim());
+      params = params.set(
+        'pesquisa',
+        pesquisa.trim()
+      );
     }
 
     if (estado) {
-      params = params.set('estado', estado);
+      params = params.set(
+        'estado',
+        estado
+      );
     }
 
     return this.http.get<EstagiariosResponse>(
@@ -336,24 +408,47 @@ export class AdminService {
     );
   }
 
+
+  /* =======================================================
+     ATUALIZAR ESTADO DO ESTÁGIO
+     ======================================================= */
+
   atualizarEstadoEstagio(
     idCandidatura: number,
     dados: {
-      estado: 'ativo' | 'suspenso' | 'concluido' | 'cancelado';
+      estado:
+        | 'ativo'
+        | 'suspenso'
+        | 'concluido'
+        | 'cancelado';
+
       data_inicio?: string;
       data_fim_prevista?: string;
       motivo_suspensao?: string;
     }
-  ): Observable<{ message: string; data: unknown }> {
-    return this.http.patch<{ message: string; data: unknown }>(
+  ): Observable<{
+    message: string;
+    data: unknown;
+  }> {
+
+    return this.http.patch<{
+      message: string;
+      data: unknown;
+    }>(
       `${this.apiUrl}/estagiarios/${idCandidatura}/estado`,
       dados
     );
   }
 
+
+  /* =======================================================
+     VISUALIZAR DOCUMENTO
+     ======================================================= */
+
   visualizarDocumento(
     idDocumento: number
   ): Observable<Blob> {
+
     return this.http.get(
       `${environment.apiUrl}/documentos/${idDocumento}`,
       {
