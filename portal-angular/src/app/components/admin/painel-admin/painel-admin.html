@@ -7,6 +7,7 @@
 
     <div class="marca-multitel">
       <img src="assets/img/multitel.png" alt="Multitel" class="logo-multitel" />
+
       <div class="marca-texto">
         <strong>SGE</strong>
         <span>Gestão de Estágios</span>
@@ -14,6 +15,7 @@
     </div>
 
     <div class="topo-direita">
+
       <span class="estado-sistema">
         <span class="estado-online"></span>
         Sistema operacional
@@ -21,18 +23,27 @@
 
       <div class="perfil-topo">
         <div class="avatar-admin">A</div>
+
         <div class="perfil-topo-info">
           <strong>Administrador</strong>
           <span>Gestão do sistema</span>
         </div>
       </div>
 
-      <button type="button" class="botao-sair" (click)="sair()">
+      <button
+        type="button"
+        class="botao-sair"
+        (click)="sair()"
+      >
         <span aria-hidden="true">⎋</span>
         Sair
       </button>
+
     </div>
 
+    <!-- =====================================================
+         NAVEGAÇÃO ADMINISTRATIVA
+         ===================================================== -->
     <nav class="menu-lateral" aria-label="Navegação administrativa">
 
       <button
@@ -40,7 +51,9 @@
         class="menu-item"
         [class.ativo]="secaoAtiva() === 'dashboard'"
         [attr.aria-current]="secaoAtiva() === 'dashboard' ? 'page' : null"
-        (click)="irParaSecao('dashboard')">
+        (click)="irParaSecao('dashboard')"
+      >
+        <span class="menu-icone">▦</span>
         Dashboard
       </button>
 
@@ -49,7 +62,9 @@
         class="menu-item"
         [class.ativo]="secaoAtiva() === 'candidaturas'"
         [attr.aria-current]="secaoAtiva() === 'candidaturas' ? 'page' : null"
-        (click)="irParaSecao('candidaturas')">
+        (click)="irParaSecao('candidaturas')"
+      >
+        <span class="menu-icone">▤</span>
         Candidaturas
       </button>
 
@@ -58,45 +73,104 @@
         class="menu-item"
         [class.ativo]="secaoAtiva() === 'departamentos'"
         [attr.aria-current]="secaoAtiva() === 'departamentos' ? 'page' : null"
-        (click)="irParaSecao('departamentos')">
+        (click)="irParaSecao('departamentos')"
+      >
+        <span class="menu-icone">⌂</span>
         Departamentos
       </button>
 
-      <!-- Secções ainda não disponíveis -->
       <button
         type="button"
         class="menu-item"
         [class.ativo]="secaoAtiva() === 'estagiarios'"
         [attr.aria-current]="secaoAtiva() === 'estagiarios' ? 'page' : null"
-        (click)="irParaSecao('estagiarios')">
+        (click)="irParaSecao('estagiarios')"
+      >
+        <span class="menu-icone">♙</span>
         Estagiários
       </button>
-      <button type="button" class="menu-item" disabled title="Em breve">Estágios</button>
+
+      <button
+        type="button"
+        class="menu-item"
+        disabled
+        title="Em breve"
+      >
+        <span class="menu-icone">▣</span>
+        Estágios
+      </button>
+
       <button
         type="button"
         class="menu-item"
         [class.ativo]="secaoAtiva() === 'relatorios'"
         [attr.aria-current]="secaoAtiva() === 'relatorios' ? 'page' : null"
-        (click)="irParaSecao('relatorios')">
+        (click)="irParaSecao('relatorios')"
+      >
+        <span class="menu-icone">▥</span>
         Relatórios
       </button>
-      <button type="button" class="menu-item" disabled title="Em breve">Avaliações</button>
-      <button type="button" class="menu-item" disabled title="Em breve">Assiduidade</button>
-      <button type="button" class="menu-item" disabled title="Em breve">Definições</button>
+
+      <button
+        type="button"
+        class="menu-item"
+        disabled
+        title="Em breve"
+      >
+        <span class="menu-icone">★</span>
+        Avaliações
+      </button>
+
+      <button
+        type="button"
+        class="menu-item"
+        disabled
+        title="Em breve"
+      >
+        <span class="menu-icone">◷</span>
+        Assiduidade
+      </button>
+
+    </nav>
+
+    <div class="menu-separador"></div>
+
+    <div class="menu-titulo">SISTEMA</div>
+
+    <nav class="menu-lateral" aria-label="Gestão do sistema">
+
+      <button
+        type="button"
+        class="menu-item"
+        [class.ativo]="secaoAtiva() === 'utilizadores'"
+        [attr.aria-current]="secaoAtiva() === 'utilizadores' ? 'page' : null"
+        (click)="irParaSecao('utilizadores')"
+      >
+        <span class="menu-icone">♙</span>
+        Utilizadores
+      </button>
 
     </nav>
 
   </header>
 
 
+  <!-- =====================================================
+       CONTEÚDO PRINCIPAL
+       ===================================================== -->
   <main class="conteudo-painel">
 
     <!-- =====================================================
          DASHBOARD
          ===================================================== -->
-    <section id="dashboard" class="painel-admin" [style.display]="secaoAtiva() === 'dashboard' ? 'block' : 'none'">
+    <section
+      id="dashboard"
+      class="painel-admin"
+      [style.display]="secaoAtiva() === 'dashboard' ? 'block' : 'none'"
+    >
 
       <header class="cabecalho">
+
         <div>
           <span class="subtitulo">Sistema de Gestão de Estágios</span>
           <h1>Painel Administrativo</h1>
@@ -107,81 +181,126 @@
           type="button"
           class="botao-atualizar"
           (click)="atualizarPainel()"
-          [disabled]="carregandoDashboard() || carregandoCandidaturas() || carregandoDepartamentos()">
+          [disabled]="
+            carregandoDashboard() ||
+            carregandoCandidaturas() ||
+            carregandoDepartamentos()
+          "
+        >
           <span aria-hidden="true">↻</span>
           Atualizar
         </button>
+
       </header>
 
       @if (erroDashboard()) {
-        <div class="mensagem-erro faixa" role="alert">{{ erroDashboard() }}</div>
+        <div class="mensagem-erro faixa" role="alert">
+          {{ erroDashboard() }}
+        </div>
       }
 
       <section class="indicadores" aria-label="Resumo das candidaturas">
 
         <article class="indicador indicador-total">
           <div class="indicador-icone" aria-hidden="true">#</div>
+
           <div class="indicador-conteudo">
             <span class="indicador-label">Total de candidaturas</span>
+
             <strong class="indicador-valor">
-              @if (carregandoDashboard()) { … } @else { {{ dashboard().total_candidaturas }} }
+              @if (carregandoDashboard()) {
+                …
+              } @else {
+                {{ dashboard().total_candidaturas }}
+              }
             </strong>
           </div>
         </article>
 
         <article class="indicador indicador-analise">
           <div class="indicador-icone" aria-hidden="true">◷</div>
+
           <div class="indicador-conteudo">
             <span class="indicador-label">Em análise</span>
+
             <strong class="indicador-valor">
-              @if (carregandoDashboard()) { … } @else { {{ dashboard().em_analise }} }
+              @if (carregandoDashboard()) {
+                …
+              } @else {
+                {{ dashboard().em_analise }}
+              }
             </strong>
           </div>
         </article>
 
         <article class="indicador indicador-aprovadas">
           <div class="indicador-icone" aria-hidden="true">✓</div>
+
           <div class="indicador-conteudo">
             <span class="indicador-label">Aprovadas</span>
+
             <strong class="indicador-valor">
-              @if (carregandoDashboard()) { … } @else { {{ dashboard().aprovadas }} }
+              @if (carregandoDashboard()) {
+                …
+              } @else {
+                {{ dashboard().aprovadas }}
+              }
             </strong>
           </div>
         </article>
 
         <article class="indicador indicador-recusadas">
           <div class="indicador-icone" aria-hidden="true">×</div>
+
           <div class="indicador-conteudo">
             <span class="indicador-label">Recusadas</span>
+
             <strong class="indicador-valor">
-              @if (carregandoDashboard()) { … } @else { {{ dashboard().recusadas }} }
+              @if (carregandoDashboard()) {
+                …
+              } @else {
+                {{ dashboard().recusadas }}
+              }
             </strong>
           </div>
         </article>
 
       </section>
+
     </section>
 
 
     <!-- =====================================================
          CANDIDATURAS
          ===================================================== -->
-    <section id="candidaturas" class="area-candidaturas" [style.display]="secaoAtiva() === 'candidaturas' ? 'block' : 'none'">
+    <section
+      id="candidaturas"
+      class="area-candidaturas"
+      [style.display]="secaoAtiva() === 'candidaturas' ? 'block' : 'none'"
+    >
 
       <div class="cabecalho-secao">
+
         <div>
           <h2>Candidaturas</h2>
           <p>Consulte, filtre e acompanhe as candidaturas recebidas.</p>
         </div>
-        <span class="contador-candidaturas">{{ totalCandidaturas() }} candidatura(s)</span>
+
+        <span class="contador-candidaturas">
+          {{ totalCandidaturas() }} candidatura(s)
+        </span>
+
       </div>
 
       <div class="filtros-candidaturas">
 
         <div class="filtro-pesquisa">
           <label for="pesquisa">Pesquisar candidaturas</label>
+
           <div class="campo-pesquisa-profissional">
+
             <span class="icone-pesquisa" aria-hidden="true">⌕</span>
+
             <input
               id="pesquisa"
               type="search"
@@ -189,23 +308,31 @@
               [value]="pesquisa()"
               (input)="pesquisa.set($any($event.target).value)"
               (keyup.enter)="pesquisar()"
-              autocomplete="off" />
+              autocomplete="off"
+            />
 
             @if (pesquisa()) {
               <button
                 type="button"
                 class="botao-limpar-pesquisa"
                 aria-label="Limpar pesquisa"
-                (click)="pesquisa.set(''); pesquisar()">
+                (click)="pesquisa.set(''); pesquisar()"
+              >
                 ×
               </button>
             }
+
           </div>
         </div>
 
         <div class="filtro-select">
           <label for="estado">Estado</label>
-          <select id="estado" [value]="estadoSelecionado()" (change)="alterarEstado($event)">
+
+          <select
+            id="estado"
+            [value]="estadoSelecionado()"
+            (change)="alterarEstado($event)"
+          >
             <option value="">Todos os estados</option>
             <option value="em_analise">Em análise</option>
             <option value="aprovada">Aprovadas</option>
@@ -216,25 +343,40 @@
 
         <div class="filtro-select">
           <label for="departamento">Departamento</label>
+
           <select
             id="departamento"
             [value]="departamentoSelecionado() ?? ''"
-            (change)="alterarDepartamento($event)">
+            (change)="alterarDepartamento($event)"
+          >
             <option value="">Todos os departamentos</option>
-            @for (departamento of departamentos(); track departamento.id_departamento) {
-              <option [value]="departamento.id_departamento">{{ departamento.nome }}</option>
+
+            @for (
+              departamento of departamentos();
+              track departamento.id_departamento
+            ) {
+              <option [value]="departamento.id_departamento">
+                {{ departamento.nome }}
+              </option>
             }
+
           </select>
         </div>
 
-        <button type="button" class="botao-limpar-filtros" (click)="limparFiltros()">
+        <button
+          type="button"
+          class="botao-limpar-filtros"
+          (click)="limparFiltros()"
+        >
           Limpar filtros
         </button>
 
       </div>
 
       @if (erroCandidaturas()) {
-        <div class="mensagem-erro faixa" role="alert">{{ erroCandidaturas() }}</div>
+        <div class="mensagem-erro faixa" role="alert">
+          {{ erroCandidaturas() }}
+        </div>
       }
 
       <div class="tabela-wrapper">
@@ -257,6 +399,7 @@
         } @else {
 
           <table class="tabela-candidaturas">
+
             <thead>
               <tr>
                 <th scope="col">Candidato</th>
@@ -270,37 +413,76 @@
             </thead>
 
             <tbody>
-              @for (candidatura of candidaturas(); track candidatura.id_candidatura) {
+
+              @for (
+                candidatura of candidaturas();
+                track candidatura.id_candidatura
+              ) {
+
                 <tr>
+
                   <td>
                     <div class="candidato-info">
-                      <div class="avatar-candidato">{{ iniciais(candidatura.nome) }}</div>
+                      <div class="avatar-candidato">
+                        {{ iniciais(candidatura.nome) }}
+                      </div>
+
                       <div>
                         <strong>{{ candidatura.nome }}</strong>
                         <span>{{ candidatura.email }}</span>
                       </div>
                     </div>
                   </td>
-                  <td><span class="texto-tabela">{{ candidatura.curso || '—' }}</span></td>
-                  <td><span class="texto-tabela">{{ candidatura.universidade || '—' }}</span></td>
-                  <td><span class="texto-tabela">{{ candidatura.departamento?.nome || '—' }}</span></td>
+
                   <td>
-                    <span class="estado-badge" [class]="classeEstado(candidatura.estado)">
+                    <span class="texto-tabela">
+                      {{ candidatura.curso || '—' }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span class="texto-tabela">
+                      {{ candidatura.universidade || '—' }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span class="texto-tabela">
+                      {{ candidatura.departamento?.nome || '—' }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span
+                      class="estado-badge"
+                      [class]="classeEstado(candidatura.estado)"
+                    >
                       {{ nomeEstado(candidatura.estado) }}
                     </span>
                   </td>
-                  <td><span class="data-tabela">{{ candidatura.created_at | date:'dd/MM/yyyy' }}</span></td>
+
+                  <td>
+                    <span class="data-tabela">
+                      {{ candidatura.created_at | date:'dd/MM/yyyy' }}
+                    </span>
+                  </td>
+
                   <td class="coluna-acoes">
                     <button
                       type="button"
                       class="botao-visualizar"
-                      (click)="abrirDetalhes(candidatura.id_candidatura)">
+                      (click)="abrirDetalhes(candidatura.id_candidatura)"
+                    >
                       Ver detalhes
                     </button>
                   </td>
+
                 </tr>
+
               }
+
             </tbody>
+
           </table>
 
         }
@@ -308,19 +490,25 @@
       </div>
 
       @if (!carregandoCandidaturas() && candidaturas().length > 0) {
+
         <div class="paginacao">
 
           <div class="paginacao-info">
-            Página <strong>{{ paginaAtual() }}</strong> de <strong>{{ ultimaPagina() }}</strong>
+            Página
+            <strong>{{ paginaAtual() }}</strong>
+            de
+            <strong>{{ ultimaPagina() }}</strong>
           </div>
 
           <div class="paginacao-botoes">
+
             <button
               type="button"
               class="botao-paginacao"
               [disabled]="paginaAtual() <= 1"
               (click)="paginaAnterior()"
-              aria-label="Página anterior">
+              aria-label="Página anterior"
+            >
               ‹
             </button>
 
@@ -330,7 +518,8 @@
                 class="botao-paginacao"
                 [class.ativo]="pagina === paginaAtual()"
                 [attr.aria-current]="pagina === paginaAtual() ? 'page' : null"
-                (click)="irParaPagina(pagina)">
+                (click)="irParaPagina(pagina)"
+              >
                 {{ pagina }}
               </button>
             }
@@ -340,12 +529,15 @@
               class="botao-paginacao"
               [disabled]="paginaAtual() >= ultimaPagina()"
               (click)="proximaPagina()"
-              aria-label="Página seguinte">
+              aria-label="Página seguinte"
+            >
               ›
             </button>
+
           </div>
 
         </div>
+
       }
 
     </section>
@@ -354,45 +546,74 @@
     <!-- =====================================================
          DEPARTAMENTOS
          ===================================================== -->
-    <section id="departamentos" class="area-departamentos" [style.display]="secaoAtiva() === 'departamentos' ? 'block' : 'none'">
+    <section
+      id="departamentos"
+      class="area-departamentos"
+      [style.display]="secaoAtiva() === 'departamentos' ? 'block' : 'none'"
+    >
 
       <header class="cabecalho-secao departamentos-cabecalho">
+
         <div>
           <h2>Gestão de departamentos</h2>
           <p>Consulte os departamentos e compare o número de estágios ativos.</p>
         </div>
 
-        <button type="button" class="botao-novo-departamento" (click)="novoDepartamento()">
+        <button
+          type="button"
+          class="botao-novo-departamento"
+          (click)="novoDepartamento()"
+        >
           <span aria-hidden="true">+</span>
           Novo departamento
         </button>
+
       </header>
 
       @if (sucessoDepartamento()) {
-        <div class="mensagem-sucesso" role="status">{{ sucessoDepartamento() }}</div>
+        <div class="mensagem-sucesso" role="status">
+          {{ sucessoDepartamento() }}
+        </div>
       }
 
       @if (erroDepartamentos()) {
-        <div class="mensagem-erro" role="alert">{{ erroDepartamentos() }}</div>
+        <div class="mensagem-erro" role="alert">
+          {{ erroDepartamentos() }}
+        </div>
       }
 
       @if (!carregandoDepartamentos() && departamentos().length > 0) {
+
         <article class="departamento-destaque">
+
           <div class="departamento-destaque-icone" aria-hidden="true">★</div>
+
           <div class="departamento-destaque-conteudo">
             <span>Departamento com mais estagiários ativos</span>
             <strong>{{ departamentos()[0].nome }}</strong>
-            <p>{{ departamentos()[0].estagiarios_ativos ?? 0 }} estágio(s) ativo(s)</p>
+            <p>
+              {{ departamentos()[0].estagiarios_ativos ?? 0 }}
+              estágio(s) ativo(s)
+            </p>
           </div>
+
         </article>
+
       }
 
       @if (mostrarFormularioDepartamento()) {
-        <section class="formulario-departamento" aria-label="Formulário de departamento">
+
+        <section
+          class="formulario-departamento"
+          aria-label="Formulário de departamento"
+        >
 
           <header class="formulario-departamento-cabecalho">
+
             <div>
-              <h3>{{ departamentoEmEdicao() ? 'Editar departamento' : 'Novo departamento' }}</h3>
+              <h3>
+                {{ departamentoEmEdicao() ? 'Editar departamento' : 'Novo departamento' }}
+              </h3>
               <p>Preencha os campos abaixo.</p>
             </div>
 
@@ -400,18 +621,24 @@
               type="button"
               class="botao-fechar-formulario"
               aria-label="Fechar formulário"
-              (click)="cancelarFormularioDepartamento()">
+              (click)="cancelarFormularioDepartamento()"
+            >
               ×
             </button>
+
           </header>
 
           @if (erroFormularioDepartamento()) {
-            <div class="mensagem-erro" role="alert">{{ erroFormularioDepartamento() }}</div>
+            <div class="mensagem-erro" role="alert">
+              {{ erroFormularioDepartamento() }}
+            </div>
           }
 
           <div class="campos-formulario-departamento">
+
             <div class="campo-departamento">
               <label for="nomeDepartamento">Nome do departamento *</label>
+
               <input
                 id="nomeDepartamento"
                 type="text"
@@ -419,26 +646,32 @@
                 placeholder="Ex.: Tecnologias de Informação"
                 [value]="nomeDepartamento()"
                 (input)="alterarNomeDepartamento($event)"
-                autocomplete="off" />
+                autocomplete="off"
+              />
             </div>
 
             <div class="campo-departamento">
               <label for="descricaoDepartamento">Descrição</label>
+
               <textarea
                 id="descricaoDepartamento"
                 rows="4"
                 placeholder="Descreva as responsabilidades deste departamento."
                 [value]="descricaoDepartamento()"
-                (input)="alterarDescricaoDepartamento($event)"></textarea>
+                (input)="alterarDescricaoDepartamento($event)"
+              ></textarea>
             </div>
+
           </div>
 
           <footer class="acoes-formulario-departamento">
+
             <button
               type="button"
               class="botao-cancelar-departamento"
               (click)="cancelarFormularioDepartamento()"
-              [disabled]="guardandoDepartamento()">
+              [disabled]="guardandoDepartamento()"
+            >
               Cancelar
             </button>
 
@@ -446,16 +679,19 @@
               type="button"
               class="botao-guardar-departamento"
               (click)="guardarDepartamento()"
-              [disabled]="guardandoDepartamento()">
+              [disabled]="guardandoDepartamento()"
+            >
               @if (guardandoDepartamento()) {
                 A guardar...
               } @else {
                 {{ departamentoEmEdicao() ? 'Guardar alterações' : 'Criar departamento' }}
               }
             </button>
+
           </footer>
 
         </section>
+
       }
 
       @if (carregandoDepartamentos()) {
@@ -470,28 +706,43 @@
         <div class="estado-vazio">
           <div class="estado-vazio-icone" aria-hidden="true">∅</div>
           <h3>Nenhum departamento disponível</h3>
-          <p>Não foi possível encontrar departamentos ativos. Podes criar um novo departamento.</p>
+          <p>
+            Não foi possível encontrar departamentos ativos.
+            Podes criar um novo departamento.
+          </p>
         </div>
 
       } @else {
 
         <div class="lista-departamentos">
-          @for (departamento of departamentos(); track departamento.id_departamento) {
+
+          @for (
+            departamento of departamentos();
+            track departamento.id_departamento
+          ) {
 
             <article class="cartao-departamento">
 
               <div class="cartao-departamento-topo">
+
                 <div class="cartao-departamento-icone" aria-hidden="true">
                   {{ iniciais(departamento.nome) }}
                 </div>
-                <span class="departamento-estado" [class.inativo]="departamento.ativo === false">
+
+                <span
+                  class="departamento-estado"
+                  [class.inativo]="departamento.ativo === false"
+                >
                   {{ departamento.ativo === false ? 'Inativo' : 'Ativo' }}
                 </span>
+
               </div>
 
               <div class="cartao-departamento-conteudo">
                 <h3>{{ departamento.nome }}</h3>
-                <p>{{ departamento.descricao || 'Sem descrição registada.' }}</p>
+                <p>
+                  {{ departamento.descricao || 'Sem descrição registada.' }}
+                </p>
               </div>
 
               <div class="cartao-departamento-estatistica">
@@ -503,7 +754,8 @@
                 <button
                   type="button"
                   class="botao-editar-departamento"
-                  (click)="editarDepartamento(departamento)">
+                  (click)="editarDepartamento(departamento)"
+                >
                   Editar departamento
                 </button>
               </footer>
@@ -511,6 +763,7 @@
             </article>
 
           }
+
         </div>
 
       }
@@ -522,49 +775,90 @@
     </section>
 
 
-    <section id="estagiarios" class="secao-painel"
-      [style.display]="secaoAtiva() === 'estagiarios' ? 'block' : 'none'">
+    <!-- =====================================================
+         ESTAGIÁRIOS
+         ===================================================== -->
+    <section
+      id="estagiarios"
+      class="secao-painel"
+      [style.display]="secaoAtiva() === 'estagiarios' ? 'block' : 'none'"
+    >
+
       <header class="secao-cabecalho">
+
         <div>
           <h2>Estagiários</h2>
           <p>Consulta os estagiários registados no sistema.</p>
         </div>
-        <button type="button" (click)="carregarEstagiarios()">
+
+        <button
+          type="button"
+          (click)="carregarEstagiarios()"
+        >
           Atualizar
         </button>
+
       </header>
 
-      <form class="filtros-candidaturas" (submit)="$event.preventDefault(); pesquisarEstagiarios()">
+      <form
+        class="filtros-candidaturas"
+        (submit)="$event.preventDefault(); pesquisarEstagiarios()"
+      >
+
         <input
           type="search"
           aria-label="Pesquisar estagiários"
           placeholder="Pesquisar por nome ou e-mail"
           [value]="pesquisaEstagiarios()"
-          (input)="pesquisaEstagiarios.set($any($event.target).value)" />
+          (input)="pesquisaEstagiarios.set($any($event.target).value)"
+        />
+
         <select
           aria-label="Filtrar por estado"
           [value]="estadoEstagiarios()"
-          (change)="estadoEstagiarios.set($any($event.target).value); carregarEstagiarios()">
+          (change)="estadoEstagiarios.set($any($event.target).value); carregarEstagiarios()"
+        >
           <option value="">Todos os estados</option>
-          <option value="aprovada">Aprovada  a aguardar início</option>
+          <option value="aprovada">Aprovada a aguardar início</option>
           <option value="ativo">Ativo</option>
           <option value="concluido">Concluído</option>
           <option value="suspenso">Suspenso</option>
           <option value="cancelado">Cancelado</option>
         </select>
+
         <button type="submit">Pesquisar</button>
+
       </form>
 
       @if (carregandoEstagiarios()) {
+
         <p class="estado-vazio">A carregar estagiários...</p>
+
       } @else if (erroEstagiarios()) {
-        <p class="mensagem-erro" role="alert">{{ erroEstagiarios() }}</p>
-        <button type="button" (click)="carregarEstagiarios()">Tentar novamente</button>
+
+        <p class="mensagem-erro" role="alert">
+          {{ erroEstagiarios() }}
+        </p>
+
+        <button
+          type="button"
+          (click)="carregarEstagiarios()"
+        >
+          Tentar novamente
+        </button>
+
       } @else if (estagiarios().length === 0) {
-        <p class="estado-vazio">Não existem estagiários para apresentar.</p>
+
+        <p class="estado-vazio">
+          Não existem estagiários para apresentar.
+        </p>
+
       } @else {
+
         <div class="tabela-responsiva">
+
           <table>
+
             <thead>
               <tr>
                 <th>Nome</th>
@@ -580,8 +874,14 @@
                 <th>Ações</th>
               </tr>
             </thead>
+
             <tbody>
-              @for (estagiario of estagiarios(); track estagiario.id_estagio ?? estagiario.id_candidatura) {
+
+              @for (
+                estagiario of estagiarios();
+                track estagiario.id_estagio ?? estagiario.id_candidatura
+              ) {
+
                 <tr>
                   <td>{{ estagiario.nome }}</td>
                   <td>{{ estagiario.email }}</td>
@@ -592,8 +892,11 @@
                   <td>{{ estagiario.data_inicio || '' }}</td>
                   <td>{{ estagiario.data_fim_prevista || '' }}</td>
                   <td>{{ estagiario.estado_estagio || '' }}</td>
+
                   <td>
+
                     @if (estagiario.estado_estagio === 'ativo') {
+
                       @if (diasRestantes(estagiario) === null) {
                         Data de término não definida
                       } @else if (diasRestantes(estagiario)! <= 0) {
@@ -601,42 +904,79 @@
                       } @else {
                         {{ diasRestantes(estagiario) }} dias restantes
                       }
+
                     } @else if (estagiario.estado_estagio === 'suspenso') {
-                      Motivo: {{ estagiario.motivo_suspensao || 'Motivo não registado' }}
+
+                      Motivo:
+                      {{ estagiario.motivo_suspensao || 'Motivo não registado' }}
+
                     } @else if (estagiario.estado_estagio === 'aprovada') {
+
                       A aguardar início do estágio
+
                     } @else if (estagiario.estado_estagio === 'concluido') {
+
                       Estágio concluído
+
                     } @else if (estagiario.estado_estagio === 'cancelado') {
+
                       Estágio cancelado
-                    } @else {
-                      
+
                     }
+
                   </td>
+
                   <td>
-                    <button type="button"
-                      (click)="abrirGestaoEstagio(estagiario)">
+                    <button
+                      type="button"
+                      (click)="abrirGestaoEstagio(estagiario)"
+                    >
                       Gerir estágio
                     </button>
                   </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-          @if (estagioEmGestao(); as estagioSelecionado) {
-        <div class="modal-overlay" role="presentation">
-          <div class="modal-conteudo" role="dialog" aria-modal="true"
-            aria-labelledby="titulo-gestao-estagio">
-            <h3 id="titulo-gestao-estagio">Gerir estágio</h3>
-            <p><strong>Estagiário:</strong> {{ estagioSelecionado.nome }}</p>
 
-            <form (submit)="$event.preventDefault(); guardarEstadoEstagio()">
+                </tr>
+
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      }
+
+      @if (estagioEmGestao(); as estagioSelecionado) {
+
+        <div class="modal-overlay" role="presentation">
+
+          <div
+            class="modal-conteudo"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-gestao-estagio"
+          >
+
+            <h3 id="titulo-gestao-estagio">Gerir estágio</h3>
+
+            <p>
+              <strong>Estagiário:</strong>
+              {{ estagioSelecionado.nome }}
+            </p>
+
+            <form
+              (submit)="$event.preventDefault(); guardarEstadoEstagio()"
+            >
+
               <label for="estado-estagio">Estado</label>
-              <select id="estado-estagio" required
+
+              <select
+                id="estado-estagio"
+                required
                 [value]="estadoEstagioFormulario()"
-                (change)="estadoEstagioFormulario.set($any($event.target).value)">
+                (change)="estadoEstagioFormulario.set($any($event.target).value)"
+              >
                 <option value="ativo">Ativo</option>
                 <option value="suspenso">Suspenso</option>
                 <option value="concluido">Concluído</option>
@@ -644,7 +984,11 @@
               </select>
 
               <label for="data-inicio-estagio">Data de início</label>
-              <input id="data-inicio-estagio" type="date" required
+
+              <input
+                id="data-inicio-estagio"
+                type="date"
+                required
                 [value]="inicioEstagioFormulario()"
                 (input)="alterarInicioEstagio($any($event.target).value)" />
 
@@ -659,28 +1003,53 @@
           [value]="fimEstagioFormulario()" />
 
               @if (estadoEstagioFormulario() === 'suspenso') {
+
                 <label for="motivo-suspensao">Motivo da suspensão</label>
-                <textarea id="motivo-suspensao" required
+
+                <textarea
+                  id="motivo-suspensao"
+                  required
                   [value]="motivoSuspensaoFormulario()"
-                  (input)="motivoSuspensaoFormulario.set($any($event.target).value)"></textarea>
+                  (input)="motivoSuspensaoFormulario.set($any($event.target).value)"
+                ></textarea>
+
               }
 
               @if (erroGestaoEstagio()) {
-                <p role="alert" class="mensagem-erro">{{ erroGestaoEstagio() }}</p>
+                <p role="alert" class="mensagem-erro">
+                  {{ erroGestaoEstagio() }}
+                </p>
               }
 
               <div class="acoes-modal">
-                <button type="button" (click)="fecharGestaoEstagio()"
-                  [disabled]="aGuardarEstadoEstagio()">Cancelar</button>
-                <button type="submit" [disabled]="aGuardarEstadoEstagio()">
+
+                <button
+                  type="button"
+                  (click)="fecharGestaoEstagio()"
+                  [disabled]="aGuardarEstadoEstagio()"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  [disabled]="aGuardarEstadoEstagio()"
+                >
                   {{ aGuardarEstadoEstagio() ? 'A guardar...' : 'Guardar estado' }}
                 </button>
+
               </div>
+
             </form>
+
           </div>
+
         </div>
+
       }
-</section>
+
+    </section>
+
 
         <section id="relatorios" class="secao-painel relatorios-pagina"
       [style.display]="secaoAtiva() === 'relatorios' ? 'block' : 'none'">
@@ -894,18 +1263,31 @@
          ===================================================== -->
     @if (candidaturaSelecionada() || carregandoDetalhes()) {
 
-      <div class="modal-overlay" role="dialog" aria-modal="true" aria-label="Detalhes da candidatura">
+      <div
+        class="modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Detalhes da candidatura"
+      >
+
         <div class="modal-caixa">
 
           <header class="modal-header">
+
             <div>
               <span class="modal-subtitulo">Candidatura</span>
               <h2>Detalhes da candidatura</h2>
             </div>
 
-            <button type="button" class="botao-fechar" (click)="fecharDetalhes()" aria-label="Fechar detalhes">
+            <button
+              type="button"
+              class="botao-fechar"
+              (click)="fecharDetalhes()"
+              aria-label="Fechar detalhes"
+            >
               ×
             </button>
+
           </header>
 
           @if (carregandoDetalhes()) {
@@ -920,7 +1302,9 @@
           } @else if (erroDetalhes()) {
 
             <div class="modal-body">
-              <div class="mensagem-erro" role="alert">{{ erroDetalhes() }}</div>
+              <div class="mensagem-erro" role="alert">
+                {{ erroDetalhes() }}
+              </div>
             </div>
 
           } @else if (candidaturaSelecionada()) {
@@ -928,101 +1312,146 @@
             <div class="modal-body">
 
               <section class="detalhes-cabecalho">
-                <div class="avatar-candidato grande">{{ iniciais(candidaturaSelecionada()!.nome) }}</div>
+
+                <div class="avatar-candidato grande">
+                  {{ iniciais(candidaturaSelecionada()!.nome) }}
+                </div>
 
                 <div class="detalhes-cabecalho-info">
                   <h3>{{ candidaturaSelecionada()!.nome }}</h3>
                   <span>{{ candidaturaSelecionada()!.email }}</span>
-                  <span class="estado-badge" [class]="classeEstado(candidaturaSelecionada()!.estado)">
+
+                  <span
+                    class="estado-badge"
+                    [class]="classeEstado(candidaturaSelecionada()!.estado)"
+                  >
                     {{ nomeEstado(candidaturaSelecionada()!.estado) }}
                   </span>
                 </div>
+
               </section>
 
               <section class="detalhes-secao">
+
                 <div class="titulo-detalhes-secao">
                   <h3>Dados pessoais</h3>
                 </div>
 
                 <div class="detalhes-grid">
+
                   <div class="detalhe-card">
                     <span>Nome completo</span>
                     <strong>{{ candidaturaSelecionada()!.nome }}</strong>
                   </div>
+
                   <div class="detalhe-card">
                     <span>E-mail</span>
                     <strong>{{ candidaturaSelecionada()!.email }}</strong>
                   </div>
+
                   <div class="detalhe-card">
                     <span>Contacto</span>
                     <strong>{{ candidaturaSelecionada()!.contacto || '—' }}</strong>
                   </div>
+
                   <div class="detalhe-card">
                     <span>Bilhete de identidade</span>
                     <strong>{{ candidaturaSelecionada()!.bi || '—' }}</strong>
                   </div>
+
                   <div class="detalhe-card">
                     <span>Data de nascimento</span>
-                    <strong>{{ (candidaturaSelecionada()!.nascimento | date:'dd/MM/yyyy') || '—' }}</strong>
+                    <strong>
+                      {{ (candidaturaSelecionada()!.nascimento | date:'dd/MM/yyyy') || '—' }}
+                    </strong>
                   </div>
+
                   <div class="detalhe-card">
                     <span>Sexo</span>
                     <strong>{{ candidaturaSelecionada()!.sexo || '—' }}</strong>
                   </div>
+
                 </div>
+
               </section>
 
               <section class="detalhes-secao">
+
                 <div class="titulo-detalhes-secao">
                   <h3>Dados académicos</h3>
                 </div>
 
                 <div class="detalhes-grid">
+
                   <div class="detalhe-card">
                     <span>Curso</span>
                     <strong>{{ candidaturaSelecionada()!.curso || '—' }}</strong>
                   </div>
+
                   <div class="detalhe-card">
                     <span>Universidade</span>
                     <strong>{{ candidaturaSelecionada()!.universidade || '—' }}</strong>
                   </div>
+
                   <div class="detalhe-card">
                     <span>Departamento selecionado</span>
-                    <strong>{{ candidaturaSelecionada()!.departamento?.nome || '—' }}</strong>
+                    <strong>
+                      {{ candidaturaSelecionada()!.departamento?.nome || '—' }}
+                    </strong>
                   </div>
+
                   <div class="detalhe-card">
                     <span>Data da candidatura</span>
-                    <strong>{{ (candidaturaSelecionada()!.created_at | date:'dd/MM/yyyy HH:mm') || '—' }}</strong>
+                    <strong>
+                      {{ (candidaturaSelecionada()!.created_at | date:'dd/MM/yyyy HH:mm') || '—' }}
+                    </strong>
                   </div>
+
                 </div>
+
               </section>
 
               @if (candidaturaSelecionada()!.estado === 'recusada') {
+
                 <section class="detalhes-secao">
+
                   <div class="titulo-detalhes-secao">
                     <h3>Motivo da recusa</h3>
                   </div>
+
                   <div class="motivo-recusa-existente">
                     {{ candidaturaSelecionada()!.motivo_recusa || 'Nenhum motivo informado.' }}
                   </div>
+
                 </section>
+
               }
 
               <section class="detalhes-secao">
+
                 <div class="titulo-detalhes-secao">
+
                   <div>
                     <h3>Documentos</h3>
                     <p>Documentos enviados pelo candidato.</p>
                   </div>
+
                 </div>
 
                 @if (
                   candidaturaSelecionada()!.documentos &&
                   candidaturaSelecionada()!.documentos!.length > 0
                 ) {
+
                   <div class="lista-documentos">
-                    @for (documento of candidaturaSelecionada()!.documentos!; track documento.id_documento) {
+
+                    @for (
+                      documento of candidaturaSelecionada()!.documentos!;
+                      track documento.id_documento
+                    ) {
+
                       <div class="documento-item">
+
                         <div class="documento-icone" aria-hidden="true">▤</div>
 
                         <div class="documento-info">
@@ -1034,27 +1463,43 @@
                           type="button"
                           class="botao-documento"
                           (click)="visualizarDocumento(documento)"
-                          [disabled]="abrindoDocumento()">
+                          [disabled]="abrindoDocumento()"
+                        >
                           {{ abrindoDocumento() ? 'A abrir...' : 'Ver documento' }}
                         </button>
+
                       </div>
+
                     }
+
                   </div>
+
                 } @else {
-                  <div class="documentos-vazios">Nenhum documento encontrado.</div>
+
+                  <div class="documentos-vazios">
+                    Nenhum documento encontrado.
+                  </div>
+
                 }
 
                 @if (erroDocumento()) {
-                  <div class="mensagem-erro" role="alert">{{ erroDocumento() }}</div>
+                  <div class="mensagem-erro" role="alert">
+                    {{ erroDocumento() }}
+                  </div>
                 }
+
               </section>
 
               @if (sucessoDecisao()) {
-                <div class="mensagem-sucesso" role="status">{{ sucessoDecisao() }}</div>
+                <div class="mensagem-sucesso" role="status">
+                  {{ sucessoDecisao() }}
+                </div>
               }
 
               @if (erroDecisao()) {
-                <div class="mensagem-erro" role="alert">{{ erroDecisao() }}</div>
+                <div class="mensagem-erro" role="alert">
+                  {{ erroDecisao() }}
+                </div>
               }
 
               @if (candidaturaSelecionada()!.estado === 'em_analise') {
@@ -1062,6 +1507,7 @@
                 @if (mostrarRecusa()) {
 
                   <section class="area-recusa">
+
                     <h3>Recusar candidatura</h3>
                     <p>Informe o motivo da recusa.</p>
 
@@ -1071,16 +1517,21 @@
                       aria-label="Motivo da recusa"
                       [value]="motivoRecusa()"
                       (input)="alterarMotivoRecusa($event)"
-                      placeholder="Digite o motivo da recusa..."></textarea>
+                      placeholder="Digite o motivo da recusa..."
+                    ></textarea>
 
-                    <div class="contador-caracteres">{{ motivoRecusa().length }}/1000</div>
+                    <div class="contador-caracteres">
+                      {{ motivoRecusa().length }}/1000
+                    </div>
 
                     <div class="acoes-recusa">
+
                       <button
                         type="button"
                         class="botao-fechar-recusa"
                         (click)="cancelarRecusa()"
-                        [disabled]="processandoDecisao()">
+                        [disabled]="processandoDecisao()"
+                      >
                         Cancelar
                       </button>
 
@@ -1088,20 +1539,25 @@
                         type="button"
                         class="botao-confirmar-recusa"
                         (click)="recusarSelecionada()"
-                        [disabled]="processandoDecisao()">
+                        [disabled]="processandoDecisao()"
+                      >
                         {{ processandoDecisao() ? 'A processar...' : 'Confirmar recusa' }}
                       </button>
+
                     </div>
+
                   </section>
 
                 } @else {
 
                   <div class="acoes-candidatura">
+
                     <button
                       type="button"
                       class="botao-recusar"
                       (click)="abrirRecusa()"
-                      [disabled]="processandoDecisao()">
+                      [disabled]="processandoDecisao()"
+                    >
                       Recusar
                     </button>
 
@@ -1109,9 +1565,11 @@
                       type="button"
                       class="botao-aprovar"
                       (click)="aprovarSelecionada()"
-                      [disabled]="processandoDecisao()">
+                      [disabled]="processandoDecisao()"
+                    >
                       {{ processandoDecisao() ? 'A processar...' : 'Aprovar candidatura' }}
                     </button>
+
                   </div>
 
                 }
@@ -1123,6 +1581,7 @@
           }
 
         </div>
+
       </div>
 
     }
@@ -1133,10 +1592,17 @@
          ===================================================== -->
     @if (documentoPreviewAberto()) {
 
-      <div class="modal-overlay modal-documento-preview" role="dialog" aria-modal="true" aria-label="Visualização do documento">
+      <div
+        class="modal-overlay modal-documento-preview"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Visualização do documento"
+      >
+
         <div class="modal-documento-caixa">
 
           <header class="modal-header">
+
             <div>
               <span class="modal-subtitulo">Documento</span>
               <h2>{{ documentoPreviewNome() }}</h2>
@@ -1146,9 +1612,11 @@
               type="button"
               class="botao-fechar"
               (click)="fecharPreviewDocumento()"
-              aria-label="Fechar visualização">
+              aria-label="Fechar visualização"
+            >
               ×
             </button>
+
           </header>
 
           <div class="documento-preview-body">
@@ -1158,29 +1626,37 @@
               <img
                 [src]="documentoPreviewUrl()"
                 [alt]="documentoPreviewNome()"
-                class="imagem-documento-preview" />
+                class="imagem-documento-preview"
+              />
 
             } @else if (documentoPreviewTipo() === 'application/pdf') {
 
               <iframe
                 class="pdf-documento-preview"
                 [src]="documentoPreviewPdfUrl()"
-                [title]="documentoPreviewNome()">
-              </iframe>
+                [title]="documentoPreviewNome()"
+              ></iframe>
 
             } @else {
 
               <div class="documento-tipo-nao-suportado">
+
                 <div class="documento-tipo-icone" aria-hidden="true">▤</div>
+
                 <h3>Pré-visualização não disponível</h3>
-                <p>Este tipo de documento não pode ser visualizado diretamente no navegador.</p>
+
+                <p>
+                  Este tipo de documento não pode ser visualizado diretamente no navegador.
+                </p>
 
                 <a
                   class="botao-download-documento"
                   [href]="documentoPreviewUrl()"
-                  [download]="documentoPreviewNome()">
+                  [download]="documentoPreviewNome()"
+                >
                   Baixar documento
                 </a>
+
               </div>
 
             }
@@ -1188,18 +1664,27 @@
           </div>
 
           <footer class="modal-documento-footer">
-            <button type="button" class="botao-fechar-recusa" (click)="fecharPreviewDocumento()">
+            <button
+              type="button"
+              class="botao-fechar-recusa"
+              (click)="fecharPreviewDocumento()"
+            >
               Fechar
             </button>
           </footer>
 
         </div>
+
       </div>
 
     }
 
   </main>
 
+
+  <!-- =====================================================
+       RODAPÉ
+       ===================================================== -->
   <footer class="rodape-painel">
     <span>© 2026 Multitel</span>
     <span>SGE — Sistema de Gestão de Estágios</span>

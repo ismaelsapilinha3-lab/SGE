@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -37,5 +38,17 @@ class User extends Authenticatable
             'password' => 'hashed',
             'ativo' => 'boolean',
         ];
+    }
+
+    /**
+     * Relação entre o utilizador e o seu perfil.
+     */
+    public function perfil(): HasOne
+    {
+        return $this->hasOne(
+            Perfil::class,
+            'id_utilizador',
+            'id_utilizador'
+        );
     }
 }

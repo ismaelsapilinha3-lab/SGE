@@ -10,47 +10,60 @@ import { TelainicialComponent } from './components/first-component/telainicial';
 import { PainelAdmin } from './components/admin/painel-admin/painel-admin';
 import { AreaReservadaComponent } from './components/first-component/area-reservada/area-reservada';
 import { estagioAtivoGuard } from './core/estagio-ativo.guard';
+import { UtilizadoresAdminComponent } from './components/admin/utilizadores-admin/utilizadores-admin';
 
 export const routes: Routes = [
-{
-path: '',
-redirectTo: 'telainicial',
-pathMatch: 'full'
-},
 
-{
-path: 'telainicial',
-component: TelainicialComponent
-},
+  // Página inicial
+  {
+    path: '',
+    redirectTo: 'telainicial',
+    pathMatch: 'full'
+  },
 
-{
-path: 'acesso',
-component: AcessoComponent
-},
+  // Portal público
+  {
+    path: 'telainicial',
+    component: TelainicialComponent
+  },
 
-{
-path: 'estagiario',
-component: PainelestagiarioComponent,
-canActivate: [authGuard]
-},
 {
 path: 'area-reservada',
 component: AreaReservadaComponent,
 canActivate: [authGuard, estagioAtivoGuard]
 },
 
+  // Autenticação
+  {
+    path: 'acesso',
+    component: AcessoComponent
+  },
 
-{
-path: 'admin',
-component: PainelAdmin,
-canActivate: [authGuard, adminGuard]
-},
+  // Painel do estagiário
+  {
+    path: 'estagiario',
+    component: PainelestagiarioComponent,
+    canActivate: [authGuard]
+  },
 
-{
-path: '**',
-redirectTo: 'telainicial'
-}
+  // Painel administrativo
+  {
+    path: 'admin',
+    component: PainelAdmin,
+    canActivate: [authGuard, adminGuard]
+  },
+
+  // Gestão de utilizadores
+  {
+    path: 'admin/utilizadores',
+    component: UtilizadoresAdminComponent,
+    canActivate: [authGuard, adminGuard]
+  },
+
+  // Rota desconhecida
+  {
+    path: '**',
+    redirectTo: 'telainicial'
+  }
+
 ];
-
-
-

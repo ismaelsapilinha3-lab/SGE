@@ -1,8 +1,7 @@
-
 <?php
-
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminRelatorioController;
+use App\Http\Controllers\Admin\UtilizadorAdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CandidaturaController;
 use App\Http\Controllers\CoordenadorController;
@@ -11,7 +10,6 @@ use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\RelatorioController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -106,13 +104,11 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    // Visualizar documento existente.
     Route::get('/documentos/{documento}', [
         DocumentoController::class,
         'download'
     ]);
 
-    // Substituir documento por uma nova versão.
     Route::post('/documentos/{documento}/substituir', [
         DocumentoController::class,
         'substituir'
@@ -145,17 +141,6 @@ Route::middleware('auth:sanctum')->group(function () {
                 'dashboard'
             ]);
 
-            // Gestão de estagiários.
-            Route::get('/estagiarios', [
-                AdminController::class,
-                'estagiarios'
-            ]);
-
-            Route::patch('/estagiarios/{idCandidatura}/estado', [
-                AdminController::class,
-                'atualizarEstadoEstagio'
-            ]);
-
             // Gestão de candidaturas.
             Route::get('/candidaturas', [
                 AdminController::class,
@@ -177,6 +162,17 @@ Route::middleware('auth:sanctum')->group(function () {
                 'recusar'
             ]);
 
+            // Gestão de estagiários e estágios.
+            Route::get('/estagiarios', [
+                AdminController::class,
+                'estagiarios'
+            ]);
+
+            Route::patch('/estagiarios/{idCandidatura}/estado', [
+                AdminController::class,
+                'atualizarEstadoEstagio'
+            ]);
+
             // Gestão de departamentos.
             Route::post('/departamentos', [
                 DepartamentoController::class,
@@ -187,42 +183,72 @@ Route::middleware('auth:sanctum')->group(function () {
                 DepartamentoController::class,
                 'update'
             ]);
+
+            // Gestão de utilizadores.
+            Route::get('/utilizadores', [
+                UtilizadorAdminController::class,
+                'index'
+            ]);
+
+            Route::post('/utilizadores', [
+                UtilizadorAdminController::class,
+                'store'
+            ]);
+
+            Route::get('/utilizadores/{id}', [
+                UtilizadorAdminController::class,
+                'show'
+            ]);
+
+            Route::put('/utilizadores/{id}', [
+                UtilizadorAdminController::class,
+                'update'
+            ]);
+
+            Route::patch('/utilizadores/{id}/estado', [
+                UtilizadorAdminController::class,
+                'alterarEstado'
+            ]);
         });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rotas exclusivas do coordenador
+    |--------------------------------------------------------------------------
+    */
 
     Route::middleware('coordenador')
         ->prefix('coordenador')
         ->group(function () {
 
-            // Indicadores do painel do coordenador.
+            // Dashboard do coordenador.
             Route::get('/dashboard', [
                 CoordenadorController::class,
                 'dashboard'
             ]);
 
-            // Listar, pesquisar e filtrar candidaturas atribuídas.
+            // Candidaturas atribuídas.
             Route::get('/candidaturas', [
                 CoordenadorController::class,
                 'candidaturas'
             ]);
 
-            // Consultar os detalhes de uma candidatura atribuída.
             Route::get('/candidaturas/{id}', [
                 CoordenadorController::class,
                 'show'
             ]);
 
-            // Aprovar candidatura.
             Route::patch('/candidaturas/{id}/aprovar', [
                 CoordenadorController::class,
                 'aprovar'
             ]);
 
-            // Recusar candidatura com motivo.
             Route::patch('/candidaturas/{id}/recusar', [
                 CoordenadorController::class,
                 'recusar'
             ]);
-
         });
 
 });
+
