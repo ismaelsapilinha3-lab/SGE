@@ -48,6 +48,9 @@ Thumbs.db
 /backups-painel-admin/
 /portal-angular/backup-painel-*/
 
+# Qualquer ficheiro de conflito/resolução guardado localmente
+*.antes-*
+
 # Outras variantes de backups locais
 *.antes-botoes
 *.backup-*
