@@ -1,8 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+
+import {
+  HttpErrorResponse
+} from '@angular/common/http';
+
+import {
+  Component,
+  OnInit
+} from '@angular/core';
+
+import {
+  FormsModule
+} from '@angular/forms';
+
+import {
+  Router
+} from '@angular/router';
 
 import {
   CandidaturaService,
@@ -13,6 +26,11 @@ import {
   AuthService,
   RespostaAuth
 } from '../../core/auth.service';
+
+
+// ============================================================
+// INTERFACES
+// ============================================================
 
 interface DadosEstagiario {
   nome: string;
@@ -41,16 +59,34 @@ interface Mensagem {
   tipo: '' | 'ok' | 'erro';
 }
 
+
+// ============================================================
+// COMPONENTE DE ACESSO
+// ============================================================
+
 @Component({
   selector: 'app-acesso',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
   templateUrl: './acesso.html',
   styleUrls: ['./acesso.css']
 })
 export class AcessoComponent implements OnInit {
 
+
+  // ==========================================================
+  // CONTROLO DAS ABAS
+  // ==========================================================
+
   abaAtiva: 'login' | 'cadastro' = 'login';
+
+
+  // ==========================================================
+  // LOGIN
+  // ==========================================================
 
   login = {
     email: '',
@@ -63,6 +99,11 @@ export class AcessoComponent implements OnInit {
   };
 
   entrando = false;
+
+
+  // ==========================================================
+  // DADOS DO CADASTRO
+  // ==========================================================
 
   cadastro: DadosEstagiario = {
     nome: '',
@@ -85,9 +126,20 @@ export class AcessoComponent implements OnInit {
 
   enviando = false;
 
+
+  // ==========================================================
+  // DEPARTAMENTOS
+  // ==========================================================
+
   departamentos: Departamento[] = [];
 
+
+  // ==========================================================
+  // DOCUMENTOS EXIGIDOS
+  // ==========================================================
+
   documentos: DocumentoUpload[] = [
+
     {
       key: 'declaracao_escolar',
       rotulo: 'Declaração <br>ou<br> Certificado Académico',
@@ -95,6 +147,7 @@ export class AcessoComponent implements OnInit {
       accept: '.pdf,.jpg,.jpeg,.png',
       arquivo: null
     },
+
     {
       key: 'foto',
       rotulo: 'Foto tipo passe',
@@ -102,6 +155,7 @@ export class AcessoComponent implements OnInit {
       accept: '.jpg,.jpeg,.png',
       arquivo: null
     },
+
     {
       key: 'bi',
       rotulo: 'Cópia do BI <br>ou<br> Passaporte',
@@ -109,6 +163,7 @@ export class AcessoComponent implements OnInit {
       accept: '.pdf,.jpg,.jpeg,.png',
       arquivo: null
     },
+
     {
       key: 'carta_solicitacao',
       rotulo: 'Carta de solicitação',
@@ -116,6 +171,7 @@ export class AcessoComponent implements OnInit {
       accept: '.pdf',
       arquivo: null
     },
+
     {
       key: 'cv',
       rotulo: 'Curriculum Vitae',
@@ -123,7 +179,13 @@ export class AcessoComponent implements OnInit {
       accept: '.pdf,.jpg,.jpeg,.png',
       arquivo: null
     }
+
   ];
+
+
+  // ==========================================================
+  // CONSTRUTOR
+  // ==========================================================
 
   constructor(
     private router: Router,
@@ -131,26 +193,52 @@ export class AcessoComponent implements OnInit {
     private authService: AuthService
   ) {}
 
+
+  // ==========================================================
+  // INICIALIZAÇÃO
+  // ==========================================================
+
   ngOnInit(): void {
+
     this.carregarDepartamentos();
   }
 
-  private carregarDepartamentos(): void {
-    this.candidaturaService.listarDepartamentos().subscribe({
-      next: (departamentos: Departamento[]) => {
-        this.departamentos = departamentos;
-      },
 
-      error: () => {
-        this.cadastroMensagem = {
-          texto: 'Não foi possível carregar os departamentos.',
-          tipo: 'erro'
-        };
-      }
-    });
+  // ==========================================================
+  // CARREGAR DEPARTAMENTOS
+  // ==========================================================
+
+  private carregarDepartamentos(): void {
+
+    this.candidaturaService
+      .listarDepartamentos()
+      .subscribe({
+
+        next: (departamentos: Departamento[]) => {
+
+          this.departamentos = departamentos;
+        },
+
+        error: () => {
+
+          this.cadastroMensagem = {
+            texto: 'Não foi possível carregar os departamentos.',
+            tipo: 'erro'
+          };
+        }
+
+      });
   }
 
-  mostrarFormulario(tipo: 'login' | 'cadastro'): void {
+
+  // ==========================================================
+  // ALTERNAR ENTRE LOGIN E CADASTRO
+  // ==========================================================
+
+  mostrarFormulario(
+    tipo: 'login' | 'cadastro'
+  ): void {
+
     this.abaAtiva = tipo;
 
     this.loginMensagem = {
@@ -164,37 +252,60 @@ export class AcessoComponent implements OnInit {
     };
   }
 
+
+  // ==========================================================
+  // SELECIONAR DOCUMENTO
+  // ==========================================================
+
   onFileChange(
     event: Event,
     documento: DocumentoUpload
   ): void {
-    const input = event.target as HTMLInputElement;
+
+    const input =
+      event.target as HTMLInputElement;
 
     if (
       input.files &&
       input.files.length > 0
     ) {
+
       documento.arquivo = input.files[0];
+
     } else {
+
       documento.arquivo = null;
     }
   }
+
+
+  // ==========================================================
+  // RECEBER DOCUMENTO POR ARRASTO
+  // ==========================================================
 
   onFileDrop(
     event: DragEvent,
     documento: DocumentoUpload
   ): void {
+
     event.preventDefault();
 
-    const arquivos = event.dataTransfer?.files;
+    const arquivos =
+      event.dataTransfer?.files;
 
     if (
       arquivos &&
       arquivos.length > 0
     ) {
+
       documento.arquivo = arquivos[0];
     }
   }
+
+
+  // ==========================================================
+  // SUBMETER CADASTRO
+  // ==========================================================
 
   onSubmitCadastro(): void {
 
@@ -207,76 +318,85 @@ export class AcessoComponent implements OnInit {
       tipo: ''
     };
 
-    /*
-     * Verificar documentos
-     */
+
+    // ----------------------------------------------------------
+    // VALIDAR DOCUMENTOS
+    // ----------------------------------------------------------
+
     const documentosEmFalta =
       this.documentos.filter(
         documento => !documento.arquivo
       );
 
     if (documentosEmFalta.length > 0) {
+
       this.cadastroMensagem = {
-        texto:
-          'Envia todos os documentos antes de continuar.',
+        texto: 'Envia todos os documentos antes de continuar.',
         tipo: 'erro'
       };
 
       return;
     }
 
-    /*
-     * Verificar departamento
-     */
+
+    // ----------------------------------------------------------
+    // VALIDAR DEPARTAMENTO
+    // ----------------------------------------------------------
+
     if (
       this.cadastro.id_departamento_selecionado === null
     ) {
+
       this.cadastroMensagem = {
-        texto:
-          'Seleciona o departamento pretendido.',
+        texto: 'Seleciona o departamento pretendido.',
         tipo: 'erro'
       };
 
       return;
     }
 
-    /*
-     * Verificar palavra-passe
-     */
+
+    // ----------------------------------------------------------
+    // VALIDAR PALAVRA-PASSE
+    // ----------------------------------------------------------
+
     if (
       this.cadastro.password.length < 8
     ) {
+
       this.cadastroMensagem = {
-        texto:
-          'A palavra-passe deve ter pelo menos 8 caracteres.',
+        texto: 'A palavra-passe deve ter pelo menos 8 caracteres.',
         tipo: 'erro'
       };
 
       return;
     }
 
-    /*
-     * Confirmar palavra-passe
-     */
+
+    // ----------------------------------------------------------
+    // CONFIRMAR PALAVRA-PASSE
+    // ----------------------------------------------------------
+
     if (
       this.cadastro.password !==
       this.cadastro.password_confirmation
     ) {
+
       this.cadastroMensagem = {
-        texto:
-          'As palavras-passe não coincidem.',
+        texto: 'As palavras-passe não coincidem.',
         tipo: 'erro'
       };
 
       return;
     }
 
+
+    // ----------------------------------------------------------
+    // ENVIAR CANDIDATURA
+    // ----------------------------------------------------------
+
     this.enviando = true;
 
-    /*
-     * Neste ponto o departamento já foi
-     * validado como number.
-     */
     const dadosParaEnviar = {
       ...this.cadastro,
       id_departamento_selecionado:
@@ -292,30 +412,24 @@ export class AcessoComponent implements OnInit {
 
         next: (resposta: RespostaAuth) => {
 
-          /*
-           * Guardar a sessão recebida
-           * pelo Laravel/Sanctum.
-           */
+          // Guardar a sessão devolvida pela API.
           this.authService.iniciarSessao(
             resposta
           );
 
           this.cadastroMensagem = {
-            texto:
-              'Candidatura enviada com sucesso!',
+            texto: 'Candidatura enviada com sucesso!',
             tipo: 'ok'
           };
 
           this.enviando = false;
 
-          /*
-           * Pequeno atraso apenas para
-           * permitir que a mensagem seja vista.
-           */
           setTimeout(() => {
+
             this.router.navigate([
               '/estagiario'
             ]);
+
           }, 600);
         },
 
@@ -325,12 +439,16 @@ export class AcessoComponent implements OnInit {
 
           this.enviando = false;
 
-          this.tratarErroCadastro(
-            erro
-          );
+          this.tratarErroCadastro(erro);
         }
+
       });
   }
+
+
+  // ============================================================
+  // SUBMETER LOGIN
+  // ============================================================
 
   onSubmitLogin(): void {
 
@@ -343,31 +461,40 @@ export class AcessoComponent implements OnInit {
       tipo: ''
     };
 
-    /*
-     * Verificar e-mail
-     */
+
+    // ----------------------------------------------------------
+    // VALIDAR E-MAIL
+    // ----------------------------------------------------------
+
     if (!this.login.email.trim()) {
+
       this.loginMensagem = {
-        texto:
-          'Digite o seu e-mail.',
+        texto: 'Digite o seu e-mail.',
         tipo: 'erro'
       };
 
       return;
     }
 
-    /*
-     * Verificar palavra-passe
-     */
+
+    // ----------------------------------------------------------
+    // VALIDAR PALAVRA-PASSE
+    // ----------------------------------------------------------
+
     if (!this.login.senha) {
+
       this.loginMensagem = {
-        texto:
-          'Digite a sua palavra-passe.',
+        texto: 'Digite a sua palavra-passe.',
         tipo: 'erro'
       };
 
       return;
     }
+
+
+    // ----------------------------------------------------------
+    // AUTENTICAR UTILIZADOR
+    // ----------------------------------------------------------
 
     this.entrando = true;
 
@@ -378,42 +505,112 @@ export class AcessoComponent implements OnInit {
       )
       .subscribe({
 
-        /*
-         * O AuthService devolve o utilizador
-         * autenticado pelo Laravel.
-         */
         next: (utilizador) => {
 
+          const tipoUtilizador =
+            utilizador.tipo_utilizador
+              ?.trim()
+              .toLowerCase();
+
+
+          // ------------------------------------------------------
+          // DETERMINAR DESTINO
+          // ------------------------------------------------------
+
+          let destino: string;
+
+          switch (tipoUtilizador) {
+
+            case 'administrador':
+
+              destino = '/admin';
+
+              break;
+
+            case 'coordenador':
+
+              destino = '/coordenador';
+
+              break;
+
+            case 'estagiario':
+
+              destino = '/estagiario';
+
+              break;
+
+            case 'supervisor':
+
+              destino = '/supervisor';
+
+              break;
+
+            default:
+
+              this.entrando = false;
+
+              this.loginMensagem = {
+                texto:
+                  `Perfil não reconhecido: ${utilizador.tipo_utilizador || 'não informado'}.`,
+                tipo: 'erro'
+              };
+
+              return;
+          }
+
+
+          // ------------------------------------------------------
+          // CONFIRMAR LOGIN
+          // ------------------------------------------------------
+
           this.loginMensagem = {
-            texto:
-              'Acesso autorizado. A abrir a tua área...',
+            texto: 'Acesso autorizado. A abrir a tua área...',
             tipo: 'ok'
           };
 
           this.entrando = false;
 
-          /*
-           * O destino depende do tipo de utilizador.
-           */
+
+          // ------------------------------------------------------
+          // REDIRECIONAR PARA O PAINEL
+          // ------------------------------------------------------
+
           setTimeout(() => {
 
-            switch (utilizador.tipo_utilizador) {
+            this.router
+              .navigate([destino])
+              .then(navegou => {
 
-              case 'administrador':
-                this.router.navigate(['/admin']);
-                break;
+                if (!navegou) {
 
-              case 'estagiario':
-                this.router.navigate(['/estagiario']);
-                break;
+                  this.loginMensagem = {
+                    texto:
+                      `Não foi possível abrir ${destino}. Verifica as rotas e as permissões.`,
+                    tipo: 'erro'
+                  };
+                }
 
-              default:
-                this.router.navigate(['/telainicial']);
-                break;
-            }
+              })
+              .catch((erro: unknown) => {
+
+                console.error(
+                  'Erro ao redirecionar após login:',
+                  erro
+                );
+
+                this.loginMensagem = {
+                  texto: 'O login foi efetuado, mas ocorreu um erro ao abrir o painel.',
+                  tipo: 'erro'
+                };
+              });
 
           }, 400);
         },
+
+
+        // --------------------------------------------------------
+        // TRATAR ERRO DE LOGIN
+        // --------------------------------------------------------
 
         error: (
           erro: HttpErrorResponse
@@ -421,10 +618,13 @@ export class AcessoComponent implements OnInit {
 
           this.entrando = false;
 
-          if (erro.status === 422) {
+          if (
+            erro.status === 422 ||
+            erro.status === 401
+          ) {
+
             this.loginMensagem = {
-              texto:
-                'E-mail ou palavra-passe incorretos.',
+              texto: 'E-mail ou palavra-passe incorretos.',
               tipo: 'erro'
             };
 
@@ -438,37 +638,40 @@ export class AcessoComponent implements OnInit {
             tipo: 'erro'
           };
         }
+
       });
   }
+
+
+  // ============================================================
+  // TRATAR ERROS DO CADASTRO
+  // ============================================================
 
   private tratarErroCadastro(
     erro: HttpErrorResponse
   ): void {
 
-    /*
-     * Limite de tentativas
-     */
+    // ----------------------------------------------------------
+    // LIMITE DE TENTATIVAS
+    // ----------------------------------------------------------
+
     if (erro.status === 429) {
+
       this.cadastroMensagem = {
-        texto:
-          'Demasiadas tentativas. Aguarda um minuto.',
+        texto: 'Demasiadas tentativas. Aguarda um minuto.',
         tipo: 'erro'
       };
 
       return;
     }
 
-    /*
-     * Erros de validação enviados pelo Laravel
-     *
-     * Exemplo:
-     * {
-     *   errors: {
-     *     email: ['Este e-mail já existe.']
-     *   }
-     * }
-     */
-    const erros = erro?.error?.errors;
+
+    // ----------------------------------------------------------
+    // ERROS DE VALIDAÇÃO DO LARAVEL
+    // ----------------------------------------------------------
+
+    const erros =
+      erro?.error?.errors;
 
     if (erros) {
 
@@ -482,6 +685,7 @@ export class AcessoComponent implements OnInit {
         mensagens &&
         mensagens.length > 0
       ) {
+
         this.cadastroMensagem = {
           texto: mensagens[0],
           tipo: 'erro'
@@ -491,9 +695,11 @@ export class AcessoComponent implements OnInit {
       }
     }
 
-    /*
-     * Erro geral enviado pelo Laravel
-     */
+
+    // ----------------------------------------------------------
+    // ERRO GERAL
+    // ----------------------------------------------------------
+
     this.cadastroMensagem = {
       texto:
         erro?.error?.message ??
@@ -502,10 +708,16 @@ export class AcessoComponent implements OnInit {
     };
   }
 
+
+  // ============================================================
+  // VOLTAR À PÁGINA INICIAL
+  // ============================================================
+
   voltarParaPaginaInicial(): void {
+
     this.router.navigate([
       '/telainicial'
     ]);
   }
-}
 
+}
