@@ -21,7 +21,21 @@ return [
 
     'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:4200,http://127.0.0.1:4200')),
 
-    'allowed_origins_patterns' => [],
+    /*
+    |--------------------------------------------------------------------------
+    | Origens por expressão regular
+    |--------------------------------------------------------------------------
+    |
+    | Por omissão aceita qualquer porta local (localhost / 127.0.0.1), o que
+    | permite ao dev server do Angular usar portas efémeras (ex.: 62060).
+    | Qualquer outra origem tem de ser listada em CORS_ALLOWED_ORIGINS.
+    |
+    */
+
+    'allowed_origins_patterns' => array_filter(array_map('trim', explode(',', env(
+        'CORS_ALLOWED_ORIGIN_PATTERNS',
+        '{^https?://(localhost|127\.0\.0\.1)(:\d+)?$}'
+    )))),
 
     'allowed_headers' => ['*'],
 
