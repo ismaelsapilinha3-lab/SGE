@@ -110,10 +110,14 @@ export class PainelCoordenadorComponent {
 
 
     // Validar a palavra-passe.
-    if (this.password.length < 8) {
+    if (
+      this.password.length < 8 ||
+      !/[A-Za-z]/.test(this.password) ||
+      !/[0-9]/.test(this.password)
+    ) {
 
       this.erro.set(
-        'A palavra-passe deve ter pelo menos 8 caracteres.'
+        'A palavra-passe deve ter pelo menos 8 caracteres e conter letras e números.'
       );
 
       return;

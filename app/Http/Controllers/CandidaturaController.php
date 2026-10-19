@@ -10,6 +10,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\Password;
 
 class CandidaturaController extends Controller
 {
@@ -44,7 +45,7 @@ class CandidaturaController extends Controller
             'password' => [
                 'required',
                 'string',
-                'min:8',
+                Password::default(),
                 'confirmed',
             ],
 

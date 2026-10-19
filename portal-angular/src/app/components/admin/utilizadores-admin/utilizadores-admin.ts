@@ -178,8 +178,14 @@ export class UtilizadoresAdminComponent implements OnInit {
 
     if (this.password || this.passwordConfirmation ||
         !this.utilizadorEditado()) {
-      if (this.password.length < 8) {
-        this.erro.set('A palavra-passe deve ter pelo menos 8 caracteres.');
+      if (
+        this.password.length < 8 ||
+        !/[A-Za-z]/.test(this.password) ||
+        !/[0-9]/.test(this.password)
+      ) {
+        this.erro.set(
+          'A palavra-passe deve ter pelo menos 8 caracteres e conter letras e números.'
+        );
         return;
       }
 

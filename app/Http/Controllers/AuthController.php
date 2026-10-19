@@ -28,6 +28,12 @@ class AuthController extends Controller
             ]);
         }
 
+        /*
+        | Rotação de sessão: os tokens anteriores do utilizador deixam de
+        | servir (um token roubado expira no próximo login legítimo).
+        */
+        $user->tokens()->delete();
+
         $token = $user
             ->createToken('angular-sge')
             ->plainTextToken;

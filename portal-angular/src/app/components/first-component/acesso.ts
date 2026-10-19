@@ -361,11 +361,13 @@ export class AcessoComponent implements OnInit {
     // ----------------------------------------------------------
 
     if (
-      this.cadastro.password.length < 8
+      this.cadastro.password.length < 8 ||
+      !/[A-Za-z]/.test(this.cadastro.password) ||
+      !/[0-9]/.test(this.cadastro.password)
     ) {
 
       this.cadastroMensagem = {
-        texto: 'A palavra-passe deve ter pelo menos 8 caracteres.',
+        texto: 'A palavra-passe deve ter pelo menos 8 caracteres e conter letras e números.',
         tipo: 'erro'
       };
 

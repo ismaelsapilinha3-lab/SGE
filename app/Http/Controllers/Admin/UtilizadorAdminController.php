@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
 class UtilizadorAdminController extends Controller
@@ -79,7 +80,7 @@ class UtilizadorAdminController extends Controller
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:255', 'unique:utilizadores,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', Password::default(), 'confirmed'],
             'telefone' => ['nullable', 'string', 'max:30'],
             'tipo_utilizador' => [
                 'required',
@@ -187,7 +188,7 @@ class UtilizadorAdminController extends Controller
                 'sometimes',
                 'nullable',
                 'string',
-                'min:8',
+                Password::default(),
                 'confirmed',
             ],
         ]);

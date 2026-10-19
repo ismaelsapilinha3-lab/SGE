@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class CoordenadorController extends Controller
 {
@@ -357,7 +358,7 @@ class CoordenadorController extends Controller
             'password' => [
                 'required',
                 'string',
-                'min:8',
+                Password::default(),
                 'confirmed',
             ],
 
