@@ -40,6 +40,7 @@ type SecaoAdmin =
   | 'candidaturas'
   | 'departamentos'
   | 'estagiarios'
+  | 'relatorios'
   | 'utilizadores';
 
 
@@ -67,13 +68,7 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // SECÇÃO ATIVA
   // ============================================================
 
-<<<<<<< HEAD
-  secaoAtiva = signal<
-    'dashboard' | 'candidaturas' | 'departamentos' | 'estagiarios' | 'relatorios'
-  >('dashboard');
-=======
   secaoAtiva = signal<SecaoAdmin>('dashboard');
->>>>>>> 2d47c528a69051ab3fbd8b9cc9be5026e31a7ee2
 
 
   // ============================================================
@@ -1445,11 +1440,6 @@ export class PainelAdmin implements OnInit, OnDestroy {
   }
 
 
-  // ============================================================
-  // NAVEGAÇÃO ENTRE SECÇÕES
-  // ============================================================
-
-<<<<<<< HEAD
   // ==========================================================
   // CARREGAR RELATORIOS
   // ==========================================================
@@ -1567,28 +1557,13 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
     this.subscriptions.add(sub);
   }
-  irParaSecao(
-    secao: 'dashboard' | 'candidaturas' | 'departamentos' | 'estagiarios' | 'relatorios'
-  ): void {
-    this.secaoAtiva.set(secao);
 
-    if (secao === 'relatorios') {
-      this.carregarRelatorios();
-    }
 
-    if (secao === 'relatorios') {
-      this.carregarRelatorios();
-    }
+  // ============================================================
+  // NAVEGAÇÃO ENTRE SECÇÕES
+  // ============================================================
 
-    if (secao === 'relatorios') {
-      this.carregarRelatorios();
-    }
-
-    if (secao === 'relatorios') {
-      this.carregarRelatorios();
-=======
   irParaSecao(secao: SecaoAdmin): void {
-
     // A gestão de utilizadores é uma página independente.
     if (secao === 'utilizadores') {
       this.router.navigate(['/admin/utilizadores']);
@@ -1598,9 +1573,12 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
     this.secaoAtiva.set(secao);
 
+    if (secao === 'relatorios') {
+      this.carregarRelatorios();
+    }
+
     if (secao === 'estagiarios') {
       this.carregarEstagiarios();
->>>>>>> 2d47c528a69051ab3fbd8b9cc9be5026e31a7ee2
     }
 
     if (!isPlatformBrowser(this.platformId)) {
@@ -1635,45 +1613,14 @@ export class PainelAdmin implements OnInit, OnDestroy {
   }
 
 
-<<<<<<< HEAD
-  estagioEmGestao = signal<Estagiario | null>(null);
-  estadoEstagioFormulario = signal<'ativo' | 'suspenso' | 'concluido' | 'cancelado'>('ativo');
-  inicioEstagioFormulario = signal('');
-  fimEstagioFormulario = signal('');
-  motivoSuspensaoFormulario = signal('');
-  aGuardarEstadoEstagio = signal(false);
-  erroGestaoEstagio = signal('');
-  sucessoGestaoEstagio = signal('');
-
-  duracaoMesesFormulario = signal(6);
-
   calcularDuracaoMeses(inicio: string, fim: string): number {
     if (!inicio || !fim) return 6;
-=======
-  // ============================================================
-  // CALCULAR DURAÇÃO DO ESTÁGIO
-  // ============================================================
-
-  calcularDuracaoMeses(inicio: string, fim: string): number {
-    if (!inicio || !fim) {
-      return 2;
-    }
->>>>>>> 2d47c528a69051ab3fbd8b9cc9be5026e31a7ee2
 
     const [ai, mi, di] = inicio.split('-').map(Number);
 
     const [af, mf, df] = fim.split('-').map(Number);
 
     let meses = (af - ai) * 12 + (mf - mi);
-<<<<<<< HEAD
-    if (df < di) meses--;
-
-    return Math.max(1, meses);
-  }
-
-  calcularDataFimEstagio(inicio: string, meses: number): string {
-    if (!inicio || !Number.isFinite(meses) || meses < 1) return '';
-=======
 
     if (df < di) {
       meses--;
@@ -1698,7 +1645,6 @@ export class PainelAdmin implements OnInit, OnDestroy {
     ) {
       return '';
     }
->>>>>>> 2d47c528a69051ab3fbd8b9cc9be5026e31a7ee2
 
     const [ano, mes, dia] = inicio.split('-').map(Number);
 
@@ -1723,7 +1669,6 @@ export class PainelAdmin implements OnInit, OnDestroy {
     return `${a}-${m}-${d}`;
   }
 
-<<<<<<< HEAD
   alterarInicioEstagio(inicio: string): void {
     this.inicioEstagioFormulario.set(inicio);
     this.fimEstagioFormulario.set(
@@ -1751,23 +1696,15 @@ export class PainelAdmin implements OnInit, OnDestroy {
       this.calcularDataFimEstagio(this.inicioEstagioFormulario(), meses)
     );
   }
-=======
+
 
   // ============================================================
   // ABRIR GESTÃO DO ESTÁGIO
   // ============================================================
->>>>>>> 2d47c528a69051ab3fbd8b9cc9be5026e31a7ee2
 
   abrirGestaoEstagio(estagiario: Estagiario): void {
     this.estagioEmGestao.set(estagiario);
 
-<<<<<<< HEAD
-    const estados = ['ativo', 'suspenso', 'concluido', 'cancelado'] as const;
-    const estado = estados.includes(
-      estagiario.estado_estagio as typeof estados[number]
-    )
-      ? estagiario.estado_estagio as typeof estados[number]
-=======
     const estados: readonly EstadoEstagio[] = [
       'ativo',
       'suspenso',
@@ -1781,7 +1718,6 @@ export class PainelAdmin implements OnInit, OnDestroy {
       estadoRecebido as EstadoEstagio
     )
       ? estadoRecebido as EstadoEstagio
->>>>>>> 2d47c528a69051ab3fbd8b9cc9be5026e31a7ee2
       : 'ativo';
 
     const inicio = estagiario.data_inicio ?? '';
@@ -1793,35 +1729,14 @@ export class PainelAdmin implements OnInit, OnDestroy {
           : 6);
 
     this.estadoEstagioFormulario.set(estado);
-<<<<<<< HEAD
+
     this.inicioEstagioFormulario.set(inicio);
     this.duracaoMesesFormulario.set(duracao);
     this.fimEstagioFormulario.set(
       this.calcularDataFimEstagio(inicio, duracao)
     );
     this.motivoSuspensaoFormulario.set(estagiario.motivo_suspensao ?? '');
-=======
 
-    this.inicioEstagioFormulario.set(
-      estagiario.data_inicio ?? ''
-    );
-
-    this.fimEstagioFormulario.set(
-      estagiario.data_fim_prevista ?? ''
-    );
-
-    this.duracaoMesesFormulario.set(
-      this.calcularDuracaoMeses(
-        estagiario.data_inicio ?? '',
-        estagiario.data_fim_prevista ?? ''
-      )
-    );
-
-    this.motivoSuspensaoFormulario.set(
-      estagiario.motivo_suspensao ?? ''
-    );
-
->>>>>>> 2d47c528a69051ab3fbd8b9cc9be5026e31a7ee2
     this.erroGestaoEstagio.set('');
 
     this.sucessoGestaoEstagio.set('');
@@ -1894,29 +1809,6 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
     this.erroGestaoEstagio.set('');
 
-<<<<<<< HEAD
-    this.adminService.atualizarEstadoEstagio(estagiario.id_candidatura, {
-      estado,
-      data_inicio: inicio || undefined,
-      duracao_meses: this.duracaoMesesFormulario(),
-      data_fim_prevista: fim || undefined,
-      motivo_suspensao: estado === 'suspenso' ? motivo : undefined
-    }).subscribe({
-      next: (resposta) => {
-        this.sucessoGestaoEstagio.set(resposta.message || 'Estado atualizado.');
-        this.aGuardarEstadoEstagio.set(false);
-        this.estagioEmGestao.set(null);
-        this.carregarEstagiarios();
-      },
-      error: (erro: unknown) => {
-        const resposta = erro as { error?: { message?: string } };
-        this.erroGestaoEstagio.set(
-          resposta.error?.message || 'Não foi possível atualizar o estágio. Verifica a API e as permissões.'
-        );
-        this.aGuardarEstadoEstagio.set(false);
-      }
-    });
-=======
     const sub = this.adminService
       .atualizarEstadoEstagio(
         estagiario.id_candidatura,
@@ -1924,6 +1816,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
           estado,
 
           data_inicio: inicio || undefined,
+
+          duracao_meses: this.duracaoMesesFormulario() || undefined,
 
           data_fim_prevista: fim || undefined,
 
@@ -1962,7 +1856,6 @@ export class PainelAdmin implements OnInit, OnDestroy {
       });
 
     this.subscriptions.add(sub);
->>>>>>> 2d47c528a69051ab3fbd8b9cc9be5026e31a7ee2
   }
 
 }
