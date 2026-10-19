@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { authGuard } from './core/auth.guard';
 import { adminGuard } from './core/admin.guard';
+import { coordenadorGuard } from './core/coordenador.guard';
 
 import { AcessoComponent } from './components/first-component/acesso';
 import { PainelestagiarioComponent } from './components/first-component/painelestagiario';
@@ -10,49 +11,95 @@ import { TelainicialComponent } from './components/first-component/telainicial';
 import { PainelAdmin } from './components/admin/painel-admin/painel-admin';
 import { UtilizadoresAdminComponent } from './components/admin/utilizadores-admin/utilizadores-admin';
 
+import {
+  PainelCoordenadorComponent
+} from './components/coordenador/painel-coordenador/painel-coordenador';
+
+
 export const routes: Routes = [
 
-  // Página inicial
+  // ============================================================
+  // PÁGINA INICIAL
+  // ============================================================
   {
     path: '',
     redirectTo: 'telainicial',
     pathMatch: 'full'
   },
 
-  // Portal público
+
+  // ============================================================
+  // PORTAL PÚBLICO
+  // ============================================================
   {
     path: 'telainicial',
     component: TelainicialComponent
   },
 
-  // Autenticação
+
+  // ============================================================
+  // AUTENTICAÇÃO
+  // ============================================================
   {
     path: 'acesso',
     component: AcessoComponent
   },
 
-  // Painel do estagiário
+
+  // ============================================================
+  // PAINEL DO ESTAGIÁRIO
+  // ============================================================
   {
     path: 'estagiario',
     component: PainelestagiarioComponent,
-    canActivate: [authGuard]
+    canActivate: [
+      authGuard
+    ]
   },
 
-  // Painel administrativo
+
+  // ============================================================
+  // PAINEL DO COORDENADOR
+  // ============================================================
+  {
+    path: 'coordenador',
+    component: PainelCoordenadorComponent,
+    canActivate: [
+      authGuard,
+      coordenadorGuard
+    ]
+  },
+
+
+  // ============================================================
+  // PAINEL ADMINISTRATIVO
+  // ============================================================
   {
     path: 'admin',
     component: PainelAdmin,
-    canActivate: [authGuard, adminGuard]
+    canActivate: [
+      authGuard,
+      adminGuard
+    ]
   },
 
-  // Gestão de utilizadores
+
+  // ============================================================
+  // GESTÃO DE UTILIZADORES
+  // ============================================================
   {
     path: 'admin/utilizadores',
     component: UtilizadoresAdminComponent,
-    canActivate: [authGuard, adminGuard]
+    canActivate: [
+      authGuard,
+      adminGuard
+    ]
   },
 
-  // Rota desconhecida
+
+  // ============================================================
+  // ROTA DESCONHECIDA
+  // ============================================================
   {
     path: '**',
     redirectTo: 'telainicial'

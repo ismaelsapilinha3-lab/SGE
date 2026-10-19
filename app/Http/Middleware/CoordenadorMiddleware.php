@@ -15,22 +15,22 @@ class CoordenadorMiddleware
 
         $user = $request->user();
 
-        // Confirmar se existe um utilizador autenticado e ativo.
-        if (!$user || !$user->ativo) {
+        if (! $user || ! $user->ativo) {
             return response()->json([
                 'message' => 'Utilizador não autorizado.',
             ], 403);
         }
 
-        // Permitir apenas utilizadores com o perfil de coordenador.
         if ($user->tipo_utilizador !== 'coordenador') {
             return response()->json([
                 'message' => 'Acesso restrito ao coordenador.',
             ], 403);
         }
 
-        // Confirmar se o coordenador está associado a uma direção.
-        if (!$user->id_departamento) {
+        // A direção está guardada no perfil do coordenador.
+        $idDepartamento = $user->perfil?->id_departamento;
+
+        if (! $idDepartamento) {
             return response()->json([
                 'message' => 'O coordenador não está associado a uma direção.',
             ], 403);
@@ -39,4 +39,3 @@ class CoordenadorMiddleware
         return $next($request);
     }
 }
-

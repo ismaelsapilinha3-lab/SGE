@@ -4,20 +4,51 @@ namespace App\Http\Controllers;
 
 use App\Models\Candidatura;
 use App\Models\HistoricoEstado;
+use App\Models\Perfil;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class CoordenadorController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Obter a direção do coordenador autenticado
+    |--------------------------------------------------------------------------
+    */
+
+    private function idDepartamentoDoCoordenador(
+        Request $request
+    ): int {
+
+        $idDepartamento = $request->user()
+            ->perfil
+            ?->id_departamento;
+
+        if (! $idDepartamento) {
+            abort(response()->json([
+                'message' => 'O coordenador não está associado a uma direção.',
+            ], 403));
+        }
+
+        return (int) $idDepartamento;
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Consultar candidaturas atribuídas ao coordenador autenticado
     |--------------------------------------------------------------------------
     */
 
-    private function candidaturasDoCoordenador(Request $request)
-    {
+    private function candidaturasDoCoordenador(
+        Request $request
+    ) {
+
         $user = $request->user();
+
+        $idDepartamento =
+            $this->idDepartamentoDoCoordenador($request);
 
         return Candidatura::query()
             ->where(
@@ -26,10 +57,9 @@ class CoordenadorController extends Controller
             )
             ->where(
                 'id_departamento_selecionado',
-                $user->id_departamento
+                $idDepartamento
             );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -58,7 +88,6 @@ class CoordenadorController extends Controller
         ]);
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Listar candidaturas
@@ -68,30 +97,57 @@ class CoordenadorController extends Controller
     public function candidaturas(Request $request)
     {
         $dados = $request->validate([
-            'pesquisa' => ['nullable', 'string', 'max:150'],
+            'pesquisa' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
+
             'estado' => [
                 'nullable',
-                'in:em_analise,aprovada,recusada,encerrada'
+                'in:em_analise,aprovada,recusada,encerrada',
             ],
-            'por_pagina' => ['nullable', 'integer', 'min:1', 'max:100'],
+
+            'por_pagina' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:100',
+            ],
         ]);
 
         $query = $this->candidaturasDoCoordenador($request)
             ->with('departamento')
             ->orderByDesc('created_at');
 
-        if (!empty($dados['pesquisa'])) {
+        if (! empty($dados['pesquisa'])) {
             $pesquisa = $dados['pesquisa'];
 
             $query->where(function ($q) use ($pesquisa) {
-                $q->where('nome', 'like', "%{$pesquisa}%")
-                    ->orWhere('email', 'like', "%{$pesquisa}%")
-                    ->orWhere('curso', 'like', "%{$pesquisa}%")
-                    ->orWhere('universidade', 'like', "%{$pesquisa}%");
+                $q->where(
+                    'nome',
+                    'like',
+                    "%{$pesquisa}%"
+                )
+                    ->orWhere(
+                        'email',
+                        'like',
+                        "%{$pesquisa}%"
+                    )
+                    ->orWhere(
+                        'curso',
+                        'like',
+                        "%{$pesquisa}%"
+                    )
+                    ->orWhere(
+                        'universidade',
+                        'like',
+                        "%{$pesquisa}%"
+                    );
             });
         }
 
-        if (!empty($dados['estado'])) {
+        if (! empty($dados['estado'])) {
             $query->where('estado', $dados['estado']);
         }
 
@@ -100,22 +156,27 @@ class CoordenadorController extends Controller
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Consultar uma candidatura
     |--------------------------------------------------------------------------
     */
 
-    public function show(Request $request, int $id)
-    {
+    public function show(
+        Request $request,
+        int $id
+    ) {
+
         $candidatura = $this
             ->candidaturasDoCoordenador($request)
-            ->with(['departamento', 'documentos'])
+            ->with([
+                'departamento',
+                'documentos',
+            ])
             ->where('id_candidatura', $id)
             ->first();
 
-        if (!$candidatura) {
+        if (! $candidatura) {
             return response()->json([
                 'message' => 'Candidatura não encontrada ou não atribuída a este coordenador.',
             ], 404);
@@ -124,16 +185,21 @@ class CoordenadorController extends Controller
         return response()->json($candidatura);
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Aprovar candidatura
     |--------------------------------------------------------------------------
     */
 
-    public function aprovar(Request $request, int $id)
-    {
-        return DB::transaction(function () use ($request, $id) {
+    public function aprovar(
+        Request $request,
+        int $id
+    ) {
+
+        return DB::transaction(function () use (
+            $request,
+            $id
+        ) {
 
             $candidatura = $this
                 ->candidaturasDoCoordenador($request)
@@ -141,7 +207,7 @@ class CoordenadorController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            if (!$candidatura) {
+            if (! $candidatura) {
                 return response()->json([
                     'message' => 'Candidatura não encontrada ou não atribuída a este coordenador.',
                 ], 404);
@@ -163,20 +229,28 @@ class CoordenadorController extends Controller
 
             HistoricoEstado::create([
                 'id_candidatura' => $candidatura->id_candidatura,
+
                 'estado_anterior' => $estadoAnterior,
+
                 'estado_novo' => 'aprovada',
+
                 'motivo' => null,
+
                 'id_utilizador' => $request->user()->id_utilizador,
             ]);
 
             return response()->json([
                 'message' => 'Candidatura aprovada com sucesso.',
-                'candidatura' => $candidatura->fresh()
-                    ->load(['departamento', 'documentos']),
+
+                'candidatura' => $candidatura
+                    ->fresh()
+                    ->load([
+                        'departamento',
+                        'documentos',
+                    ]),
             ]);
         });
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -184,13 +258,25 @@ class CoordenadorController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function recusar(Request $request, int $id)
-    {
+    public function recusar(
+        Request $request,
+        int $id
+    ) {
+
         $dados = $request->validate([
-            'motivo' => ['required', 'string', 'min:5', 'max:1000'],
+            'motivo' => [
+                'required',
+                'string',
+                'min:5',
+                'max:1000',
+            ],
         ]);
 
-        return DB::transaction(function () use ($request, $id, $dados) {
+        return DB::transaction(function () use (
+            $request,
+            $id,
+            $dados
+        ) {
 
             $candidatura = $this
                 ->candidaturasDoCoordenador($request)
@@ -198,7 +284,7 @@ class CoordenadorController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            if (!$candidatura) {
+            if (! $candidatura) {
                 return response()->json([
                     'message' => 'Candidatura não encontrada ou não atribuída a este coordenador.',
                 ], 404);
@@ -220,18 +306,116 @@ class CoordenadorController extends Controller
 
             HistoricoEstado::create([
                 'id_candidatura' => $candidatura->id_candidatura,
+
                 'estado_anterior' => $estadoAnterior,
+
                 'estado_novo' => 'recusada',
+
                 'motivo' => $dados['motivo'],
+
                 'id_utilizador' => $request->user()->id_utilizador,
             ]);
 
             return response()->json([
                 'message' => 'Candidatura recusada com sucesso.',
-                'candidatura' => $candidatura->fresh()
-                    ->load(['departamento', 'documentos']),
+
+                'candidatura' => $candidatura
+                    ->fresh()
+                    ->load([
+                        'departamento',
+                        'documentos',
+                    ]),
             ]);
         });
     }
-}
 
+    /*
+    |--------------------------------------------------------------------------
+    | Criar supervisor
+    |--------------------------------------------------------------------------
+    */
+
+    public function criarSupervisor(Request $request)
+    {
+        $idDepartamento =
+            $this->idDepartamentoDoCoordenador($request);
+
+        $dados = $request->validate([
+            'nome' => [
+                'required',
+                'string',
+                'max:150',
+            ],
+
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                'unique:utilizadores,email',
+            ],
+
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+            ],
+
+            'telefone' => [
+                'nullable',
+                'string',
+                'max:30',
+            ],
+        ]);
+
+        $supervisor = DB::transaction(function () use (
+            $dados,
+            $idDepartamento
+        ) {
+
+            $utilizador = User::create([
+                'nome' => $dados['nome'],
+
+                'email' => $dados['email'],
+
+                'password' => Hash::make(
+                    $dados['password']
+                ),
+
+                'telefone' => $dados['telefone'] ?? null,
+
+                'tipo_utilizador' => 'supervisor',
+
+                'ativo' => true,
+            ]);
+
+            Perfil::create([
+                'id_utilizador' => $utilizador->id_utilizador,
+
+                'id_departamento' => $idDepartamento,
+            ]);
+
+            return $utilizador;
+        });
+
+        return response()->json([
+            'message' => 'Supervisor criado com sucesso.',
+
+            'supervisor' => [
+                'id_utilizador' => $supervisor->id_utilizador,
+
+                'nome' => $supervisor->nome,
+
+                'email' => $supervisor->email,
+
+                'telefone' => $supervisor->telefone,
+
+                'tipo_utilizador' => $supervisor->tipo_utilizador,
+
+                'ativo' => $supervisor->ativo,
+
+                'id_departamento' => $idDepartamento,
+            ],
+        ], 201);
+    }
+}

@@ -1,0 +1,254 @@
+<section class="coord-page">
+
+  <header class="coord-header">
+
+    <div>
+      <span class="coord-kicker">
+        SISTEMA DE GESTÃO DE ESTÁGIOS
+      </span>
+
+      <h1>Painel do coordenador</h1>
+
+      <p>
+        Gere a criação de contas de supervisores
+        associados à tua direção.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="coord-btn coord-btn-outline"
+      (click)="sair()"
+    >
+      Encerrar sessão
+    </button>
+
+  </header>
+
+
+  <main class="coord-main">
+
+    @if (erro()) {
+      <div
+        class="coord-alert coord-alert-error"
+        role="alert"
+      >
+        <strong>Não foi possível concluir a operação</strong>
+        <p>{{ erro() }}</p>
+      </div>
+    }
+
+
+    @if (sucesso()) {
+      <div
+        class="coord-alert coord-alert-success"
+        role="status"
+      >
+        <strong>Operação concluída</strong>
+        <p>{{ sucesso() }}</p>
+      </div>
+    }
+
+
+    <section class="coord-card">
+
+      <div class="coord-card-heading">
+
+        <div class="coord-icon" aria-hidden="true">
+          +
+        </div>
+
+        <div>
+          <span class="coord-kicker">
+            GESTÃO DE SUPERVISORES
+          </span>
+
+          <h2>Criar conta de supervisor</h2>
+
+          <p>
+            Preenche os dados para registar um novo supervisor.
+          </p>
+        </div>
+
+      </div>
+
+
+      <form
+        #formSupervisor="ngForm"
+        (ngSubmit)="criarSupervisor()"
+        novalidate
+      >
+
+        <div class="coord-form-grid">
+
+          <div class="coord-field">
+
+            <label for="nome">
+              Nome completo *
+            </label>
+
+            <input
+              id="nome"
+              name="nome"
+              type="text"
+              [(ngModel)]="nome"
+              required
+              minlength="3"
+              maxlength="150"
+              autocomplete="name"
+              placeholder="Nome completo do supervisor"
+              [disabled]="guardando()"
+            >
+
+          </div>
+
+
+          <div class="coord-field">
+
+            <label for="email">
+              E-mail *
+            </label>
+
+            <input
+              id="email"
+              name="email"
+              type="email"
+              [(ngModel)]="email"
+              required
+              email
+              maxlength="255"
+              autocomplete="email"
+              placeholder="supervisor@empresa.ao"
+              [disabled]="guardando()"
+            >
+
+          </div>
+
+
+          <div class="coord-field">
+
+            <label for="telefone">
+              Telefone
+            </label>
+
+            <input
+              id="telefone"
+              name="telefone"
+              type="tel"
+              [(ngModel)]="telefone"
+              maxlength="30"
+              autocomplete="tel"
+              placeholder="Contacto telefónico"
+              [disabled]="guardando()"
+            >
+
+          </div>
+
+
+          <div class="coord-field">
+
+            <label for="password">
+              Palavra-passe *
+            </label>
+
+            <input
+              id="password"
+              name="password"
+              type="password"
+              [(ngModel)]="password"
+              required
+              minlength="8"
+              autocomplete="new-password"
+              placeholder="Mínimo de 8 caracteres"
+              [disabled]="guardando()"
+            >
+
+          </div>
+
+
+          <div class="coord-field coord-field-full">
+
+            <label for="passwordConfirmation">
+              Confirmar palavra-passe *
+            </label>
+
+            <input
+              id="passwordConfirmation"
+              name="passwordConfirmation"
+              type="password"
+              [(ngModel)]="passwordConfirmation"
+              required
+              minlength="8"
+              autocomplete="new-password"
+              placeholder="Repete a palavra-passe"
+              [disabled]="guardando()"
+            >
+
+          </div>
+
+        </div>
+
+
+        <div class="coord-security-note">
+
+          <span aria-hidden="true">i</span>
+
+          <p>
+            A conta será criada com o perfil de supervisor
+            e associada à direção do coordenador autenticado.
+          </p>
+
+        </div>
+
+
+        <div class="coord-actions">
+
+          <button
+            type="button"
+            class="coord-btn coord-btn-outline"
+            (click)="limparFormulario()"
+            [disabled]="guardando()"
+          >
+            Limpar campos
+          </button>
+
+          <button
+            type="submit"
+            class="coord-btn coord-btn-primary"
+            [disabled]="guardando() || formSupervisor.invalid"
+          >
+            @if (guardando()) {
+              A criar conta...
+            } @else {
+              Criar supervisor
+            }
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+
+    <section class="coord-info">
+
+      <div class="coord-info-icon" aria-hidden="true">
+        ✓
+      </div>
+
+      <div>
+        <h3>Acesso e permissões</h3>
+
+        <p>
+          O coordenador pode criar contas de supervisores.
+          A autorização final é validada pelo Laravel,
+          que associa o supervisor à direção do coordenador.
+        </p>
+      </div>
+
+    </section>
+
+  </main>
+
+</section>
