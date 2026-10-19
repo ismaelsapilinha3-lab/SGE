@@ -27,7 +27,9 @@ import {
   DepartamentoDados,
   Documento,
   Estagiario,
-  EstagiariosResponse
+  EstagiariosResponse,
+  RelatorioAdmin,
+  RelatoriosAdminResponse
 } from '../../../services/admin.service';
 
 import { AuthService } from '../../../core/auth.service';
@@ -47,7 +49,7 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   secaoAtiva = signal<
-    'dashboard' | 'candidaturas' | 'departamentos' | 'estagiarios' | 'estagiarios'
+    'dashboard' | 'candidaturas' | 'departamentos' | 'estagiarios' | 'relatorios'
   >('dashboard');
 
 
@@ -181,6 +183,21 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // CICLO DE VIDA
   // ============================================================
 
+  // ==========================================================
+  // RELATORIOS ADMINISTRATIVOS
+  // ==========================================================
+
+  relatorios = signal<RelatorioAdmin[]>([]);
+  carregandoRelatorios = signal(false);
+  erroRelatorios = signal('');
+  sucessoRelatorio = signal('');
+  pesquisaRelatorios = signal('');
+  estadoRelatorios = signal('');
+  tipoRelatorios = signal('');
+  relatorioSelecionado = signal<RelatorioAdmin | null>(null);
+  comentarioAvaliacaoRelatorio = signal('');
+  avaliandoRelatorioId = signal<number | null>(null);
+  erroAvaliacaoRelatorio = signal('');
   ngOnInit(): void {
     this.carregarDashboard();
     this.carregarDepartamentos();
@@ -1128,10 +1145,143 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // NAVEGAÇÃO ENTRE SECÇÕES
   // ============================================================
 
+  // ==========================================================
+  // CARREGAR RELATORIOS
+  // ==========================================================
+
+  carregarRelatorios(): void {
+    this.carregandoRelatorios.set(true);
+    this.erroRelatorios.set('');
+    this.sucessoRelatorio.set('');
+
+    const sub = this.adminService.listarRelatoriosAdmin(
+      this.pesquisaRelatorios(),
+      this.estadoRelatorios(),
+      this.tipoRelatorios(),
+      1
+    ).subscribe({
+      next: (resposta: RelatoriosAdminResponse) => {
+        this.relatorios.set(resposta.data ?? []);
+        this.carregandoRelatorios.set(false);
+      },
+      error: (erro: unknown) => {
+        console.error('Erro ao carregar relatórios:', erro);
+        this.relatorios.set([]);
+        this.erroRelatorios.set(
+          'Não foi possível carregar os relatórios. Confirma a API e a autenticação.'
+        );
+        this.carregandoRelatorios.set(false);
+      }
+    });
+
+    this.subscriptions.add(sub);
+  }
+
+  pesquisarRelatorios(): void {
+    this.carregarRelatorios();
+  }
+
+  // ==========================================================
+  // ABRIR E FECHAR DETALHES DO RELATORIO
+  // ==========================================================
+
+  abrirRelatorio(relatorio: RelatorioAdmin): void {
+    this.relatorioSelecionado.set(relatorio);
+    this.comentarioAvaliacaoRelatorio.set(
+      relatorio.comentario_admin ?? ''
+    );
+    this.erroAvaliacaoRelatorio.set('');
+    this.sucessoRelatorio.set('');
+  }
+
+  fecharRelatorio(): void {
+    this.relatorioSelecionado.set(null);
+    this.comentarioAvaliacaoRelatorio.set('');
+    this.erroAvaliacaoRelatorio.set('');
+  }
+
+  // ==========================================================
+  // APROVAR OU REJEITAR RELATORIO
+  // ==========================================================
+
+  avaliarRelatorio(estado: 'aprovado' | 'rejeitado'): void {
+    const relatorio = this.relatorioSelecionado();
+
+    if (!relatorio || this.avaliandoRelatorioId() !== null) {
+      return;
+    }
+
+    const comentario = this.comentarioAvaliacaoRelatorio().trim();
+
+    if (estado === 'rejeitado' && !comentario) {
+      this.erroAvaliacaoRelatorio.set(
+        'Indica o motivo da rejeição antes de continuar.'
+      );
+      return;
+    }
+
+    this.avaliandoRelatorioId.set(relatorio.id_relatorio);
+    this.erroAvaliacaoRelatorio.set('');
+    this.sucessoRelatorio.set('');
+
+    const sub = this.adminService.avaliarRelatorioAdmin(
+      relatorio.id_relatorio,
+      estado,
+      comentario
+    ).subscribe({
+      next: (resposta) => {
+        const atualizado: RelatorioAdmin = {
+          ...relatorio,
+          estado_avaliacao: resposta.data.estado_avaliacao,
+          comentario_admin: resposta.data.comentario_admin
+        };
+
+        this.relatorios.update(lista =>
+          lista.map(item =>
+            item.id_relatorio === atualizado.id_relatorio
+              ? atualizado
+              : item
+          )
+        );
+
+        this.relatorioSelecionado.set(atualizado);
+        this.comentarioAvaliacaoRelatorio.set(
+          atualizado.comentario_admin ?? ''
+        );
+        this.sucessoRelatorio.set(resposta.message);
+        this.avaliandoRelatorioId.set(null);
+      },
+      error: (erro: unknown) => {
+        console.error('Erro ao avaliar relatório:', erro);
+        this.erroAvaliacaoRelatorio.set(
+          'Não foi possível guardar a avaliação. Verifica os dados e tenta novamente.'
+        );
+        this.avaliandoRelatorioId.set(null);
+      }
+    });
+
+    this.subscriptions.add(sub);
+  }
   irParaSecao(
-    secao: 'dashboard' | 'candidaturas' | 'departamentos' | 'estagiarios' | 'estagiarios'
+    secao: 'dashboard' | 'candidaturas' | 'departamentos' | 'estagiarios' | 'relatorios'
   ): void {
     this.secaoAtiva.set(secao);
+
+    if (secao === 'relatorios') {
+      this.carregarRelatorios();
+    }
+
+    if (secao === 'relatorios') {
+      this.carregarRelatorios();
+    }
+
+    if (secao === 'relatorios') {
+      this.carregarRelatorios();
+    }
+
+    if (secao === 'relatorios') {
+      this.carregarRelatorios();
+    }
 
     if (!isPlatformBrowser(this.platformId)) {
       return;
@@ -1170,41 +1320,95 @@ export class PainelAdmin implements OnInit, OnDestroy {
   erroGestaoEstagio = signal('');
   sucessoGestaoEstagio = signal('');
 
-  duracaoMesesFormulario = signal(2);
+  duracaoMesesFormulario = signal(6);
 
   calcularDuracaoMeses(inicio: string, fim: string): number {
-    if (!inicio || !fim) return 2;
+    if (!inicio || !fim) return 6;
+
     const [ai, mi, di] = inicio.split('-').map(Number);
     const [af, mf, df] = fim.split('-').map(Number);
+
     let meses = (af - ai) * 12 + (mf - mi);
     if (df < di) meses--;
-    return Math.max(1, Math.min(60, meses || 1));
+
+    return Math.max(1, meses);
   }
 
   calcularDataFimEstagio(inicio: string, meses: number): string {
     if (!inicio || !Number.isFinite(meses) || meses < 1) return '';
+
     const [ano, mes, dia] = inicio.split('-').map(Number);
     const data = new Date(ano, mes - 1, 1);
+
     data.setMonth(data.getMonth() + Math.floor(meses));
-    const ultimoDia = new Date(data.getFullYear(), data.getMonth() + 1, 0).getDate();
+
+    const ultimoDia = new Date(
+      data.getFullYear(),
+      data.getMonth() + 1,
+      0
+    ).getDate();
+
     data.setDate(Math.min(dia, ultimoDia));
+
     const a = data.getFullYear();
     const m = String(data.getMonth() + 1).padStart(2, '0');
     const d = String(data.getDate()).padStart(2, '0');
+
     return `${a}-${m}-${d}`;
+  }
+
+  alterarInicioEstagio(inicio: string): void {
+    this.inicioEstagioFormulario.set(inicio);
+    this.fimEstagioFormulario.set(
+      this.calcularDataFimEstagio(inicio, this.duracaoMesesFormulario())
+    );
+  }
+
+  alterarDuracaoEstagio(valor: string): void {
+    if (valor.trim() === '') {
+      this.duracaoMesesFormulario.set(0);
+      this.fimEstagioFormulario.set('');
+      return;
+    }
+
+    const meses = Number(valor);
+
+    if (!Number.isInteger(meses) || meses < 1) {
+      this.duracaoMesesFormulario.set(0);
+      this.fimEstagioFormulario.set('');
+      return;
+    }
+
+    this.duracaoMesesFormulario.set(meses);
+    this.fimEstagioFormulario.set(
+      this.calcularDataFimEstagio(this.inicioEstagioFormulario(), meses)
+    );
   }
 
   abrirGestaoEstagio(estagiario: Estagiario): void {
     this.estagioEmGestao.set(estagiario);
+
     const estados = ['ativo', 'suspenso', 'concluido', 'cancelado'] as const;
-    const estado = estados.includes(estagiario.estado_estagio as typeof estados[number])
+    const estado = estados.includes(
+      estagiario.estado_estagio as typeof estados[number]
+    )
       ? estagiario.estado_estagio as typeof estados[number]
       : 'ativo';
 
+    const inicio = estagiario.data_inicio ?? '';
+    const duracaoGuardada = estagiario.duracao_meses;
+    const duracao = duracaoGuardada && duracaoGuardada >= 1
+      ? duracaoGuardada
+      : (inicio && estagiario.data_fim_prevista
+          ? this.calcularDuracaoMeses(inicio, estagiario.data_fim_prevista)
+          : 6);
+
     this.estadoEstagioFormulario.set(estado);
-    this.inicioEstagioFormulario.set(estagiario.data_inicio ?? '');
-    this.fimEstagioFormulario.set(estagiario.data_fim_prevista ?? '');
-    this.duracaoMesesFormulario.set(this.calcularDuracaoMeses(estagiario.data_inicio ?? '', estagiario.data_fim_prevista ?? ''));
+    this.inicioEstagioFormulario.set(inicio);
+    this.duracaoMesesFormulario.set(duracao);
+    this.fimEstagioFormulario.set(
+      this.calcularDataFimEstagio(inicio, duracao)
+    );
     this.motivoSuspensaoFormulario.set(estagiario.motivo_suspensao ?? '');
     this.erroGestaoEstagio.set('');
     this.sucessoGestaoEstagio.set('');
@@ -1245,6 +1449,7 @@ export class PainelAdmin implements OnInit, OnDestroy {
     this.adminService.atualizarEstadoEstagio(estagiario.id_candidatura, {
       estado,
       data_inicio: inicio || undefined,
+      duracao_meses: this.duracaoMesesFormulario(),
       data_fim_prevista: fim || undefined,
       motivo_suspensao: estado === 'suspenso' ? motivo : undefined
     }).subscribe({

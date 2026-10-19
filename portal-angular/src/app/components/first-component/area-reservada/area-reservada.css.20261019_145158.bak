@@ -1,0 +1,128 @@
+﻿:host {
+  display: block;
+  min-height: 100vh;
+  background: #f3f6fb;
+  color: #1e293b;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.area-reservada {
+  min-height: 100vh;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto 32px;
+}
+
+.subtitulo {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.cabecalho h1 {
+  margin: 8px 0;
+  font-size: clamp(25px, 3vw, 36px);
+}
+
+.cabecalho p,
+.cartao p,
+.cartao-boas-vindas p {
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.botao-sair {
+  padding: 12px 18px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botao-sair:hover {
+  background: #eaf1ff;
+  border-color: #2563eb;
+}
+
+.area-reservada main {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.cartao-boas-vindas {
+  padding: 30px;
+  margin-bottom: 24px;
+  border-radius: 14px;
+  background: #ffffff;
+  border-left: 5px solid #2563eb;
+  box-shadow: 0 4px 18px rgb(15 23 42 / 5%);
+}
+
+.cartao-boas-vindas h2 {
+  margin-top: 0;
+  font-size: 23px;
+}
+
+.cartoes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.cartao {
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgb(15 23 42 / 4%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cartao:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgb(15 23 42 / 8%);
+}
+
+.cartao h3 {
+  margin-top: 0;
+  color: #1d4ed8;
+}
+
+.aviso {
+  margin-top: 24px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: #eaf1ff;
+  color: #1e40af;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .area-reservada {
+    padding: 20px 16px;
+  }
+
+  .cabecalho {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cartoes {
+    grid-template-columns: 1fr;
+  }
+
+  .cartao-boas-vindas {
+    padding: 22px;
+  }
+}

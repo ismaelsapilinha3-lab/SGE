@@ -72,7 +72,14 @@
         Estagiários
       </button>
       <button type="button" class="menu-item" disabled title="Em breve">Estágios</button>
-      <button type="button" class="menu-item" disabled title="Em breve">Relatórios</button>
+      <button
+        type="button"
+        class="menu-item"
+        [class.ativo]="secaoAtiva() === 'relatorios'"
+        [attr.aria-current]="secaoAtiva() === 'relatorios' ? 'page' : null"
+        (click)="irParaSecao('relatorios')">
+        Relatórios
+      </button>
       <button type="button" class="menu-item" disabled title="Em breve">Avaliações</button>
       <button type="button" class="menu-item" disabled title="Em breve">Assiduidade</button>
       <button type="button" class="menu-item" disabled title="Em breve">Definições</button>
@@ -639,12 +646,17 @@
               <label for="data-inicio-estagio">Data de início</label>
               <input id="data-inicio-estagio" type="date" required
                 [value]="inicioEstagioFormulario()"
-                (input)="inicioEstagioFormulario.set($any($event.target).value)" />
+                (input)="alterarInicioEstagio($any($event.target).value)" />
 
-              <label for="data-fim-estagio">Data prevista de fim</label>
-              <input id="data-fim-estagio" type="date" required
-                [value]="fimEstagioFormulario()"
-                (input)="fimEstagioFormulario.set($any($event.target).value)" />
+              <label for="duracao-estagio">Duração do estágio (meses)</label>
+        <input id="duracao-estagio" type="number" min="1" step="1" required
+          [value]="duracaoMesesFormulario()"
+          (input)="alterarDuracaoEstagio($any($event.target).value)" />
+        <p class="texto-ajuda">A data prevista de fim é calculada automaticamente.</p>
+
+        <label for="data-fim-estagio">Data prevista de fim</label>
+        <input id="data-fim-estagio" type="date" readonly
+          [value]="fimEstagioFormulario()" />
 
               @if (estadoEstagioFormulario() === 'suspenso') {
                 <label for="motivo-suspensao">Motivo da suspensão</label>
@@ -670,7 +682,214 @@
       }
 </section>
 
-    <!-- =====================================================
+        <section id="relatorios" class="secao-painel relatorios-pagina"
+      [style.display]="secaoAtiva() === 'relatorios' ? 'block' : 'none'">
+
+      <header class="secao-cabecalho">
+        <div>
+          <h2>Relatórios de estágio</h2>
+          <p>Consulta e avalia os relatórios submetidos pelos estagiários.</p>
+        </div>
+        <button type="button" class="relatorios-botao"
+          (click)="carregarRelatorios()">
+          Atualizar
+        </button>
+      </header>
+
+      <form class="relatorios-filtros"
+        (submit)="$event.preventDefault(); pesquisarRelatorios()">
+
+        <input type="search"
+          aria-label="Pesquisar relatórios"
+          placeholder="Pesquisar por nome ou e-mail"
+          [value]="pesquisaRelatorios()"
+          (input)="pesquisaRelatorios.set($any($event.target).value)" />
+
+        <select aria-label="Filtrar por estado"
+          [value]="estadoRelatorios()"
+          (change)="estadoRelatorios.set($any($event.target).value); carregarRelatorios()">
+          <option value="">Todos os estados</option>
+          <option value="pendente">Pendente</option>
+          <option value="aprovado">Aprovado</option>
+          <option value="rejeitado">Rejeitado</option>
+        </select>
+
+        <select aria-label="Filtrar por tipo"
+          [value]="tipoRelatorios()"
+          (change)="tipoRelatorios.set($any($event.target).value); carregarRelatorios()">
+          <option value="">Todos os tipos</option>
+          <option value="semanal">Semanal</option>
+          <option value="mensal">Mensal</option>
+          <option value="final">Final</option>
+        </select>
+
+        <button type="submit" class="relatorios-botao">
+          Pesquisar
+        </button>
+      </form>
+
+      @if (carregandoRelatorios()) {
+        <p class="relatorios-estado">A carregar relatórios...</p>
+      } @else if (erroRelatorios()) {
+        <div class="relatorios-erro" role="alert">
+          {{ erroRelatorios() }}
+          <button type="button" class="relatorios-botao"
+            (click)="carregarRelatorios()">Tentar novamente</button>
+        </div>
+      } @else if (relatorios().length === 0) {
+        <div class="relatorios-vazio">
+          <h3>Sem relatórios para apresentar</h3>
+          <p>Quando os estagiários submeterem relatórios, estes aparecerão aqui.</p>
+        </div>
+      } @else {
+        <div class="relatorios-tabela-wrap">
+          <table class="relatorios-tabela">
+            <thead>
+              <tr>
+                <th>Estagiário</th>
+                <th>E-mail</th>
+                <th>Tipo</th>
+                <th>Período</th>
+                <th>Submetido em</th>
+                <th>Estado</th>
+                <th>Acção</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (relatorio of relatorios(); track relatorio.id_relatorio) {
+                <tr>
+                  <td>{{ relatorio.estagio?.estagiario?.nome || '' }}</td>
+                  <td>{{ relatorio.estagio?.estagiario?.email || '' }}</td>
+                  <td>{{ relatorio.tipo }}</td>
+                  <td>{{ relatorio.periodo_referencia || '' }}</td>
+                  <td>{{ relatorio.submetido_em || '' }}</td>
+                  <td>
+                    <span class="relatorios-estado-tag"
+                      [class.pendente]="relatorio.estado_avaliacao === 'pendente'"
+                      [class.aprovado]="relatorio.estado_avaliacao === 'aprovado'"
+                      [class.rejeitado]="relatorio.estado_avaliacao === 'rejeitado'">
+                      {{ relatorio.estado_avaliacao }}
+                    </span>
+                  </td>
+                  <td>
+                    <button type="button" class="relatorios-botao"
+                      (click)="abrirRelatorio(relatorio)">
+                      Ver relatório
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    @if (relatorioSelecionado(); as relatorio) {
+      <div class="modal-overlay relatorio-modal-overlay"
+        role="dialog" aria-modal="true" aria-label="Avaliação do relatório">
+
+        <div class="modal-conteudo relatorio-modal">
+          <header class="relatorio-modal-cabecalho">
+            <div>
+              <span class="relatorio-modal-subtitulo">Relatório de estágio</span>
+              <h2>{{ relatorio.tipo }}  {{ relatorio.periodo_referencia }}</h2>
+              <p>{{ relatorio.estagio?.estagiario?.nome || 'Estagiário' }}</p>
+              <p>{{ relatorio.estagio?.estagiario?.email || '' }}</p>
+            </div>
+            <button type="button" class="relatorio-fechar"
+              aria-label="Fechar relatório" (click)="fecharRelatorio()"></button>
+          </header>
+
+          <div class="relatorio-modal-corpo">
+            <div class="relatorio-detalhe">
+              <h3>Actividades realizadas</h3>
+              <p>{{ relatorio.atividades || 'Não foram indicadas actividades.' }}</p>
+            </div>
+
+            <div class="relatorio-detalhe">
+              <h3>Resultados alcançados</h3>
+              <p>{{ relatorio.resultados || 'Não foram indicados resultados.' }}</p>
+            </div>
+
+            <div class="relatorio-detalhe">
+              <h3>Constrangimentos</h3>
+              <p>{{ relatorio.constrangimentos || 'Nenhum constrangimento indicado.' }}</p>
+            </div>
+
+            <div class="relatorio-detalhe">
+              <h3>Objectivos</h3>
+              <p>{{ relatorio.objetivos || 'Nenhum objectivo indicado.' }}</p>
+            </div>
+
+            <div class="relatorio-detalhe">
+              <h3>Data de submissão</h3>
+              <p>{{ relatorio.submetido_em || '' }}</p>
+            </div>
+
+            @if (relatorio.ficheiro_nome) {
+              <div class="relatorio-detalhe">
+                <h3>Ficheiro anexado</h3>
+                <p>{{ relatorio.ficheiro_nome }}</p>
+              </div>
+            }
+
+            <div class="relatorio-detalhe">
+              <h3>Estado actual</h3>
+              <p>{{ relatorio.estado_avaliacao }}</p>
+            </div>
+
+            @if (relatorio.comentario_admin) {
+              <div class="relatorio-detalhe">
+                <h3>Comentário anterior</h3>
+                <p>{{ relatorio.comentario_admin }}</p>
+              </div>
+            }
+
+            <label class="relatorio-label" for="comentario-avaliacao">
+              Comentário da avaliação
+            </label>
+            <textarea id="comentario-avaliacao"
+              rows="4"
+              placeholder="Escreve um comentário. É obrigatório ao rejeitar."
+              [value]="comentarioAvaliacaoRelatorio()"
+              (input)="comentarioAvaliacaoRelatorio.set($any($event.target).value)">
+            </textarea>
+
+            @if (erroAvaliacaoRelatorio()) {
+              <p class="relatorios-erro" role="alert">
+                {{ erroAvaliacaoRelatorio() }}
+              </p>
+            }
+
+            @if (sucessoRelatorio()) {
+              <p class="relatorios-sucesso" role="status">
+                {{ sucessoRelatorio() }}
+              </p>
+            }
+          </div>
+
+          <footer class="relatorio-modal-acoes">
+            <button type="button" class="relatorio-botao-secundario"
+              (click)="fecharRelatorio()">Fechar</button>
+
+            <button type="button" class="relatorio-botao-rejeitar"
+              [disabled]="avaliandoRelatorioId() === relatorio.id_relatorio"
+              (click)="avaliarRelatorio('rejeitado')">
+              Rejeitar
+            </button>
+
+            <button type="button" class="relatorio-botao-aprovar"
+              [disabled]="avaliandoRelatorioId() === relatorio.id_relatorio"
+              (click)="avaliarRelatorio('aprovado')">
+              Aprovar
+            </button>
+          </footer>
+        </div>
+      </div>
+    }
+
+<!-- =====================================================
          MODAL DE DETALHES DA CANDIDATURA
          ===================================================== -->
     @if (candidaturaSelecionada() || carregandoDetalhes()) {

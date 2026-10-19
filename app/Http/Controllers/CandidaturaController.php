@@ -373,6 +373,41 @@ class CandidaturaController extends Controller
     /**
      * Obter a candidatura do estagiário autenticado.
      */
+    public function estagioAtivo(Request $request)
+    {
+        $utilizador = $request->user();
+
+        if (!$utilizador) {
+            return response()->json([
+                'message' => 'Utilizador nao autenticado.',
+            ], 401);
+        }
+
+        if ($utilizador->tipo_utilizador !== 'estagiario') {
+            return response()->json([
+                'message' => 'Esta area e exclusiva para estagiarios.',
+            ], 403);
+        }
+
+        $estagio = DB::table('estagios')
+            ->where('id_estagiario', $utilizador->id_utilizador)
+            ->where('estado', 'ativo')
+            ->first();
+
+        if (!$estagio) {
+            return response()->json([
+                'message' => 'Nao existe um estagio activo para esta conta.',
+            ], 403);
+        }
+
+        return response()->json([
+            'id_estagio' => $estagio->id_estagio,
+            'id_candidatura' => $estagio->id_candidatura,
+            'data_inicio' => $estagio->data_inicio,
+            'data_fim_prevista' => $estagio->data_fim_prevista,
+            'estado_estagio' => $estagio->estado,
+        ]);
+    }
     public function minhaCandidatura(Request $request)
     {
         $utilizador = $request->user();
@@ -401,6 +436,10 @@ class CandidaturaController extends Controller
             'id_departamento',
             $candidatura->id_departamento_selecionado
         )->first();
+
+        $estagio = DB::table('estagios')
+            ->where('id_candidatura', $candidatura->id_candidatura)
+            ->first();
 
         $documentos = Documento::where(
             'id_candidatura',
@@ -434,6 +473,8 @@ class CandidaturaController extends Controller
                 $departamento?->nome ?? 'Não definido',
 
             'estado' => $estado,
+            'id_estagio' => $estagio?->id_estagio,
+            'estado_estagio' => $estagio?->estado,
             'data_submissao' => $candidatura->created_at,
 
             'documentos' => $documentos->map(function ($documento) {

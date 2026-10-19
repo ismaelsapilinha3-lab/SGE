@@ -141,12 +141,45 @@ export interface Estagiario {
   universidade?: string | null;
   departamento?: string | null;
   data_inicio?: string | null;
+  duracao_meses?: number | null;
   data_fim_prevista?: string | null;
   data_fim_real?: string | null;
   estado_estagio?: string | null;
   motivo_suspensao?: string | null;
 }
 
+export type TipoRelatorioAdmin = 'semanal' | 'mensal' | 'final';
+export type EstadoRelatorioAdmin = 'pendente' | 'aprovado' | 'rejeitado';
+
+export interface RelatorioAdmin {
+  id_relatorio: number;
+  id_estagio: number;
+  tipo: TipoRelatorioAdmin;
+  periodo_referencia: string;
+  atividades: string;
+  resultados: string;
+  constrangimentos?: string | null;
+  objetivos?: string | null;
+  submetido_em: string;
+  estado_avaliacao: EstadoRelatorioAdmin;
+  comentario_admin?: string | null;
+  ficheiro_nome?: string | null;
+  estagio?: {
+    estagiario?: {
+      id_utilizador: number;
+      nome: string;
+      email: string;
+    } | null;
+  } | null;
+}
+
+export interface RelatoriosAdminResponse {
+  data: RelatorioAdmin[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
 export interface EstagiariosResponse {
   data: Estagiario[];
   total: number;
@@ -312,6 +345,65 @@ export class AdminService {
      VISUALIZAR DOCUMENTO
      ======================================================= */
 
+  /* =======================================================
+     RELATORIOS ADMINISTRATIVOS
+     ======================================================= */
+
+  listarRelatoriosAdmin(
+    pesquisa: string = '',
+    estado: string = '',
+    tipo: string = '',
+    pagina: number = 1
+  ): Observable<RelatoriosAdminResponse> {
+    let params = new HttpParams()
+      .set('page', pagina);
+
+    if (pesquisa.trim()) {
+      params = params.set('pesquisa', pesquisa.trim());
+    }
+
+    if (estado) {
+      params = params.set('estado', estado);
+    }
+
+    if (tipo) {
+      params = params.set('tipo', tipo);
+    }
+
+    return this.http.get<RelatoriosAdminResponse>(
+      `${this.apiUrl}/relatorios`,
+      { params }
+    );
+  }
+
+  avaliarRelatorioAdmin(
+    id: number,
+    estado: 'aprovado' | 'rejeitado',
+    comentario: string = ''
+  ): Observable<{
+    message: string;
+    data: {
+      id_relatorio: number;
+      estado_avaliacao: EstadoRelatorioAdmin;
+      comentario_admin: string | null;
+    };
+  }> {
+    return this.http.patch<{
+      message: string;
+      data: {
+        id_relatorio: number;
+        estado_avaliacao: EstadoRelatorioAdmin;
+        comentario_admin: string | null;
+      };
+    }>(
+      `${this.apiUrl}/relatorios/${id}/avaliacao`,
+      {
+        estado_avaliacao: estado,
+        comentario_admin: comentario.trim() || null
+      }
+    );
+  }
+
   listarEstagiarios(
     pesquisa: string = '',
     estado: string = '',
@@ -341,6 +433,7 @@ export class AdminService {
     dados: {
       estado: 'ativo' | 'suspenso' | 'concluido' | 'cancelado';
       data_inicio?: string;
+      duracao_meses?: number;
       data_fim_prevista?: string;
       motivo_suspensao?: string;
     }

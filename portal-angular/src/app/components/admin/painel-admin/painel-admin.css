@@ -1185,3 +1185,463 @@ a:focus-visible { outline: 2px solid var(--laranja); outline-offset: 2px; }
   .pdf-documento-preview { height: 65vh; }
   .rodape-painel { flex-direction: column; justify-content: center; padding: 10px 4%; }
 }
+/* ==========================================================
+   ESTILOS DO MODAL GERIR ESTAGIO
+   ========================================================== */
+
+.modal-conteudo {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 28px;
+  border-radius: 14px;
+  background: #fff;
+  color: #172033;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.25);
+}
+
+.modal-conteudo h3 {
+  margin: 0 0 18px;
+  font-size: 1.4rem;
+  line-height: 1.3;
+}
+
+.modal-conteudo > p {
+  margin: 0 0 22px;
+  color: #475569;
+}
+
+.modal-conteudo form {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.modal-conteudo label {
+  margin-top: 8px;
+  color: #334155;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.modal-conteudo input,
+.modal-conteudo select,
+.modal-conteudo textarea {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+}
+
+.modal-conteudo input:focus,
+.modal-conteudo select:focus,
+.modal-conteudo textarea:focus {
+  outline: 2px solid #93c5fd;
+  outline-offset: 1px;
+  border-color: #2563eb;
+}
+
+.modal-conteudo input[readonly] {
+  background: #f1f5f9;
+  color: #475569;
+  cursor: default;
+}
+
+.modal-conteudo textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.modal-conteudo .texto-ajuda {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.modal-conteudo .mensagem-erro {
+  margin: 8px 0;
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+.modal-conteudo .acoes-modal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.modal-conteudo .acoes-modal button {
+  min-height: 42px;
+  padding: 10px 18px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-conteudo .acoes-modal button[type="submit"] {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.modal-conteudo .acoes-modal button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 560px) {
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-conteudo {
+    padding: 20px;
+    max-height: calc(100vh - 24px);
+  }
+
+  .modal-conteudo .acoes-modal {
+    flex-direction: column-reverse;
+  }
+
+  .modal-conteudo .acoes-modal button {
+    width: 100%;
+  }
+}
+/* ==========================================================
+   RELATÓRIOS DO PAINEL ADMINISTRATIVO
+   ========================================================== */
+
+.relatorios-pagina {
+  color: #172033;
+}
+
+.relatorios-pagina .secao-cabecalho {
+  margin-bottom: 24px;
+}
+
+.relatorios-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #e5eaf1;
+  border-radius: 12px;
+}
+
+.relatorios-filtros input,
+.relatorios-filtros select {
+  flex: 1 1 190px;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid #d6deea;
+  border-radius: 8px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+}
+
+.relatorios-botao {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #1456a0;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.relatorios-botao:hover {
+  background: #0d417d;
+}
+
+.relatorios-botao:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.relatorios-tabela-wrap {
+  width: 100%;
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #e5eaf1;
+  border-radius: 12px;
+}
+
+.relatorios-tabela {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+}
+
+.relatorios-tabela th,
+.relatorios-tabela td {
+  padding: 13px 15px;
+  border-bottom: 1px solid #edf0f5;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.relatorios-tabela th {
+  background: #f5f8fc;
+  color: #34445c;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .035em;
+}
+
+.relatorios-tabela td {
+  color: #354155;
+  font-size: 14px;
+}
+
+.relatorios-tabela tbody tr:hover {
+  background: #f9fbfe;
+}
+
+.relatorios-estado-tag {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.relatorios-estado-tag.pendente {
+  background: #fff2cc;
+  color: #875d00;
+}
+
+.relatorios-estado-tag.aprovado {
+  background: #d9f5e5;
+  color: #146b3a;
+}
+
+.relatorios-estado-tag.rejeitado {
+  background: #ffe0e0;
+  color: #a12626;
+}
+
+.relatorios-estado,
+.relatorios-vazio {
+  padding: 28px;
+  text-align: center;
+  color: #657187;
+}
+
+.relatorios-vazio {
+  margin-top: 18px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.relatorios-vazio h3 {
+  margin: 0 0 8px;
+  color: #243249;
+}
+
+.relatorios-erro,
+.relatorios-sucesso {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+}
+
+.relatorios-erro {
+  background: #fff0f0;
+  color: #a12626;
+}
+
+.relatorios-sucesso {
+  background: #e4f8ec;
+  color: #146b3a;
+}
+
+.relatorio-modal-overlay {
+  z-index: 1100;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.relatorio-modal {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.relatorio-modal-cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5eaf1;
+}
+
+.relatorio-modal-cabecalho h2 {
+  margin: 5px 0;
+  color: #172033;
+  text-transform: capitalize;
+}
+
+.relatorio-modal-cabecalho p {
+  margin: 4px 0;
+  color: #657187;
+}
+
+.relatorio-modal-subtitulo {
+  color: #1456a0;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.relatorio-fechar {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: #f0f3f8;
+  color: #243249;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+.relatorio-modal-corpo {
+  display: grid;
+  gap: 16px;
+}
+
+.relatorio-detalhe {
+  padding: 14px;
+  border: 1px solid #e5eaf1;
+  border-radius: 9px;
+  background: #fbfcfe;
+}
+
+.relatorio-detalhe h3 {
+  margin: 0 0 8px;
+  color: #34445c;
+  font-size: 14px;
+}
+
+.relatorio-detalhe p {
+  margin: 0;
+  color: #354155;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.relatorio-label {
+  margin-bottom: -8px;
+  color: #243249;
+  font-weight: 600;
+}
+
+.relatorio-modal textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.relatorio-modal textarea:focus,
+.relatorios-filtros input:focus,
+.relatorios-filtros select:focus {
+  outline: 2px solid #9cc5f5;
+  outline-offset: 1px;
+  border-color: #1456a0;
+}
+
+.relatorio-modal-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid #e5eaf1;
+}
+
+.relatorio-modal-acoes button {
+  padding: 10px 15px;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.relatorio-modal-acoes button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.relatorio-botao-secundario {
+  background: #edf1f6;
+  color: #34445c;
+}
+
+.relatorio-botao-rejeitar {
+  background: #b4232c;
+  color: #fff;
+}
+
+.relatorio-botao-aprovar {
+  background: #167647;
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .relatorios-filtros {
+    flex-direction: column;
+  }
+
+  .relatorios-filtros input,
+  .relatorios-filtros select,
+  .relatorios-filtros button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .relatorio-modal-overlay {
+    padding: 10px;
+  }
+
+  .relatorio-modal {
+    max-height: calc(100vh - 20px);
+    padding: 18px;
+  }
+
+  .relatorio-modal-acoes {
+    flex-direction: column-reverse;
+  }
+
+  .relatorio-modal-acoes button {
+    width: 100%;
+  }
+}

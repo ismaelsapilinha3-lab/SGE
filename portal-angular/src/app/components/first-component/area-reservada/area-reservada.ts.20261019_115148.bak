@@ -1,0 +1,33 @@
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { EstagioAtivo, EstagioAtivoService } from '../../../services/estagio-ativo.service';
+
+@Component({
+  selector: 'app-area-reservada',
+  standalone: true,
+  templateUrl: './area-reservada.html',
+  styleUrl: './area-reservada.css'
+})
+export class AreaReservadaComponent implements OnInit {
+  private readonly estagioService = inject(EstagioAtivoService);
+
+  estagio = signal<EstagioAtivo | null>(null);
+  carregando = signal(true);
+  erro = signal('');
+
+  ngOnInit(): void {
+    this.estagioService.verificarEstagioAtivo().subscribe({
+      next: (dados) => {
+        this.estagio.set(dados);
+        this.carregando.set(false);
+      },
+      error: (erro) => {
+        this.erro.set(
+          erro.status === 401
+            ? 'A sessão expirou. Entra novamente.'
+            : 'Não foi possível carregar os dados do estágio.'
+        );
+        this.carregando.set(false);
+      }
+    });
+  }
+}

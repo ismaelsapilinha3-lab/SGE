@@ -303,6 +303,7 @@ class AdminController extends Controller
                 'e.id_estagio',
                 'c.id_candidatura',
                 'e.data_inicio',
+                'e.duracao_meses',
                 'e.data_fim_prevista',
                 'e.data_fim_real',
               'e.motivo_suspensao',
@@ -347,8 +348,8 @@ class AdminController extends Controller
     {
         $dados = $request->validate([
             'estado' => 'required|in:ativo,suspenso,concluido,cancelado',
-            'data_inicio' => 'nullable|date',
-            'data_fim_prevista' => 'nullable|date|after_or_equal:data_inicio',
+            'data_inicio' => 'required|date',
+            'duracao_meses' => 'nullable|integer|min:1',
             'motivo_suspensao' => 'nullable|string|required_if:estado,suspenso|max:5000',
         ]);
 
@@ -375,8 +376,7 @@ class AdminController extends Controller
                 ], 422);
             }
 
-            // A conta é resolvida no servidor pelo e-mail da candidatura.
-            // O cliente não pode escolher livremente o ID do estagiário.
+            // Resolver a conta do estagiário no servidor.
             $utilizador = DB::table('utilizadores')
                 ->where('email', $candidatura->email)
                 ->first();
@@ -389,26 +389,37 @@ class AdminController extends Controller
 
             $inicio = $dados['data_inicio']
                 ?? ($estagio->data_inicio ?? null);
-            $fimPrevisto = $dados['data_fim_prevista']
-                ?? ($estagio->data_fim_prevista ?? null);
 
-            if (!$estagio && (!$inicio || !$fimPrevisto)) {
+            $duracaoMeses = (int) (
+                $dados['duracao_meses']
+                ?? ($estagio->duracao_meses ?? 6)
+            );
+
+            if (!$inicio) {
                 return response()->json([
-                    'message' => 'Indica a data de início e a data prevista de fim.'
+                    'message' => 'Indica a data de início do estágio.'
                 ], 422);
             }
 
-            if ($inicio && $fimPrevisto && $fimPrevisto < $inicio) {
+            if ($duracaoMeses < 1) {
                 return response()->json([
-                    'message' => 'A data prevista de fim não pode ser anterior à data de início.'
+                    'message' => 'A duração deve ser de pelo menos um mês.'
                 ], 422);
             }
+
+            // O servidor calcula a data final; não confia na data
+            // prevista enviada pelo navegador.
+            $fimPrevisto = \Illuminate\Support\Carbon::parse($inicio)
+                ->addMonthsNoOverflow($duracaoMeses)
+                ->toDateString();
 
             $agora = now();
+
             $valores = [
                 'id_candidatura' => $idCandidatura,
                 'id_estagiario' => $utilizador->id_utilizador,
                 'data_inicio' => $inicio,
+                'duracao_meses' => $duracaoMeses,
                 'data_fim_prevista' => $fimPrevisto,
                 'estado' => $dados['estado'],
                 'motivo_suspensao' => $dados['estado'] === 'suspenso'
@@ -424,9 +435,11 @@ class AdminController extends Controller
                 DB::table('estagios')
                     ->where('id_estagio', $estagio->id_estagio)
                     ->update($valores);
+
                 $idEstagio = $estagio->id_estagio;
             } else {
                 $valores['created_at'] = $agora;
+
                 $idEstagio = DB::table('estagios')->insertGetId(
                     $valores,
                     'id_estagio'

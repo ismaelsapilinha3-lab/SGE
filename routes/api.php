@@ -2,11 +2,13 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminRelatorioController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CandidaturaController;
 use App\Http\Controllers\CoordenadorController;
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\DocumentoController;
+use App\Http\Controllers\RelatorioController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -70,6 +72,21 @@ Route::middleware('auth:sanctum')->group(function () {
         'minhaCandidatura'
     ]);
 
+    Route::get('/estagiario/estagio-ativo', [
+        CandidaturaController::class,
+        'estagioAtivo'
+    ]);    
+    // Relatórios do estágio do utilizador autenticado.
+    Route::get('/estagiario/relatorios', [
+        RelatorioController::class,
+        'meusRelatorios'
+    ]);
+
+    Route::post('/estagiario/relatorios', [
+        RelatorioController::class,
+        'guardarRelatorio'
+    ]);
+
 
     /*
     |--------------------------------------------------------------------------
@@ -112,6 +129,16 @@ Route::middleware('auth:sanctum')->group(function () {
         ->prefix('admin')
         ->group(function () {
 
+            // Gestão de relatórios dos estagiários.
+            Route::get('/relatorios', [
+                AdminRelatorioController::class,
+                'index'
+            ]);
+
+            Route::patch('/relatorios/{id}/avaliacao', [
+                AdminRelatorioController::class,
+                'avaliar'
+            ]);
             // Painel do administrador.
             Route::get('/dashboard', [
                 AdminController::class,

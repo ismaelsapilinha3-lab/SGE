@@ -1,0 +1,59 @@
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { finalize } from 'rxjs';
+import { AuthService } from '../../../core/auth.service';
+import { EstagioAtivo, EstagioAtivoService } from '../../../services/estagio-ativo.service';
+
+@Component({
+  selector: 'app-area-reservada',
+  standalone: true,
+  templateUrl: './area-reservada.html',
+  styleUrl: './area-reservada.css'
+})
+export class AreaReservadaComponent implements OnInit {
+  private readonly estagioService = inject(EstagioAtivoService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+
+  estagio = signal<EstagioAtivo | null>(null);
+  carregando = signal(true);
+  erro = signal('');
+  terminandoSessao = signal(false);
+
+  ngOnInit(): void {
+    this.estagioService.verificarEstagioAtivo().subscribe({
+      next: (dados) => {
+        this.estagio.set(dados);
+        this.carregando.set(false);
+      },
+      error: (erro) => {
+        this.erro.set(
+          erro.status === 401
+            ? 'A sessão expirou. Entra novamente.'
+            : 'Não foi possível carregar os dados do estágio.'
+        );
+        this.carregando.set(false);
+
+        if (erro.status === 401) {
+          this.authService.terminarLocal();
+          this.router.navigate(['/acesso']);
+        }
+      }
+    });
+  }
+
+  terminarSessao(): void {
+    if (this.terminandoSessao()) {
+      return;
+    }
+
+    this.terminandoSessao.set(true);
+
+    this.authService.logout()
+      .pipe(finalize(() => this.terminandoSessao.set(false)))
+      .subscribe({
+        next: () => this.router.navigate(['/acesso']),
+        error: () => this.router.navigate(['/acesso'])
+      });
+  }
+}

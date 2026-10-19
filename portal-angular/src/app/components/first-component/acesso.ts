@@ -13,6 +13,7 @@ import {
   AuthService,
   RespostaAuth
 } from '../../core/auth.service';
+import { EstagioAtivoService } from '../../services/estagio-ativo.service';
 
 interface DadosEstagiario {
   nome: string;
@@ -128,7 +129,8 @@ export class AcessoComponent implements OnInit {
   constructor(
     private router: Router,
     private candidaturaService: CandidaturaService,
-    private authService: AuthService
+    private authService: AuthService,
+    private estagioAtivoService: EstagioAtivoService
   ) {}
 
   ngOnInit(): void {
@@ -404,7 +406,22 @@ export class AcessoComponent implements OnInit {
                 break;
 
               case 'estagiario':
-                this.router.navigate(['/estagiario']);
+                this.estagioAtivoService.verificarEstagioAtivo().subscribe({
+                  next: () => {
+                    this.router.navigate(['/area-reservada']);
+                  },
+                  error: (erro) => {
+                    if (erro.status === 401) {
+                      this.loginMensagem = {
+                        texto: 'A sessão expirou. Entra novamente.',
+                        tipo: 'erro'
+                      };
+                      return;
+                    }
+
+                    this.router.navigate(['/estagiario']);
+                  }
+                });
                 break;
 
               default:

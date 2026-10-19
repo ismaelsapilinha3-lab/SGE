@@ -8,6 +8,8 @@ import { PainelestagiarioComponent } from './components/first-component/paineles
 import { TelainicialComponent } from './components/first-component/telainicial';
 
 import { PainelAdmin } from './components/admin/painel-admin/painel-admin';
+import { AreaReservadaComponent } from './components/first-component/area-reservada/area-reservada';
+import { estagioAtivoGuard } from './core/estagio-ativo.guard';
 
 export const routes: Routes = [
 {
@@ -31,6 +33,12 @@ path: 'estagiario',
 component: PainelestagiarioComponent,
 canActivate: [authGuard]
 },
+{
+path: 'area-reservada',
+component: AreaReservadaComponent,
+canActivate: [authGuard, estagioAtivoGuard]
+},
+
 
 {
 path: 'admin',
