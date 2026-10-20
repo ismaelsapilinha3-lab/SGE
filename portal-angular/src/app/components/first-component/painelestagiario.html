@@ -158,28 +158,6 @@
           </li>
 
 
-          <li>
-            <a
-              href="#est-estagio" (click)="$event.preventDefault(); navegarSecao('est-estagio')"
-              class="nav-link"
-              aria-label="Ver o meu estágio"
-            >
-              <svg
-                class="ic"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path d="M4 7h16v13H4z"></path>
-                <path d="M9 7V4h6v3"></path>
-                <path d="M4 12h16"></path>
-              </svg>
-
-              <span>Estágio</span>
-            </a>
-          </li>
-
-
         </ul>
 
 
@@ -1121,38 +1099,104 @@
 
 
       <!-- =====================================================
-           CICLO DE VIDA DO ESTÁGIO
+           MODAL DE PRÉ-VISUALIZAÇÃO DE DOCUMENTO
            ===================================================== -->
-      <section
-        id="est-estagio"
-        class="est-section"
-        aria-labelledby="titulo-estagio"
-      >
+      @if (documentoPreviewAberto()) {
 
-        <div class="est-section-head">
+        <div
+          class="est-preview-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Visualização do documento"
+        >
 
-          <div>
+          <div class="est-preview-caixa">
 
-            <span class="section-kicker">
-              ESTÁGIO
-            </span>
+            <header class="est-preview-header">
 
-            <h2 id="titulo-estagio">
-              O meu estágio
-            </h2>
+              <div>
+                <span>Documento</span>
 
-            <p>
-              Contrato, relatórios, assiduidade, atividades,
-              avaliações e feedback do teu estágio.
-            </p>
+                <h2>{{ documentoPreviewNome() }}</h2>
+              </div>
+
+              <button
+                type="button"
+                class="est-preview-fechar"
+                (click)="fecharPreviewDocumento()"
+                aria-label="Fechar visualização"
+              >
+                ×
+              </button>
+
+            </header>
+
+            <div class="est-preview-corpo">
+
+              @if (
+                documentoPreviewTipo().startsWith('image/')
+              ) {
+
+                <img
+                  [src]="documentoPreviewUrl()"
+                  [alt]="documentoPreviewNome()"
+                  class="est-preview-imagem"
+                >
+
+              } @else if (
+                documentoPreviewTipo() === 'application/pdf'
+              ) {
+
+                <iframe
+                  class="est-preview-pdf"
+                  [src]="documentoPreviewPdfUrl()"
+                  [title]="documentoPreviewNome()"
+                ></iframe>
+
+              } @else {
+
+                <div class="est-preview-indisponivel">
+
+                  <div aria-hidden="true">▤</div>
+
+                  <h3>Pré-visualização não disponível</h3>
+
+                  <p>
+                    Este tipo de documento não pode ser
+                    visualizado directamente no navegador.
+                  </p>
+
+                  <a
+                    class="est-preview-download"
+                    [href]="documentoPreviewUrl()"
+                    [download]="documentoPreviewNome()"
+                  >
+                    Baixar documento
+                  </a>
+
+                </div>
+
+              }
+
+            </div>
+
+            <footer class="est-preview-footer">
+
+              <button
+                type="button"
+                class="est-btn-light"
+                (click)="fecharPreviewDocumento()"
+              >
+                Fechar
+              </button>
+
+            </footer>
 
           </div>
 
         </div>
 
-        <app-estagio-estagiario></app-estagio-estagiario>
-
-      </section>
+      }
 
     }
 
@@ -1270,10 +1314,6 @@
       >
 
         <h4>PORTAL</h4>
-
-        <a href="#est-inicio">
-          InÃ­cio
-        </a>
 
         <a href="#est-inicio" (click)="$event.preventDefault(); navegarSecao('est-inicio')">
           Início
