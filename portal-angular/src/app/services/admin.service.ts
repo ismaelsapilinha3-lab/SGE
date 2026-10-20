@@ -118,14 +118,19 @@ export interface Candidatura {
    ========================================================= */
 
 export interface DadosEncaminhamento {
-  id_coordenador?: number;
-  observacao?: string | null;
+  id_departamento: number;
 }
 
 
 export interface RespostaEncaminhamento {
   message: string;
   candidatura: Candidatura;
+  coordenador?: {
+    id_utilizador: number;
+    nome: string;
+    email: string;
+    id_departamento: number;
+  };
 }
 
 
@@ -397,53 +402,12 @@ export class AdminService {
 
   encaminharCandidatura(
     id: number,
-    dados: DadosEncaminhamento = {}
+    dados: DadosEncaminhamento
   ): Observable<RespostaEncaminhamento> {
 
     return this.http.patch<RespostaEncaminhamento>(
       `${this.apiUrl}/candidaturas/${id}/encaminhar`,
       dados
-    );
-  }
-
-
-  /* =======================================================
-     APROVAR CANDIDATURA
-     =======================================================
-
-     Mantido temporariamente por compatibilidade.
-     No fluxo definitivo, a decisão deve ser feita
-     exclusivamente pelo coordenador.
-     ======================================================= */
-
-  aprovarCandidatura(
-    id: number
-  ): Observable<unknown> {
-
-    return this.http.patch(
-      `${this.apiUrl}/candidaturas/${id}/aprovar`,
-      {}
-    );
-  }
-
-
-  /* =======================================================
-     RECUSAR CANDIDATURA
-     =======================================================
-
-     Mantido temporariamente por compatibilidade.
-     No fluxo definitivo, a decisão deve ser feita
-     exclusivamente pelo coordenador.
-     ======================================================= */
-
-  recusarCandidatura(
-    id: number,
-    motivo: string
-  ): Observable<unknown> {
-
-    return this.http.patch(
-      `${this.apiUrl}/candidaturas/${id}/recusar`,
-      { motivo }
     );
   }
 

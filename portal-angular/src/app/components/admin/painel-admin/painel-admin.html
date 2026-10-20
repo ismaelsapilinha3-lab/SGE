@@ -1356,58 +1356,71 @@
 
               </section>
 
-              @if (sucessoDecisao()) {
+
+              @if (sucessoEncaminhamento()) {
                 <div class="mensagem-sucesso" role="status">
-                  {{ sucessoDecisao() }}
+                  {{ sucessoEncaminhamento() }}
                 </div>
               }
 
-              @if (erroDecisao()) {
+              @if (erroEncaminhamento()) {
                 <div class="mensagem-erro" role="alert">
-                  {{ erroDecisao() }}
+                  {{ erroEncaminhamento() }}
                 </div>
               }
 
-              @if (candidaturaSelecionada()!.estado === 'em_analise') {
 
-                @if (mostrarRecusa()) {
+              @if (
+                candidaturaSelecionada()!.estado === 'em_analise' &&
+                !candidaturaSelecionada()!.encaminhada_em
+              ) {
 
-                  <section class="area-recusa">
+                @if (mostrarEncaminhamento()) {
 
-                    <h3>Recusar candidatura</h3>
-                    <p>Informe o motivo da recusa.</p>
+                  <section class="area-encaminhamento">
 
-                    <textarea
-                      rows="4"
-                      maxlength="1000"
-                      aria-label="Motivo da recusa"
-                      [value]="motivoRecusa()"
-                      (input)="alterarMotivoRecusa($event)"
-                      placeholder="Digite o motivo da recusa..."
-                    ></textarea>
+                    <h3>Encaminhar à direção</h3>
 
-                    <div class="contador-caracteres">
-                      {{ motivoRecusa().length }}/1000
-                    </div>
+                    <p>
+                      Selecciona a direção para a qual queres
+                      encaminhar esta candidatura. O coordenador
+                      dessa direção receberá para decisão.
+                    </p>
 
-                    <div class="acoes-recusa">
+                    <select
+                      aria-label="Direção de destino"
+                      [value]="departamentoEncaminhamento() ?? ''"
+                      (change)="alterarDepartamentoEncaminhamento($event)"
+                      [disabled]="processandoEncaminhamento()"
+                    >
+                      <option value="">— Seleccionar direção —</option>
+
+                      @for (dep of departamentos(); track dep.id_departamento) {
+                        <option [value]="dep.id_departamento">
+                          {{ dep.nome }}
+                        </option>
+                      }
+
+                    </select>
+
+                    <div class="acoes-encaminhamento">
 
                       <button
                         type="button"
-                        class="botao-fechar-recusa"
-                        (click)="cancelarRecusa()"
-                        [disabled]="processandoDecisao()"
+                        class="botao-cancelar-encaminhamento"
+                        (click)="cancelarEncaminhamento()"
+                        [disabled]="processandoEncaminhamento()"
                       >
                         Cancelar
                       </button>
 
                       <button
                         type="button"
-                        class="botao-confirmar-recusa"
-                        (click)="recusarSelecionada()"
-                        [disabled]="processandoDecisao()"
+                        class="botao-confirmar-encaminhamento"
+                        (click)="confirmarEncaminhamento()"
+                        [disabled]="processandoEncaminhamento()"
                       >
-                        {{ processandoDecisao() ? 'A processar...' : 'Confirmar recusa' }}
+                        {{ processandoEncaminhamento() ? 'A encaminhar...' : 'Encaminhar candidatura' }}
                       </button>
 
                     </div>
@@ -1416,24 +1429,15 @@
 
                 } @else {
 
-                  <div class="acoes-candidatura">
+                  <div class="acoes-encaminhar">
 
                     <button
                       type="button"
-                      class="botao-recusar"
-                      (click)="abrirRecusa()"
-                      [disabled]="processandoDecisao()"
+                      class="botao-encaminhar"
+                      (click)="abrirEncaminhamento()"
+                      [disabled]="processandoEncaminhamento()"
                     >
-                      Recusar
-                    </button>
-
-                    <button
-                      type="button"
-                      class="botao-aprovar"
-                      (click)="aprovarSelecionada()"
-                      [disabled]="processandoDecisao()"
-                    >
-                      {{ processandoDecisao() ? 'A processar...' : 'Aprovar candidatura' }}
+                      Encaminhar à direção
                     </button>
 
                   </div>

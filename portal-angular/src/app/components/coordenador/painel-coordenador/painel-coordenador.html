@@ -242,6 +242,421 @@
       <div class="coord-card-heading">
 
         <div class="coord-icon" aria-hidden="true">
+          ✉
+        </div>
+
+        <div>
+          <span class="coord-kicker">
+            DECISÃO DE CANDIDATURAS
+          </span>
+
+          <h2>Candidaturas atribuídas</h2>
+
+          <p>
+            Analisa e decide as candidaturas encaminhadas
+            para a tua direção.
+          </p>
+        </div>
+
+      </div>
+
+
+      @if (erroDashboard()) {
+        <div class="coord-alert coord-alert-error" role="alert">
+          <strong>Não foi possível carregar o dashboard</strong>
+          <p>{{ erroDashboard() }}</p>
+        </div>
+      }
+
+
+      @if (dashboard(); as dash) {
+
+        <div class="coord-stats">
+
+          <div class="coord-stat">
+            <span class="coord-stat-numero">{{ dash.total_candidaturas }}</span>
+            <span class="coord-stat-label">Total</span>
+          </div>
+
+          <div class="coord-stat coord-stat-analise">
+            <span class="coord-stat-numero">{{ dash.em_analise }}</span>
+            <span class="coord-stat-label">Em análise</span>
+          </div>
+
+          <div class="coord-stat coord-stat-aprovadas">
+            <span class="coord-stat-numero">{{ dash.aprovadas }}</span>
+            <span class="coord-stat-label">Aprovadas</span>
+          </div>
+
+          <div class="coord-stat coord-stat-recusadas">
+            <span class="coord-stat-numero">{{ dash.recusadas }}</span>
+            <span class="coord-stat-label">Recusadas</span>
+          </div>
+
+        </div>
+
+      }
+
+
+      <div class="coord-filtro-estado">
+
+        <label for="filtroEstado">Filtrar por estado:</label>
+
+        <select
+          id="filtroEstado"
+          [ngModel]="filtroEstado()"
+          (ngModelChange)="alterarFiltroEstado($event)"
+        >
+          <option value="">Todos</option>
+          <option value="em_analise">Em análise</option>
+          <option value="aprovada">Aprovada</option>
+          <option value="recusada">Recusada</option>
+        </select>
+
+      </div>
+
+
+      @if (erroCandidaturas()) {
+        <div class="coord-alert coord-alert-error" role="alert">
+          <strong>Erro</strong>
+          <p>{{ erroCandidaturas() }}</p>
+        </div>
+      }
+
+
+      @if (carregandoCandidaturas()) {
+
+        <p class="coord-vazio">A carregar candidaturas...</p>
+
+      } @else if (candidaturas().length === 0) {
+
+        <p class="coord-vazio">
+          Nenhuma candidatura encontrada.
+        </p>
+
+      } @else {
+
+        <div class="coord-tabela-wrapper">
+
+          <table class="coord-tabela">
+
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Curso</th>
+                <th>Universidade</th>
+                <th>Estado</th>
+                <th>Data</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (c of candidaturas(); track c.id_candidatura) {
+
+                <tr>
+                  <td>
+                    <strong>{{ c.nome }}</strong>
+                    <br>
+                    <small>{{ c.email }}</small>
+                  </td>
+
+                  <td>{{ c.curso || '—' }}</td>
+
+                  <td>{{ c.universidade || '—' }}</td>
+
+                  <td>
+                    <span
+                      class="coord-badge"
+                      [class.coord-badge-analise]="c.estado === 'em_analise'"
+                      [class.coord-badge-aprovada]="c.estado === 'aprovada'"
+                      [class.coord-badge-recusada]="c.estado === 'recusada'"
+                    >
+                      {{ c.estado }}
+                    </span>
+                  </td>
+
+                  <td>
+                    {{ c.created_at ? (c.created_at | date:'dd/MM/yyyy') : '—' }}
+                  </td>
+
+                  <td>
+                    <button
+                      type="button"
+                      class="coord-btn coord-btn-outline coord-btn-pequeno"
+                      (click)="abrirDetalhes(c)"
+                    >
+                      Ver detalhes
+                    </button>
+                  </td>
+
+                </tr>
+
+              }
+            </tbody>
+
+          </table>
+
+        </div>
+
+
+        @if (ultimaPagina() > 1) {
+
+          <div class="coord-paginacao">
+
+            <button
+              type="button"
+              class="coord-btn coord-btn-outline coord-btn-pequeno"
+              (click)="mudarPagina(paginaAtual() - 1)"
+              [disabled]="paginaAtual() <= 1"
+            >
+              Anterior
+            </button>
+
+            <span class="coord-pagina-info">
+              Página {{ paginaAtual() }} de {{ ultimaPagina() }}
+            </span>
+
+            <button
+              type="button"
+              class="coord-btn coord-btn-outline coord-btn-pequeno"
+              (click)="mudarPagina(paginaAtual() + 1)"
+              [disabled]="paginaAtual() >= ultimaPagina()"
+            >
+              Próxima
+            </button>
+
+          </div>
+
+        }
+
+      }
+
+
+      @if (candidaturaSelecionada(); as candidatura) {
+
+        <div class="coord-detalhe-overlay">
+
+          <div class="coord-detalhe">
+
+            <div class="coord-detalhe-header">
+
+              <h3>Detalhes da candidatura</h3>
+
+              <button
+                type="button"
+                class="coord-btn-close"
+                (click)="fecharDetalhes()"
+                [disabled]="processandoDecisao()"
+              >
+                ✕
+              </button>
+
+            </div>
+
+
+            @if (carregandoDetalhes()) {
+
+              <p class="coord-vazio">A carregar detalhes...</p>
+
+            } @else if (erroDetalhes()) {
+
+              <div class="coord-alert coord-alert-error" role="alert">
+                <p>{{ erroDetalhes() }}</p>
+              </div>
+
+            } @else {
+
+              <div class="coord-detalhe-corpo">
+
+                <div class="coord-detalhe-campo">
+                  <strong>Nome:</strong>
+                  <span>{{ candidatura.nome }}</span>
+                </div>
+
+                <div class="coord-detalhe-campo">
+                  <strong>E-mail:</strong>
+                  <span>{{ candidatura.email }}</span>
+                </div>
+
+                @if (candidatura.telefone) {
+                  <div class="coord-detalhe-campo">
+                    <strong>Telefone:</strong>
+                    <span>{{ candidatura.telefone }}</span>
+                  </div>
+                }
+
+                @if (candidatura.curso) {
+                  <div class="coord-detalhe-campo">
+                    <strong>Curso:</strong>
+                    <span>{{ candidatura.curso }}</span>
+                  </div>
+                }
+
+                @if (candidatura.universidade) {
+                  <div class="coord-detalhe-campo">
+                    <strong>Universidade:</strong>
+                    <span>{{ candidatura.universidade }}</span>
+                  </div>
+                }
+
+                @if (candidatura.mensagem) {
+                  <div class="coord-detalhe-campo coord-detalhe-campo-completo">
+                    <strong>Mensagem:</strong>
+                    <span>{{ candidatura.mensagem }}</span>
+                  </div>
+                }
+
+                @if (candidatura.departamento) {
+                  <div class="coord-detalhe-campo">
+                    <strong>Direção:</strong>
+                    <span>{{ candidatura.departamento.nome }}</span>
+                  </div>
+                }
+
+                <div class="coord-detalhe-campo">
+                  <strong>Estado:</strong>
+                  <span
+                    class="coord-badge"
+                    [class.coord-badge-analise]="candidatura.estado === 'em_analise'"
+                    [class.coord-badge-aprovada]="candidatura.estado === 'aprovada'"
+                    [class.coord-badge-recusada]="candidatura.estado === 'recusada'"
+                  >
+                    {{ candidatura.estado }}
+                  </span>
+                </div>
+
+                @if (candidatura.motivo_recusa) {
+                  <div class="coord-detalhe-campo coord-detalhe-campo-completo">
+                    <strong>Motivo da recusa:</strong>
+                    <span>{{ candidatura.motivo_recusa }}</span>
+                  </div>
+                }
+
+                @if (candidatura.documentos && candidatura.documentos.length > 0) {
+
+                  <div class="coord-detalhe-campo coord-detalhe-campo-completo">
+                    <strong>Documentos:</strong>
+
+                    <ul class="coord-documentos">
+                      @for (doc of candidatura.documentos; track doc.id_documento) {
+                        <li>
+                          <span class="coord-doc-icone" aria-hidden="true">▤</span>
+                          {{ doc.nome_arquivo }}
+                          <small>({{ doc.tipo_documento }})</small>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+
+                }
+
+              </div>
+
+
+              @if (sucessoDecisao()) {
+                <div class="coord-alert coord-alert-success" role="status">
+                  <p>{{ sucessoDecisao() }}</p>
+                </div>
+              }
+
+              @if (erroDecisao()) {
+                <div class="coord-alert coord-alert-error" role="alert">
+                  <p>{{ erroDecisao() }}</p>
+                </div>
+              }
+
+
+              @if (candidatura.estado === 'em_analise') {
+
+                @if (mostrarRecusa()) {
+
+                  <div class="coord-recusa-area">
+
+                    <h4>Motivo da recusa</h4>
+
+                    <textarea
+                      rows="4"
+                      maxlength="1000"
+                      aria-label="Motivo da recusa"
+                      [value]="motivoRecusa()"
+                      (input)="alterarMotivoRecusa($event)"
+                      placeholder="Descreve o motivo da recusa..."
+                      [disabled]="processandoDecisao()"
+                    ></textarea>
+
+                    <div class="coord-contador">
+                      {{ motivoRecusa().length }}/1000
+                    </div>
+
+                    <div class="coord-acoes-recusa">
+
+                      <button
+                        type="button"
+                        class="coord-btn coord-btn-outline"
+                        (click)="cancelarRecusa()"
+                        [disabled]="processandoDecisao()"
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        class="coord-btn coord-btn-recusar"
+                        (click)="recusarSelecionada()"
+                        [disabled]="processandoDecisao()"
+                      >
+                        {{ processandoDecisao() ? 'A processar...' : 'Confirmar recusa' }}
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                } @else {
+
+                  <div class="coord-acoes-decisao">
+
+                    <button
+                      type="button"
+                      class="coord-btn coord-btn-recusar"
+                      (click)="abrirRecusa()"
+                      [disabled]="processandoDecisao()"
+                    >
+                      Recusar
+                    </button>
+
+                    <button
+                      type="button"
+                      class="coord-btn coord-btn-aprovar"
+                      (click)="aprovarSelecionada()"
+                      [disabled]="processandoDecisao()"
+                    >
+                      {{ processandoDecisao() ? 'A processar...' : 'Aprovar candidatura' }}
+                    </button>
+
+                  </div>
+
+                }
+
+              }
+
+            }
+
+          </div>
+
+        </div>
+
+      }
+
+    </section>
+
+
+    <section class="coord-card">
+
+      <div class="coord-card-heading">
+
+        <div class="coord-icon" aria-hidden="true">
           ★
         </div>
 

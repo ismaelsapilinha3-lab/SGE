@@ -154,7 +154,7 @@ class AdminController extends Controller
     public function encaminhar(Request $request, int $id)
     {
         $dados = $request->validate([
-            'id_coordenador' => [
+            'id_departamento' => [
                 'required',
                 'integer',
                 'min:1',
@@ -199,40 +199,24 @@ class AdminController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | Localizar coordenador ativo
+            | Localizar coordenador ativo da direção escolhida
             |--------------------------------------------------------------------------
             */
             $coordenador = User::query()
-                ->where(
-                    'id_utilizador',
-                    $dados['id_coordenador']
-                )
                 ->where('tipo_utilizador', 'coordenador')
                 ->where('ativo', true)
+                ->whereHas('perfil', function ($q) use ($dados) {
+                    $q->where(
+                        'id_departamento',
+                        $dados['id_departamento']
+                    );
+                })
                 ->with('perfil')
                 ->first();
 
             if (! $coordenador) {
                 return response()->json([
-                    'message' => 'O coordenador indicado não existe, está inativo ou não tem o perfil correto.',
-                ], 422);
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Confirmar a direção do coordenador
-            |--------------------------------------------------------------------------
-            */
-            $idDepartamentoCoordenador =
-                $coordenador->perfil?->id_departamento;
-
-            if (
-                ! $idDepartamentoCoordenador ||
-                (int) $idDepartamentoCoordenador !==
-                    (int) $candidatura->id_departamento_selecionado
-            ) {
-                return response()->json([
-                    'message' => 'O coordenador não pertence à direção selecionada na candidatura.',
+                    'message' => 'Não existe coordenador activo para a direção seleccionada.',
                 ], 422);
             }
 
@@ -243,6 +227,7 @@ class AdminController extends Controller
             */
             $candidatura->update([
                 'id_coordenador' => $coordenador->id_utilizador,
+                'id_departamento_selecionado' => (int) $dados['id_departamento'],
                 'encaminhada_em' => now(),
             ]);
 
@@ -258,7 +243,7 @@ class AdminController extends Controller
                     'id_utilizador' => $coordenador->id_utilizador,
                     'nome' => $coordenador->nome,
                     'email' => $coordenador->email,
-                    'id_departamento' => $idDepartamentoCoordenador,
+                    'id_departamento' => (int) $dados['id_departamento'],
                 ],
             ]);
         });

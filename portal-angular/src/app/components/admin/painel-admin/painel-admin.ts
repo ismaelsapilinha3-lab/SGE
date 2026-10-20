@@ -244,8 +244,6 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
   carregandoDetalhes = signal(false);
 
-  processandoDecisao = signal(false);
-
   abrindoDocumento = signal(false);
 
 
@@ -261,25 +259,22 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
   erroDetalhes = signal('');
 
-  erroDecisao = signal('');
-
   erroDocumento = signal('');
 
 
   // ============================================================
-  // SUCESSO
+  // ENCAMINHAMENTO
   // ============================================================
 
-  sucessoDecisao = signal('');
+  processandoEncaminhamento = signal(false);
 
+  erroEncaminhamento = signal('');
 
-  // ============================================================
-  // RECUSA
-  // ============================================================
+  sucessoEncaminhamento = signal('');
 
-  mostrarRecusa = signal(false);
+  mostrarEncaminhamento = signal(false);
 
-  motivoRecusa = signal('');
+  departamentoEncaminhamento = signal<number | null>(null);
 
 
   // ============================================================
@@ -1108,14 +1103,6 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
     this.erroDocumento.set('');
 
-    this.erroDecisao.set('');
-
-    this.sucessoDecisao.set('');
-
-    this.mostrarRecusa.set(false);
-
-    this.motivoRecusa.set('');
-
     const sub = this.adminService.obterCandidatura(id).subscribe({
       next: (dados) => {
         this.candidaturaSelecionada.set(dados);
@@ -1147,149 +1134,56 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
     this.carregandoDetalhes.set(false);
 
-    this.mostrarRecusa.set(false);
-
-    this.motivoRecusa.set('');
-
     this.erroDetalhes.set('');
 
-    this.erroDecisao.set('');
-
-    this.sucessoDecisao.set('');
-
     this.erroDocumento.set('');
+
+    this.mostrarEncaminhamento.set(false);
+
+    this.erroEncaminhamento.set('');
+
+    this.sucessoEncaminhamento.set('');
+
+    this.departamentoEncaminhamento.set(null);
   }
 
 
   // ============================================================
-  // ABRIR ÁREA DE RECUSA
+  // ENCAMINHAR CANDIDATURA
   // ============================================================
 
-  abrirRecusa(): void {
-    const candidatura = this.candidaturaSelecionada();
+  abrirEncaminhamento(): void {
+    this.erroEncaminhamento.set('');
 
-    if (!candidatura) {
-      return;
-    }
+    this.sucessoEncaminhamento.set('');
 
-    if (candidatura.estado !== 'em_analise') {
-      this.erroDecisao.set(
-        'Esta candidatura já não está em análise.'
-      );
+    this.departamentoEncaminhamento.set(null);
 
-      return;
-    }
-
-    this.erroDecisao.set('');
-
-    this.sucessoDecisao.set('');
-
-    this.motivoRecusa.set('');
-
-    this.mostrarRecusa.set(true);
+    this.mostrarEncaminhamento.set(true);
   }
 
 
-  // ============================================================
-  // CANCELAR RECUSA
-  // ============================================================
+  cancelarEncaminhamento(): void {
+    this.mostrarEncaminhamento.set(false);
 
-  cancelarRecusa(): void {
-    this.mostrarRecusa.set(false);
+    this.erroEncaminhamento.set('');
 
-    this.motivoRecusa.set('');
-
-    this.erroDecisao.set('');
+    this.departamentoEncaminhamento.set(null);
   }
 
 
-  // ============================================================
-  // ALTERAR MOTIVO DA RECUSA
-  // ============================================================
+  alterarDepartamentoEncaminhamento(event: Event): void {
+    const select = event.target as HTMLSelectElement;
 
-  alterarMotivoRecusa(event: Event): void {
-    const textarea = event.target as HTMLTextAreaElement;
+    const valor = select.value;
 
-    this.motivoRecusa.set(textarea.value);
-  }
-
-
-  // ============================================================
-  // APROVAR CANDIDATURA
-  // ============================================================
-
-  aprovarSelecionada(): void {
-    const candidatura = this.candidaturaSelecionada();
-
-    if (!candidatura) {
-      return;
-    }
-
-    if (candidatura.estado !== 'em_analise') {
-      this.erroDecisao.set(
-        'Esta candidatura já não está em análise.'
-      );
-
-      return;
-    }
-
-    if (!isPlatformBrowser(this.platformId)) {
-      return;
-    }
-
-    const confirmar = window.confirm(
-      `Tem certeza que deseja aprovar a candidatura de ${candidatura.nome}?`
+    this.departamentoEncaminhamento.set(
+      valor ? Number(valor) : null
     );
-
-    if (!confirmar) {
-      return;
-    }
-
-    this.processandoDecisao.set(true);
-
-    this.erroDecisao.set('');
-
-    this.sucessoDecisao.set('');
-
-    const sub = this.adminService
-      .aprovarCandidatura(candidatura.id_candidatura)
-      .subscribe({
-        next: () => {
-          this.processandoDecisao.set(false);
-
-          this.sucessoDecisao.set(
-            'Candidatura aprovada com sucesso.'
-          );
-
-          this.mostrarRecusa.set(false);
-
-          this.atualizarCandidaturaLocal('aprovada');
-
-          this.carregarDashboard();
-
-          this.carregarCandidaturas();
-        },
-
-        error: (erro: unknown) => {
-          console.error('Erro ao aprovar candidatura:', erro);
-
-          this.processandoDecisao.set(false);
-
-          this.erroDecisao.set(
-            'Não foi possível aprovar a candidatura.'
-          );
-        }
-      });
-
-    this.subscriptions.add(sub);
   }
 
 
-  // ============================================================
-  // RECUSAR CANDIDATURA
-  // ============================================================
-
-  recusarSelecionada(): void {
+  confirmarEncaminhamento(): void {
     const candidatura = this.candidaturaSelecionada();
 
     if (!candidatura) {
@@ -1297,56 +1191,49 @@ export class PainelAdmin implements OnInit, OnDestroy {
     }
 
     if (candidatura.estado !== 'em_analise') {
-      this.erroDecisao.set(
-        'Esta candidatura já não está em análise.'
+      this.erroEncaminhamento.set(
+        'Só é possível encaminhar candidaturas em análise.'
       );
 
       return;
     }
 
-    const motivo = this.motivoRecusa().trim();
-
-    if (motivo.length < 5) {
-      this.erroDecisao.set(
-        'O motivo da recusa deve ter pelo menos 5 caracteres.'
+    if (candidatura.encaminhada_em) {
+      this.erroEncaminhamento.set(
+        'Esta candidatura já foi encaminhada.'
       );
 
       return;
     }
 
-    if (motivo.length > 1000) {
-      this.erroDecisao.set(
-        'O motivo da recusa não pode ultrapassar 1000 caracteres.'
+    const idDepartamento = this.departamentoEncaminhamento();
+
+    if (!idDepartamento) {
+      this.erroEncaminhamento.set(
+        'Selecciona a direção para encaminhar a candidatura.'
       );
 
       return;
     }
 
-    this.processandoDecisao.set(true);
+    this.processandoEncaminhamento.set(true);
 
-    this.erroDecisao.set('');
+    this.erroEncaminhamento.set('');
 
-    this.sucessoDecisao.set('');
+    this.sucessoEncaminhamento.set('');
 
     const sub = this.adminService
-      .recusarCandidatura(
+      .encaminharCandidatura(
         candidatura.id_candidatura,
-        motivo
+        { id_departamento: idDepartamento }
       )
       .subscribe({
-        next: () => {
-          this.processandoDecisao.set(false);
+        next: (resposta) => {
+          this.processandoEncaminhamento.set(false);
 
-          this.mostrarRecusa.set(false);
+          this.sucessoEncaminhamento.set(resposta.message);
 
-          this.sucessoDecisao.set(
-            'Candidatura recusada com sucesso.'
-          );
-
-          this.atualizarCandidaturaLocal(
-            'recusada',
-            motivo
-          );
+          this.candidaturaSelecionada.set(resposta.candidatura);
 
           this.carregarDashboard();
 
@@ -1354,45 +1241,17 @@ export class PainelAdmin implements OnInit, OnDestroy {
         },
 
         error: (erro: unknown) => {
-          console.error('Erro ao recusar candidatura:', erro);
+          console.error('Erro ao encaminhar candidatura:', erro);
 
-          this.processandoDecisao.set(false);
+          this.processandoEncaminhamento.set(false);
 
-          this.erroDecisao.set(
-            'Não foi possível recusar a candidatura.'
+          this.erroEncaminhamento.set(
+            'Não foi possível encaminhar a candidatura.'
           );
         }
       });
 
     this.subscriptions.add(sub);
-  }
-
-
-  // ============================================================
-  // ATUALIZAR CANDIDATURA LOCALMENTE
-  // ============================================================
-
-  private atualizarCandidaturaLocal(
-    estado: 'aprovada' | 'recusada',
-    motivo?: string
-  ): void {
-    const atual = this.candidaturaSelecionada();
-
-    if (!atual) {
-      return;
-    }
-
-    this.candidaturaSelecionada.set({
-      ...atual,
-
-      estado,
-
-      motivo_recusa: estado === 'recusada'
-        ? motivo ?? null
-        : null,
-
-      data_decisao: new Date().toISOString()
-    });
   }
 
 

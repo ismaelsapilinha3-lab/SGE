@@ -510,8 +510,7 @@
 .campo-pesquisa-profissional input,
 .filtro-select select,
 .campo-departamento input,
-.campo-departamento textarea,
-.area-recusa textarea {
+.campo-departamento textarea {
   width: 100%;
   padding: 0 12px;
   border: 1px solid #CBD5E1;
@@ -529,8 +528,7 @@
 
 .campo-pesquisa-profissional input { padding: 0 38px 0 36px; }
 
-.campo-departamento textarea,
-.area-recusa textarea { padding: 11px 12px; line-height: 1.5; resize: vertical; }
+.campo-departamento textarea { padding: 11px 12px; line-height: 1.5; resize: vertical; }
 
 .campo-pesquisa-profissional input::placeholder,
 .campo-departamento input::placeholder,
@@ -683,7 +681,6 @@
 
 .botao-visualizar,
 .botao-documento,
-.botao-aprovar,
 .botao-novo-departamento,
 .botao-guardar-departamento,
 .botao-download-documento {
@@ -704,14 +701,12 @@
 
 .botao-visualizar { min-height: 34px; padding: 0 14px; font-size: 12px; }
 .botao-documento { min-height: 34px; padding: 0 14px; font-size: 12px; }
-.botao-aprovar { min-height: 40px; padding: 0 18px; font-size: 13px; }
 .botao-novo-departamento,
 .botao-guardar-departamento { min-height: 40px; padding: 0 18px; font-size: 13px; }
 .botao-download-documento { min-height: 38px; padding: 0 16px; font-size: 13px; }
 
 .botao-visualizar:hover,
 .botao-documento:hover:not(:disabled),
-.botao-aprovar:hover:not(:disabled),
 .botao-novo-departamento:hover,
 .botao-guardar-departamento:hover:not(:disabled),
 .botao-download-documento:hover { background: var(--azul-medio); border-color: var(--azul-medio); }
@@ -1126,11 +1121,7 @@
 .documento-info span { font-size: 11px; color: var(--cinza); }
 
 .botao-documento:disabled,
-.botao-aprovar:disabled,
 .botao-guardar-departamento:disabled,
-.botao-recusar:disabled,
-.botao-confirmar-recusa:disabled,
-.botao-fechar-recusa:disabled,
 .botao-cancelar-departamento:disabled { opacity: 0.55; cursor: not-allowed; }
 
 .documentos-vazios {
@@ -1143,53 +1134,140 @@
   text-align: center;
 }
 
-/* ---------- Decisão ---------- */
+/* ---------- Encaminhamento ---------- */
 
-.area-recusa {
+.area-encaminhamento {
   padding: 18px;
-  border: 1px solid #f3b5bc;
+  border: 1px solid #b9d4f0;
   border-radius: 10px;
-  background: #fff7f7;
+  background: #f4f9ff;
 }
 
-.area-recusa h3 { margin: 0 0 4px; font-size: 14px; font-weight: 800; color: #b42318; }
-.area-recusa p { margin: 0 0 12px; font-size: 12px; color: var(--cinza); }
-.area-recusa textarea { min-height: 96px; }
-.area-recusa textarea:focus { outline: none; border-color: var(--vermelho); box-shadow: 0 0 0 3px rgba(196, 50, 63, 0.12); }
+.area-encaminhamento h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0879bd;
+}
 
-.contador-caracteres { margin-top: 5px; font-size: 11px; color: #98a2b3; text-align: right; }
-.acoes-recusa { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.area-encaminhamento p {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--cinza);
+  line-height: 1.5;
+}
 
-.acoes-candidatura {
+.area-encaminhamento select {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--texto);
+  font: inherit;
+  font-size: 13px;
+}
+
+.area-encaminhamento select:focus {
+  outline: none;
+  border-color: var(--azul-medio);
+  box-shadow: 0 0 0 3px rgba(26, 61, 107, 0.14);
+}
+
+.area-encaminhamento select:disabled {
+  cursor: not-allowed;
+  background: #f1f5f9;
+}
+
+.acoes-encaminhamento {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.botao-encaminhar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--azul);
+  border-radius: 8px;
+  background: var(--azul);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.botao-encaminhar:hover:not(:disabled) {
+  background: var(--azul-medio);
+  border-color: var(--azul-medio);
+}
+
+.botao-encaminhar:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.botao-cancelar-encaminhamento {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  background: #fff;
+  color: #475467;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.botao-cancelar-encaminhamento:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.botao-cancelar-encaminhamento:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.botao-confirmar-encaminhamento {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--azul);
+  border-radius: 8px;
+  background: var(--azul);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.botao-confirmar-encaminhamento:hover:not(:disabled) {
+  background: var(--azul-medio);
+}
+
+.botao-confirmar-encaminhamento:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.acoes-encaminhar {
+  display: flex;
+  justify-content: flex-end;
   padding: 14px;
   border: 1px solid var(--borda);
   border-radius: 10px;
   background: #fff;
 }
-
-.botao-recusar,
-.botao-confirmar-recusa {
-  min-height: 40px;
-  padding: 0 18px;
-  border: 1px solid var(--vermelho);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--vermelho);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.botao-recusar:hover:not(:disabled),
-.botao-confirmar-recusa:hover:not(:disabled) { background: var(--vermelho); color: #fff; }
-
-.botao-confirmar-recusa { background: var(--vermelho); color: #fff; }
-.botao-confirmar-recusa:hover:not(:disabled) { background: #a62833; }
 
 /* ---------- Pré-visualização de documento ---------- */
 
@@ -1316,13 +1394,12 @@ a:focus-visible { outline: 2px solid var(--laranja); outline-offset: 2px; }
   .documento-item { flex-wrap: wrap; }
   .documento-info { width: calc(100% - 56px); flex: none; }
   .botao-documento { width: 100%; }
-  .acoes-candidatura,
-  .acoes-recusa,
   .acoes-formulario-departamento { flex-direction: column; }
-  .botao-recusar,
-  .botao-aprovar,
-  .botao-fechar-recusa,
-  .botao-confirmar-recusa,
+  .acoes-encaminhamento,
+  .acoes-encaminhar { flex-direction: column; }
+  .botao-cancelar-encaminhamento,
+  .botao-confirmar-encaminhamento,
+  .botao-encaminhar { width: 100%; }
   .botao-cancelar-departamento,
   .botao-guardar-departamento { width: 100%; }
   .documento-preview-body { min-height: 320px; }
