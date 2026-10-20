@@ -18,12 +18,18 @@ import {
 import { AuthService } from '../../../core/auth.service';
 
 import {
-  SinoNotificacoesComponent
-} from '../../shared/sino-notificacoes/sino-notificacoes';
+  LayoutPainelComponent,
+  GrupoNavegacaoPainel
+} from '../../shared/layout-painel/layout-painel';
 
 import {
   EstagioSupervisorComponent
 } from '../../shared/estagio-supervisor/estagio-supervisor';
+
+
+type SecaoSupervisor =
+  | 'estagios'
+  | 'acompanhamento';
 
 
 @Component({
@@ -31,7 +37,7 @@ import {
   standalone: true,
   imports: [
     CommonModule,
-    SinoNotificacoesComponent,
+    LayoutPainelComponent,
     EstagioSupervisorComponent
   ],
   templateUrl: './painel-supervisor.html',
@@ -62,6 +68,31 @@ export class PainelSupervisorComponent implements OnInit {
   totalEstagiosAtivos = signal(0);
 
   estagios = signal<EstagioSupervisionado[]>([]);
+
+
+  // ============================================================
+  // NAVEGAÇÃO LATERAL
+  // ============================================================
+
+  secaoAtiva = signal<SecaoSupervisor>('estagios');
+
+  readonly gruposNavegacao: GrupoNavegacaoPainel[] = [
+    {
+      titulo: 'ACOMPANHAMENTO',
+      itens: [
+        {
+          id: 'estagios',
+          rotulo: 'Estágios',
+          icone: '▣'
+        },
+        {
+          id: 'acompanhamento',
+          rotulo: 'Gestão do estágio',
+          icone: '★'
+        }
+      ]
+    }
+  ];
 
 
   // ============================================================
@@ -180,6 +211,20 @@ export class PainelSupervisorComponent implements OnInit {
 
     return data.toLocaleDateString('pt-PT');
 
+  }
+
+
+  // ============================================================
+  // NAVEGAÇÃO
+  // ============================================================
+
+  irParaSecao(secao: string): void {
+    this.secaoAtiva.set(secao as SecaoSupervisor);
+
+    document.getElementById(secao)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
   }
 
 

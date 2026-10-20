@@ -1,194 +1,212 @@
-<section class="sup-page">
+<div class="sup-page">
 
-  <header class="sup-header">
+  <app-layout-painel
+    marcaSigla="SGE"
+    marcaDescricao="Gestão de Estágios"
+    [nomePerfil]="nomeSupervisor() || 'Supervisor'"
+    descricaoPerfil="Supervisão de estágios"
+    [secaoAtiva]="secaoAtiva()"
+    [grupos]="gruposNavegacao"
+    (secaoSelecionada)="irParaSecao($event)"
+    (terminarSessao)="sair()"
+  >
 
-    <div>
-      <span class="sup-kicker">
-        SISTEMA DE GESTÃO DE ESTÁGIOS
-      </span>
+    <main class="sup-main" role="main">
 
-      <h1>Painel do supervisor</h1>
-
-      <p>
-        Acompanha os estágios em curso e os estagiários
-        associados à tua supervisão.
-      </p>
-    </div>
-
-    <div class="sup-header-acoes">
-
-      <app-sino-notificacoes></app-sino-notificacoes>
-
-      <button
-        type="button"
-        class="sup-btn sup-btn-outline"
-        (click)="sair()"
-      >
-        Encerrar sessão
-      </button>
-
-    </div>
-
-  </header>
-
-
-  <main class="sup-main">
-
-    @if (erro()) {
-      <div
-        class="sup-alert sup-alert-error"
-        role="alert"
-      >
-        <strong>Não foi possível carregar o painel</strong>
-        <p>{{ erro() }}</p>
-      </div>
-    }
-
-
-    <section class="sup-stats">
-
-      <article class="sup-stat">
-
-        <span class="sup-stat-label">
-          Estágios activos
-        </span>
-
-        <strong class="sup-stat-value">
-          @if (carregando()) {
-            ...
-          } @else {
-            {{ totalEstagiosAtivos() }}
-          }
-        </strong>
-
-      </article>
-
-    </section>
-
-
-    <section class="sup-card">
-
-      <div class="sup-card-heading">
-
-        <div class="sup-icon" aria-hidden="true">
-          ✓
-        </div>
+      <header class="sup-cabecalho">
 
         <div>
           <span class="sup-kicker">
-            ESTÁGIOS EM CURSO
+            SISTEMA DE GESTÃO DE ESTÁGIOS
           </span>
 
-          <h2>Estágios a decorrer</h2>
+          <h1>Painel do supervisor</h1>
 
           <p>
-            Consulta apenas leitura. As decisões de estado
-            são tomadas pela coordenação e pela direcção.
+            Acompanha os estágios em curso e os estagiários
+            associados à tua supervisão.
           </p>
         </div>
 
-      </div>
+        <button
+          type="button"
+          class="sup-btn sup-btn-outline"
+          (click)="carregarPainel()"
+          [disabled]="carregando()"
+        >
+          <span aria-hidden="true">↻</span>
+          Atualizar
+        </button>
+
+      </header>
 
 
-      @if (carregando()) {
-
-        <p class="sup-empty">
-          A carregar estágios...
-        </p>
-
-      } @else if (estagios().length === 0) {
-
-        <p class="sup-empty">
-          Não existem estágios activos de momento.
-        </p>
-
-      } @else {
-
-        <div class="sup-table-wrap">
-
-          <table class="sup-table">
-
-            <thead>
-              <tr>
-                <th>Estagiário</th>
-                <th>Departamento</th>
-                <th>Início</th>
-                <th>Fim previsto</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-
-            <tbody>
-
-              @for (
-                estagio of estagios();
-                track estagio.id_estagio
-              ) {
-
-                <tr>
-                  <td>
-                    {{ estagio.nome_estagiario || '—' }}
-                  </td>
-
-                  <td>
-                    {{ estagio.nome_departamento || '—' }}
-                  </td>
-
-                  <td>
-                    {{ formatarData(estagio.data_inicio) }}
-                  </td>
-
-                  <td>
-                    {{ formatarData(estagio.data_fim_prevista) }}
-                  </td>
-
-                  <td>
-                    <span class="sup-tag">
-                      {{ estagio.estado_estagio || 'em curso' }}
-                    </span>
-                  </td>
-                </tr>
-
-              }
-
-            </tbody>
-
-          </table>
-
+      @if (erro()) {
+        <div
+          class="sup-alert sup-alert-error"
+          role="alert"
+        >
+          <strong>Não foi possível carregar o painel</strong>
+          <p>{{ erro() }}</p>
         </div>
-
       }
 
-    </section>
 
+      <section
+        class="sup-stats"
+        aria-label="Resumo da supervisão"
+      >
 
-    <section class="sup-card">
+        <article class="sup-stat">
 
-      <div class="sup-card-heading">
-
-        <div class="sup-icon" aria-hidden="true">
-          ★
-        </div>
-
-        <div>
-          <span class="sup-kicker">
-            ACOMPANHAMENTO DO ESTÁGIO
+          <span class="sup-stat-label">
+            Estágios activos
           </span>
 
-          <h2>Gestão do estágio</h2>
+          <strong class="sup-stat-value">
+            @if (carregando()) {
+              ...
+            } @else {
+              {{ totalEstagiosAtivos() }}
+            }
+          </strong>
 
-          <p>
-            Plano de estágio, contrato, relatórios, assiduidade,
-            avaliações e feedback dos estágios que acompanhas.
-          </p>
+        </article>
+
+      </section>
+
+
+      <section
+        id="estagios"
+        class="sup-card"
+      >
+
+        <div class="sup-card-heading">
+
+          <div class="sup-icon" aria-hidden="true">
+            ✓
+          </div>
+
+          <div>
+            <span class="sup-kicker">
+              ESTÁGIOS EM CURSO
+            </span>
+
+            <h2>Estágios a decorrer</h2>
+
+            <p>
+              Consulta apenas leitura. As decisões de estado
+              são tomadas pela coordenação e pela direcção.
+            </p>
+          </div>
+
         </div>
 
-      </div>
 
-      <app-estagio-supervisor></app-estagio-supervisor>
+        @if (carregando()) {
 
-    </section>
+          <p class="sup-empty">
+            A carregar estágios...
+          </p>
 
-  </main>
+        } @else if (estagios().length === 0) {
 
-</section>
+          <p class="sup-empty">
+            Não existem estágios activos de momento.
+          </p>
+
+        } @else {
+
+          <div class="sup-table-wrap">
+
+            <table class="sup-table">
+
+              <thead>
+                <tr>
+                  <th>Estagiário</th>
+                  <th>Departamento</th>
+                  <th>Início</th>
+                  <th>Fim previsto</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                @for (
+                  estagio of estagios();
+                  track estagio.id_estagio
+                ) {
+
+                  <tr>
+                    <td>
+                      {{ estagio.nome_estagiario || '—' }}
+                    </td>
+
+                    <td>
+                      {{ estagio.nome_departamento || '—' }}
+                    </td>
+
+                    <td>
+                      {{ formatarData(estagio.data_inicio) }}
+                    </td>
+
+                    <td>
+                      {{ formatarData(estagio.data_fim_prevista) }}
+                    </td>
+
+                    <td>
+                      <span class="sup-tag">
+                        {{ estagio.estado_estagio || 'em curso' }}
+                      </span>
+                    </td>
+                  </tr>
+
+                }
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        }
+
+      </section>
+
+
+      <section
+        id="acompanhamento"
+        class="sup-card"
+      >
+
+        <div class="sup-card-heading">
+
+          <div class="sup-icon" aria-hidden="true">
+            ★
+          </div>
+
+          <div>
+            <span class="sup-kicker">
+              ACOMPANHAMENTO DO ESTÁGIO
+            </span>
+
+            <h2>Gestão do estágio</h2>
+
+            <p>
+              Plano de estágio, contrato, relatórios, assiduidade,
+              avaliações e feedback dos estágios que acompanhas.
+            </p>
+          </div>
+
+        </div>
+
+        <app-estagio-supervisor></app-estagio-supervisor>
+
+      </section>
+
+    </main>
+
+  </app-layout-painel>
+
+</div>

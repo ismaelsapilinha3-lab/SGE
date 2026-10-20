@@ -1,38 +1,45 @@
-<section class="coord-page">
+<div class="coord-page">
 
-  <header class="coord-header">
+  <app-layout-painel
+    marcaSigla="SGE"
+    marcaDescricao="Gestão de Estágios"
+    [nomePerfil]="nomeCoordenador()"
+    descricaoPerfil="Coordenação de estágios"
+    [secaoAtiva]="secao()"
+    [grupos]="gruposNavegacao"
+    (secaoSelecionada)="alterarSecao($any($event))"
+    (terminarSessao)="sair()"
+  >
 
-    <div>
-      <span class="coord-kicker">
-        SISTEMA DE GESTÃO DE ESTÁGIOS
-      </span>
+  <main class="coord-main">
 
-      <h1>Painel do coordenador</h1>
 
-      <p>
-        Gere as candidaturas, os estágios e os supervisores
-        associados à tua direção.
-      </p>
-    </div>
+    <header class="coord-cabecalho">
 
-    <div class="coord-header-acoes">
+      <div>
+        <span class="coord-kicker">
+          SISTEMA DE GESTÃO DE ESTÁGIOS
+        </span>
 
-      <app-sino-notificacoes></app-sino-notificacoes>
+        <h1>Painel do coordenador</h1>
+
+        <p>
+          Gere as candidaturas, os estágios e os supervisores
+          associados à tua direção.
+        </p>
+      </div>
 
       <button
         type="button"
         class="coord-btn coord-btn-outline"
-        (click)="sair()"
+        (click)="carregarDashboard(); carregarCandidaturas()"
       >
-        Encerrar sessão
+        <span aria-hidden="true">↻</span>
+        Atualizar
       </button>
 
-    </div>
+    </header>
 
-  </header>
-
-
-  <main class="coord-main">
 
     @if (erro()) {
       <div
@@ -1086,4 +1093,6 @@
 
   }
 
-</section>
+  </app-layout-painel>
+
+</div>

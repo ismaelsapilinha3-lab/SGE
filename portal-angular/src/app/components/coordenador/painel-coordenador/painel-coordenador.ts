@@ -37,8 +37,9 @@ import {
 import { AuthService } from '../../../core/auth.service';
 
 import {
-  SinoNotificacoesComponent
-} from '../../shared/sino-notificacoes/sino-notificacoes';
+  LayoutPainelComponent,
+  GrupoNavegacaoPainel
+} from '../../shared/layout-painel/layout-painel';
 
 import {
   EstagioCoordenadorComponent
@@ -94,13 +95,28 @@ const SECOES: SecaoDefinicao[] = [
 ];
 
 
+/**
+ * Grupos da navegação lateral, derivados das secções do painel.
+ */
+const GRUPOS_NAVEGACAO: GrupoNavegacaoPainel[] = [
+  {
+    titulo: 'GESTÃO DA DIREÇÃO',
+    itens: SECOES.map((secao) => ({
+      id: secao.id,
+      rotulo: secao.rotulo,
+      icone: secao.icone
+    }))
+  }
+];
+
+
 @Component({
   selector: 'app-painel-coordenador',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
-    SinoNotificacoesComponent,
+    LayoutPainelComponent,
     EstagioCoordenadorComponent
   ],
   templateUrl: './painel-coordenador.html',
@@ -134,6 +150,8 @@ export class PainelCoordenadorComponent implements OnInit {
   readonly secoes = SECOES;
 
   secao = signal<SecaoCoordenador>('candidaturas');
+
+  readonly gruposNavegacao = GRUPOS_NAVEGACAO;
 
 
   // ============================================================
@@ -219,10 +237,21 @@ export class PainelCoordenadorComponent implements OnInit {
 
 
   // ============================================================
+  // PERFIL
+  // ============================================================
+
+  nomeCoordenador = signal('Coordenador');
+
+
+  // ============================================================
   // CICLO DE VIDA
   // ============================================================
 
   ngOnInit(): void {
+    this.nomeCoordenador.set(
+      this.authService.utilizador()?.nome || 'Coordenador'
+    );
+
     this.carregarDashboard();
 
     this.carregarCandidaturas();
