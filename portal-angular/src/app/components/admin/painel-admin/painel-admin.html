@@ -1,163 +1,16 @@
-<div class="painel-shell">
+﻿<div class="painel-shell">
+  <app-layout-painel
+    marcaSigla="SGE"
+    marcaDescricao="GestÃ£o de EstÃ¡gios"
+    nomePerfil="Administrador"
+    descricaoPerfil="GestÃ£o do sistema"
+    [secaoAtiva]="secaoAtiva()"
+    [grupos]="gruposNavegacao"
+    (secaoSelecionada)="irParaSecao($event)"
+    (terminarSessao)="sair()"
+  >
 
-  <!-- =====================================================
-       CABEÇALHO FIXO: MARCA + NAVEGAÇÃO + PERFIL
-       ===================================================== -->
-  <header class="topo">
-
-    <div class="marca-multitel">
-      <img src="assets/img/multitel.png" alt="Multitel" class="logo-multitel" />
-
-      <div class="marca-texto">
-        <strong>SGE</strong>
-        <span>Gestão de Estágios</span>
-      </div>
-    </div>
-
-    <div class="topo-direita">
-
-      <span class="estado-sistema">
-        <span class="estado-online"></span>
-        Sistema operacional
-      </span>
-
-      <div class="perfil-topo">
-        <div class="avatar-admin">A</div>
-
-        <div class="perfil-topo-info">
-          <strong>Administrador</strong>
-          <span>Gestão do sistema</span>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        class="botao-sair"
-        (click)="sair()"
-      >
-        <span aria-hidden="true">⎋</span>
-        Sair
-      </button>
-
-    </div>
-
-    <!-- =====================================================
-         NAVEGAÇÃO ADMINISTRATIVA
-         ===================================================== -->
-    <nav class="menu-lateral" aria-label="Navegação administrativa">
-
-      <button
-        type="button"
-        class="menu-item"
-        [class.ativo]="secaoAtiva() === 'dashboard'"
-        [attr.aria-current]="secaoAtiva() === 'dashboard' ? 'page' : null"
-        (click)="irParaSecao('dashboard')"
-      >
-        <span class="menu-icone">▦</span>
-        Dashboard
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        [class.ativo]="secaoAtiva() === 'candidaturas'"
-        [attr.aria-current]="secaoAtiva() === 'candidaturas' ? 'page' : null"
-        (click)="irParaSecao('candidaturas')"
-      >
-        <span class="menu-icone">▤</span>
-        Candidaturas
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        [class.ativo]="secaoAtiva() === 'departamentos'"
-        [attr.aria-current]="secaoAtiva() === 'departamentos' ? 'page' : null"
-        (click)="irParaSecao('departamentos')"
-      >
-        <span class="menu-icone">⌂</span>
-        Departamentos
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        [class.ativo]="secaoAtiva() === 'estagiarios'"
-        [attr.aria-current]="secaoAtiva() === 'estagiarios' ? 'page' : null"
-        (click)="irParaSecao('estagiarios')"
-      >
-        <span class="menu-icone">♙</span>
-        Estagiários
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        disabled
-        title="Em breve"
-      >
-        <span class="menu-icone">▣</span>
-        Estágios
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        disabled
-        title="Em breve"
-      >
-        <span class="menu-icone">▥</span>
-        Relatórios
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        disabled
-        title="Em breve"
-      >
-        <span class="menu-icone">★</span>
-        Avaliações
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        disabled
-        title="Em breve"
-      >
-        <span class="menu-icone">◷</span>
-        Assiduidade
-      </button>
-
-    </nav>
-
-    <div class="menu-separador"></div>
-
-    <div class="menu-titulo">SISTEMA</div>
-
-    <nav class="menu-lateral" aria-label="Gestão do sistema">
-
-      <button
-        type="button"
-        class="menu-item"
-        [class.ativo]="secaoAtiva() === 'utilizadores'"
-        [attr.aria-current]="secaoAtiva() === 'utilizadores' ? 'page' : null"
-        (click)="irParaSecao('utilizadores')"
-      >
-        <span class="menu-icone">♙</span>
-        Utilizadores
-      </button>
-
-    </nav>
-
-  </header>
-
-
-  <!-- =====================================================
-       CONTEÚDO PRINCIPAL
-       ===================================================== -->
-  <main class="conteudo-painel">
+  <main class="conteudo-painel" role="main">
 
     <!-- =====================================================
          DASHBOARD
@@ -263,6 +116,199 @@
             </strong>
           </div>
         </article>
+
+      </section>
+
+      <!-- =====================================================
+           GRÁFICOS DE ACOMPANHAMENTO
+           ===================================================== -->
+      <section
+        class="graficos-acompanhamento"
+        aria-label="Gráficos de acompanhamento das candidaturas"
+      >
+
+        <div class="grafico-card">
+
+          <header class="grafico-cabecalho">
+            <div>
+              <h2>Distribuição por estado</h2>
+              <p>Visualização global do estado das candidaturas</p>
+            </div>
+          </header>
+
+          <div class="grafico-corpo">
+
+            <div
+              class="grafico-donut-wrapper"
+              role="img"
+              aria-label="Gráfico circular com a distribuição das candidaturas por estado"
+            >
+              <svg viewBox="0 0 42 42" class="grafico-donut">
+                <circle
+                  cx="21"
+                  cy="21"
+                  r="15.91549430918954"
+                  fill="transparent"
+                  stroke="#E3E8EE"
+                  stroke-width="3"
+                ></circle>
+
+                @if (dashboard().em_analise > 0) {
+                  <circle
+                    cx="21"
+                    cy="21"
+                    r="15.91549430918954"
+                    fill="transparent"
+                    stroke="#FF6B00"
+                    stroke-width="3"
+                    [attr.stroke-dasharray]="percentEmAnalise() + ' ' + (100 - percentEmAnalise())"
+                    stroke-dashoffset="25"
+                    class="grafico-arco"
+                  ></circle>
+                }
+
+                @if (dashboard().aprovadas > 0) {
+                  <circle
+                    cx="21"
+                    cy="21"
+                    r="15.91549430918954"
+                    fill="transparent"
+                    stroke="#137A47"
+                    stroke-width="3"
+                    [attr.stroke-dasharray]="percentAprovadas() + ' ' + (100 - percentAprovadas())"
+                    [attr.stroke-dashoffset]="25 - percentEmAnalise()"
+                    class="grafico-arco"
+                  ></circle>
+                }
+
+                @if (dashboard().recusadas > 0) {
+                  <circle
+                    cx="21"
+                    cy="21"
+                    r="15.91549430918954"
+                    fill="transparent"
+                    stroke="#C4323F"
+                    stroke-width="3"
+                    [attr.stroke-dasharray]="percentRecusadas() + ' ' + (100 - percentRecusadas())"
+                    [attr.stroke-dashoffset]="25 - percentEmAnalise() - percentAprovadas()"
+                    class="grafico-arco"
+                  ></circle>
+                }
+              </svg>
+
+              <div class="grafico-centro">
+                <strong>{{ dashboard().total_candidaturas }}</strong>
+                <span>Total</span>
+              </div>
+            </div>
+
+            <div class="grafico-legenda">
+
+              <div class="legenda-item">
+                <span class="legenda-cor legenda-cor--analise"></span>
+
+                <div class="legenda-texto">
+                  <span>Em análise</span>
+                  <strong>
+                    {{ dashboard().em_analise }}
+                    <small>({{ percentEmAnalise() }}%)</small>
+                  </strong>
+                </div>
+              </div>
+
+              <div class="legenda-item">
+                <span class="legenda-cor legenda-cor--aprovadas"></span>
+
+                <div class="legenda-texto">
+                  <span>Aprovadas</span>
+                  <strong>
+                    {{ dashboard().aprovadas }}
+                    <small>({{ percentAprovadas() }}%)</small>
+                  </strong>
+                </div>
+              </div>
+
+              <div class="legenda-item">
+                <span class="legenda-cor legenda-cor--recusadas"></span>
+
+                <div class="legenda-texto">
+                  <span>Recusadas</span>
+                  <strong>
+                    {{ dashboard().recusadas }}
+                    <small>({{ percentRecusadas() }}%)</small>
+                  </strong>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="grafico-card grafico-card--barras">
+
+          <header class="grafico-cabecalho">
+            <div>
+              <h2>Taxa de decisão</h2>
+              <p>Aprovações versus recusas entre candidaturas decididas</p>
+            </div>
+          </header>
+
+          <div class="grafico-barras">
+
+            <div class="barra-item">
+              <div class="barra-info">
+                <span>Aprovações</span>
+                <strong>{{ taxaAprovacao() }}%</strong>
+              </div>
+
+              <div class="barra-trilho">
+                <div
+                  class="barra-preenchimento barra-preenchimento--aprovadas"
+                  [style.width.%]="taxaAprovacao()"
+                ></div>
+              </div>
+            </div>
+
+            <div class="barra-item">
+              <div class="barra-info">
+                <span>Recusas</span>
+                <strong>{{ taxaRejeicao() }}%</strong>
+              </div>
+
+              <div class="barra-trilho">
+                <div
+                  class="barra-preenchimento barra-preenchimento--recusadas"
+                  [style.width.%]="taxaRejeicao()"
+                ></div>
+              </div>
+            </div>
+
+            <div class="barras-metricas">
+
+              <div class="metrica">
+                <span class="metrica-label">Decididas</span>
+                <strong class="metrica-valor">
+                  {{ dashboard().aprovadas + dashboard().recusadas }}
+                </strong>
+              </div>
+
+              <div class="metrica">
+                <span class="metrica-label">Pendentes</span>
+                <strong class="metrica-valor">{{ dashboard().em_analise }}</strong>
+              </div>
+
+              <div class="metrica">
+                <span class="metrica-label">Total</span>
+                <strong class="metrica-valor">{{ dashboard().total_candidaturas }}</strong>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
 
       </section>
 
@@ -1052,6 +1098,33 @@
 
 
     <!-- =====================================================
+         ESTÁGIOS
+         ===================================================== -->
+    <section
+      id="estagios"
+      class="secao-painel"
+      [style.display]="secaoAtiva() === 'estagios' ? 'block' : 'none'"
+    >
+
+      <header class="secao-cabecalho">
+
+        <div>
+          <span class="subtitulo">Ciclo de vida</span>
+          <h2>Estágios</h2>
+          <p>
+            Acompanhe os estágios em curso, altere datas e o estado
+            de cada estágio.
+          </p>
+        </div>
+
+      </header>
+
+      <app-estagio-admin></app-estagio-admin>
+
+    </section>
+
+
+    <!-- =====================================================
          MODAL DE DETALHES DA CANDIDATURA
          ===================================================== -->
     @if (candidaturaSelecionada() || carregandoDetalhes()) {
@@ -1474,6 +1547,7 @@
 
   </main>
 
+  </app-layout-painel>
 
   <!-- =====================================================
        RODAPÉ

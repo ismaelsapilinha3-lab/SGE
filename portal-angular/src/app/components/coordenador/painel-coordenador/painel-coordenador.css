@@ -220,6 +220,12 @@
   background: #f0f6fc;
 }
 
+.coord-header-acoes {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
 .coord-alert {
   margin-bottom: 20px;
   padding: 16px 18px;

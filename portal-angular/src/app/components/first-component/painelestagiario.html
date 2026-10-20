@@ -157,6 +157,29 @@
             </a>
           </li>
 
+
+          <li>
+            <a
+              href="#est-estagio" (click)="$event.preventDefault(); navegarSecao('est-estagio')"
+              class="nav-link"
+              aria-label="Ver o meu estágio"
+            >
+              <svg
+                class="ic"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M4 7h16v13H4z"></path>
+                <path d="M9 7V4h6v3"></path>
+                <path d="M4 12h16"></path>
+              </svg>
+
+              <span>Estágio</span>
+            </a>
+          </li>
+
+
         </ul>
 
 
@@ -174,6 +197,8 @@
           >
             {{ inicial() }}
           </div>
+
+          <app-sino-notificacoes></app-sino-notificacoes>
 
           <button
             type="button"
@@ -1091,6 +1116,41 @@
           </article>
 
         </div>
+
+      </section>
+
+
+      <!-- =====================================================
+           CICLO DE VIDA DO ESTÁGIO
+           ===================================================== -->
+      <section
+        id="est-estagio"
+        class="est-section"
+        aria-labelledby="titulo-estagio"
+      >
+
+        <div class="est-section-head">
+
+          <div>
+
+            <span class="section-kicker">
+              ESTÁGIO
+            </span>
+
+            <h2 id="titulo-estagio">
+              O meu estágio
+            </h2>
+
+            <p>
+              Contrato, relatórios, assiduidade, atividades,
+              avaliações e feedback do teu estágio.
+            </p>
+
+          </div>
+
+        </div>
+
+        <app-estagio-estagiario></app-estagio-estagiario>
 
       </section>
 

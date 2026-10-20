@@ -188,6 +188,81 @@ export interface EstagiariosResponse {
 
 
 /* =========================================================
+   ESTÁGIOS (GESTÃO ADMINISTRATIVA)
+   ========================================================= */
+
+export interface SupervisorEstagio {
+  id_estagio_supervisor?: number;
+  id_supervisor: number;
+  atribuido_em?: string | null;
+  supervisor?: {
+    id_utilizador: number;
+    nome: string;
+    email: string;
+  } | null;
+}
+
+
+export interface PlanoEstagioAdmin {
+  id_plano_estagio: number;
+  objetivos: string;
+  atividades_previstas: string;
+  cronograma: string;
+  data_inicio: string;
+  data_fim: string;
+  estado: string;
+  motivo_recusa: string | null;
+  data_decisao: string | null;
+}
+
+
+export interface EstagioAdmin {
+  id_estagio: number;
+  id_candidatura: number;
+  id_estagiario: number | null;
+
+  data_inicio: string | null;
+  data_fim_prevista: string | null;
+  data_fim_real: string | null;
+
+  estado: 'ativo' | 'suspenso' | 'concluido' | 'cancelado';
+  motivo_suspensao: string | null;
+
+  estagiario?: {
+    id_utilizador: number;
+    nome: string;
+    email: string;
+  } | null;
+
+  candidatura?: {
+    id_candidatura: number;
+    nome: string;
+    email: string;
+    curso?: string | null;
+    universidade?: string | null;
+    telefone?: string | null;
+    departamento?: {
+      id_departamento: number;
+      nome: string;
+    } | null;
+  } | null;
+
+  supervisores_ativos?: SupervisorEstagio[];
+
+  plano_aprovado?: PlanoEstagioAdmin | null;
+}
+
+
+export interface EstagiosAdminResponse {
+  data: EstagioAdmin[];
+  total: number;
+  current_page: number;
+  last_page: number;
+  per_page: number;
+}
+
+
+/* =========================================================
    SERVIÇO ADMINISTRATIVO
    ========================================================= */
 
@@ -437,6 +512,47 @@ export class AdminService {
     }>(
       `${this.apiUrl}/estagiarios/${idCandidatura}/estado`,
       dados
+    );
+  }
+
+
+  /* =======================================================
+     LISTAR ESTÁGIOS (CANÓNICO)
+     ======================================================= */
+
+  listarEstagios(
+    pesquisa: string = '',
+    estado: string = '',
+    pagina: number = 1,
+    porPagina: number = 15
+  ): Observable<EstagiosAdminResponse> {
+
+    let params = new HttpParams()
+      .set('page', pagina)
+      .set('por_pagina', porPagina);
+
+    if (pesquisa.trim()) {
+      params = params.set('pesquisa', pesquisa.trim());
+    }
+
+    if (estado) {
+      params = params.set('estado', estado);
+    }
+
+    return this.http.get<EstagiosAdminResponse>(
+      `${this.apiUrl}/estagios`,
+      { params }
+    );
+  }
+
+
+  /* =======================================================
+     CONSULTAR UM ESTÁGIO
+     ======================================================= */
+
+  obterEstagio(id: number): Observable<EstagioAdmin> {
+    return this.http.get<EstagioAdmin>(
+      `${this.apiUrl}/estagios/${id}`
     );
   }
 

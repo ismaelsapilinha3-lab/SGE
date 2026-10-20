@@ -25,6 +25,14 @@ import {
   DocumentoEstagiario
 } from '../../core/candidatura-estagiario.service';
 
+import {
+  SinoNotificacoesComponent
+} from '../shared/sino-notificacoes/sino-notificacoes';
+
+import {
+  EstagioEstagiarioComponent
+} from '../shared/estagio-estagiario/estagio-estagiario';
+
 
 // ============================================================
 // TIPOS
@@ -154,7 +162,9 @@ const ESTADOS: Record<Estado, ConfigEstado> = {
   standalone: true,
 
   imports: [
-    CommonModule
+    CommonModule,
+    SinoNotificacoesComponent,
+    EstagioEstagiarioComponent
   ],
 
   templateUrl: './painelestagiario.html',

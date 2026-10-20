@@ -17,13 +17,23 @@ import {
 
 import { AuthService } from '../../../core/auth.service';
 
+import {
+  SinoNotificacoesComponent
+} from '../../shared/sino-notificacoes/sino-notificacoes';
+
+import {
+  EstagioCoordenadorComponent
+} from '../../shared/estagio-coordenador/estagio-coordenador';
+
 
 @Component({
   selector: 'app-painel-coordenador',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    SinoNotificacoesComponent,
+    EstagioCoordenadorComponent
   ],
   templateUrl: './painel-coordenador.html',
   styleUrls: ['./painel-coordenador.css']

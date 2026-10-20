@@ -1,0 +1,217 @@
+import { CommonModule } from '@angular/common';
+
+import {
+  Component,
+  OnInit,
+  inject,
+  signal
+} from '@angular/core';
+
+import { Router } from '@angular/router';
+
+import {
+  SupervisorService,
+  PainelSupervisor,
+  EstagioSupervisionado
+} from '../../../services/supervisor.service';
+
+import { AuthService } from '../../../core/auth.service';
+
+import {
+  SinoNotificacoesComponent
+} from '../../shared/sino-notificacoes/sino-notificacoes';
+
+import {
+  EstagioSupervisorComponent
+} from '../../shared/estagio-supervisor/estagio-supervisor';
+
+
+@Component({
+  selector: 'app-painel-supervisor',
+  standalone: true,
+  imports: [
+    CommonModule,
+    SinoNotificacoesComponent,
+    EstagioSupervisorComponent
+  ],
+  templateUrl: './painel-supervisor.html',
+  styleUrls: ['./painel-supervisor.css']
+})
+export class PainelSupervisorComponent implements OnInit {
+
+  private readonly supervisorService =
+    inject(SupervisorService);
+
+  private readonly authService =
+    inject(AuthService);
+
+  private readonly router =
+    inject(Router);
+
+
+  // ============================================================
+  // ESTADO DO PAINEL
+  // ============================================================
+
+  carregando = signal(true);
+
+  erro = signal('');
+
+  nomeSupervisor = signal('');
+
+  totalEstagiosAtivos = signal(0);
+
+  estagios = signal<EstagioSupervisionado[]>([]);
+
+
+  // ============================================================
+  // CICLO DE VIDA
+  // ============================================================
+
+  ngOnInit(): void {
+
+    this.carregarPainel();
+  }
+
+
+  // ============================================================
+  // CARREGAR PAINEL (APENAS LEITURA)
+  // ============================================================
+
+  carregarPainel(): void {
+
+    this.carregando.set(true);
+
+    this.erro.set('');
+
+
+    this.supervisorService
+      .dashboard()
+      .subscribe({
+
+        next: (painel: PainelSupervisor) => {
+
+          this.nomeSupervisor.set(
+            painel.utilizador.nome
+          );
+
+          this.totalEstagiosAtivos.set(
+            painel.resumo.estagios_ativos
+          );
+
+          this.estagios.set(
+            painel.estagios
+          );
+
+          this.carregando.set(false);
+
+        },
+
+        error: erro => {
+
+          console.error(
+            'Erro ao carregar o painel do supervisor:',
+            erro
+          );
+
+          this.erro.set(
+            this.mensagemErro(erro)
+          );
+
+          this.carregando.set(false);
+
+        }
+
+      });
+
+  }
+
+
+  // ============================================================
+  // INTERPRETAR ERROS DA API
+  // ============================================================
+
+  private mensagemErro(erro: any): string {
+
+    if (erro.status === 401) {
+
+      return (
+        'A sessão expirou. Inicia sessão novamente.'
+      );
+
+    }
+
+    if (erro.status === 403) {
+
+      return (
+        erro.error?.message ||
+        'Não tens permissão para aceder a este painel.'
+      );
+
+    }
+
+    return (
+      erro.error?.message ||
+      'Não foi possível carregar os estágios.'
+    );
+
+  }
+
+
+  // ============================================================
+  // FORMATAR DATAS
+  // ============================================================
+
+  formatarData(valor: string | null): string {
+
+    if (!valor) {
+
+      return '—';
+
+    }
+
+    const data = new Date(valor);
+
+    if (Number.isNaN(data.getTime())) {
+
+      return '—';
+
+    }
+
+    return data.toLocaleDateString('pt-PT');
+
+  }
+
+
+  // ============================================================
+  // ENCERRAR SESSÃO
+  // ============================================================
+
+  sair(): void {
+
+    this.authService
+      .logout()
+      .subscribe({
+
+        next: () => {
+
+          this.router.navigate([
+            '/acesso'
+          ]);
+
+        },
+
+        error: () => {
+
+          // Mesmo que a API falhe, regressar ao acesso.
+          this.router.navigate([
+            '/acesso'
+          ]);
+
+        }
+
+      });
+
+  }
+
+}

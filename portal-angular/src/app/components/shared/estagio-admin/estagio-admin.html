@@ -1,0 +1,441 @@
+<section class="ea">
+
+  <!-- =======================================================
+       FILTROS
+       ======================================================= -->
+  <form
+    class="ea-filtros"
+    (submit)="$event.preventDefault(); aplicarFiltros()"
+  >
+
+    <label class="ea-campo">
+      <span>Pesquisar</span>
+
+      <input
+        type="search"
+        name="pesquisaEstagios"
+        placeholder="Estagiário, candidato, curso ou e-mail"
+        [(ngModel)]="pesquisaEstagios"
+      >
+    </label>
+
+    <label class="ea-campo">
+      <span>Estado</span>
+
+      <select
+        name="estadoFiltroEstagios"
+        [(ngModel)]="estadoFiltroEstagios"
+      >
+        <option value="">Todos os estados</option>
+        <option value="ativo">Ativo</option>
+        <option value="suspenso">Suspenso</option>
+        <option value="concluido">Concluído</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+    </label>
+
+    <button type="submit" class="ea-btn ea-btn--primary">
+      Pesquisar
+    </button>
+
+    <button
+      type="button"
+      class="ea-btn ea-btn--ghost"
+      (click)="carregarEstagios()"
+    >
+      Atualizar
+    </button>
+
+  </form>
+
+
+  <!-- =======================================================
+       LISTAGEM
+       ======================================================= -->
+  @if (carregando()) {
+
+    <p class="ea-vazio" role="status">A carregar estágios...</p>
+
+  } @else if (erro()) {
+
+    <div class="ea-alerta ea-alerta--erro" role="alert">
+
+      <p>{{ erro() }}</p>
+
+      <button
+        type="button"
+        class="ea-btn ea-btn--light"
+        (click)="carregarEstagios()"
+      >
+        Tentar novamente
+      </button>
+
+    </div>
+
+  } @else if (estagios().length === 0) {
+
+    <p class="ea-vazio" role="status">
+      Não existem estágios para os filtros selecionados.
+    </p>
+
+  } @else {
+
+    <div class="ea-tabela-wrap">
+
+      <table class="ea-tabela">
+
+        <thead>
+          <tr>
+            <th>Estagiário</th>
+            <th>Departamento</th>
+            <th>Início</th>
+            <th>Fim previsto</th>
+            <th>Supervisores</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          @for (estagio of estagios(); track estagio.id_estagio) {
+
+            <tr [class.selecionada]="estagioSelecionadoId() === estagio.id_estagio">
+
+              <td>
+                <strong>{{ nomeEstagiario(estagio) }}</strong>
+                <small>{{ estagio.candidatura?.email || '' }}</small>
+              </td>
+
+              <td>{{ estagio.candidatura?.departamento?.nome || '—' }}</td>
+
+              <td>{{ formatarData(estagio.data_inicio) }}</td>
+
+              <td>{{ formatarData(estagio.data_fim_prevista) }}</td>
+
+              <td>{{ nomesSupervisores(estagio) }}</td>
+
+              <td>
+                <span
+                  class="ea-etiqueta"
+                  [attr.data-estado]="estagio.estado"
+                >
+                  {{ rotuloEstado(estagio.estado) }}
+                </span>
+              </td>
+
+              <td>
+                <button
+                  type="button"
+                  class="ea-btn ea-btn--ghost"
+                  (click)="selecionar(estagio)"
+                >
+                  Ver / gerir
+                </button>
+              </td>
+
+            </tr>
+
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <div class="ea-paginacao">
+
+      <button
+        type="button"
+        class="ea-btn ea-btn--ghost"
+        (click)="paginaAnterior()"
+        [disabled]="pagina() <= 1"
+      >
+        Anterior
+      </button>
+
+      <span>
+        Página {{ pagina() }} de {{ ultimaPagina() }}
+        ({{ totalEstagios() }} estágios)
+      </span>
+
+      <button
+        type="button"
+        class="ea-btn ea-btn--ghost"
+        (click)="proximaPagina()"
+        [disabled]="pagina() >= ultimaPagina()"
+      >
+        Seguinte
+      </button>
+
+    </div>
+
+  }
+
+
+  <!-- =======================================================
+       DETALHE DO ESTÁGIO
+       ======================================================= -->
+  @if (estagioSelecionadoId() !== null) {
+
+    <section class="ea-detalhe">
+
+      <header class="ea-detalhe-cabecalho">
+
+        <div>
+          <span class="ea-kicker">ESTÁGIO</span>
+          <h3>Gestão do estágio</h3>
+        </div>
+
+        <button
+          type="button"
+          class="ea-btn ea-btn--light"
+          (click)="fecharDetalhe()"
+          [disabled]="processando()"
+        >
+          Fechar
+        </button>
+
+      </header>
+
+      @if (carregandoDetalhe()) {
+
+        <p class="ea-vazio">A carregar o estágio...</p>
+
+      } @else if (erroDetalhe()) {
+
+        <div class="ea-alerta ea-alerta--erro" role="alert">
+          {{ erroDetalhe() }}
+        </div>
+
+      } @else if (detalhe(); as e) {
+
+        @if (sucesso()) {
+
+          <div class="ea-alerta ea-alerta--sucesso" role="status">
+            {{ sucesso() }}
+          </div>
+
+        }
+
+        @if (erroAcao()) {
+
+          <div class="ea-alerta ea-alerta--erro" role="alert">
+            {{ erroAcao() }}
+          </div>
+
+        }
+
+        <div class="ea-info-grelha">
+
+          <div class="ea-info">
+            <span>Estagiário</span>
+            <strong>{{ e.estagiario?.nome || e.candidatura?.nome || '—' }}</strong>
+            <small>{{ e.estagiario?.email || e.candidatura?.email || '' }}</small>
+          </div>
+
+          <div class="ea-info">
+            <span>Departamento</span>
+            <strong>{{ e.candidatura?.departamento?.nome || '—' }}</strong>
+          </div>
+
+          <div class="ea-info">
+            <span>Curso</span>
+            <strong>{{ e.candidatura?.curso || '—' }}</strong>
+            <small>{{ e.candidatura?.universidade || '' }}</small>
+          </div>
+
+          <div class="ea-info">
+            <span>Estado</span>
+            <strong>
+              <span class="ea-etiqueta" [attr.data-estado]="e.estado">
+                {{ rotuloEstado(e.estado) }}
+              </span>
+            </strong>
+          </div>
+
+          <div class="ea-info">
+            <span>Início</span>
+            <strong>{{ formatarData(e.data_inicio) }}</strong>
+          </div>
+
+          <div class="ea-info">
+            <span>Fim previsto</span>
+            <strong>{{ formatarData(e.data_fim_prevista) }}</strong>
+          </div>
+
+          @if (e.data_fim_real) {
+
+            <div class="ea-info">
+              <span>Fim real</span>
+              <strong>{{ formatarData(e.data_fim_real) }}</strong>
+            </div>
+
+          }
+
+          <div class="ea-info">
+            <span>Supervisores</span>
+            <strong>{{ nomesSupervisores(e) }}</strong>
+          </div>
+
+        </div>
+
+        @if (e.motivo_suspensao) {
+
+          <p class="ea-motivo">
+            <strong>Motivo da suspensão:</strong> {{ e.motivo_suspensao }}
+          </p>
+
+        }
+
+
+        <!-- ===============================================
+             PLANO APROVADO
+             =============================================== -->
+        <div class="ea-bloco">
+
+          <h4>Plano de estágio</h4>
+
+          @if (e.plano_aprovado; as plano) {
+
+            <span class="ea-etiqueta" [attr.data-estado]="plano.estado">
+              {{ rotuloEstadoPlano(plano) }}
+            </span>
+
+            <p class="ea-texto">
+              <strong>Objetivos:</strong> {{ plano.objetivos }}
+            </p>
+
+            <p class="ea-texto">
+              <strong>Atividades previstas:</strong>
+              {{ plano.atividades_previstas }}
+            </p>
+
+            <p class="ea-texto">
+              <strong>Cronograma:</strong> {{ plano.cronograma }}
+            </p>
+
+            <span class="ea-meta">
+              {{ formatarData(plano.data_inicio) }}
+              a {{ formatarData(plano.data_fim) }}
+            </span>
+
+          } @else {
+
+            <p class="ea-meta">
+              Ainda não existe um plano de estágio aprovado.
+            </p>
+
+          }
+
+        </div>
+
+
+        <!-- ===============================================
+             ALTERAR ESTADO
+             =============================================== -->
+        <div class="ea-bloco">
+
+          <h4>Alterar estado</h4>
+
+          @if (estagioTerminado()) {
+
+            <p class="ea-meta">
+              Este estágio já terminou e não pode ser alterado.
+            </p>
+
+          } @else {
+
+            <form
+              class="ea-form"
+              (ngSubmit)="guardarEstado()"
+              novalidate
+            >
+
+              <div class="ea-form-grelha">
+
+                <label class="ea-campo">
+                  <span>Estado *</span>
+
+                  <select
+                    [value]="estadoFormulario()"
+                    (change)="estadoFormulario.set($any($event.target).value)"
+                    [disabled]="processando()"
+                  >
+                    @for (opcao of estadosPermitidos(); track opcao) {
+
+                      <option [value]="opcao">
+                        {{ rotuloEstado(opcao) }}
+                      </option>
+
+                    }
+                  </select>
+                </label>
+
+                <label class="ea-campo">
+                  <span>Data de início *</span>
+
+                  <input
+                    type="date"
+                    [value]="inicioFormulario()"
+                    (input)="inicioFormulario.set($any($event.target).value)"
+                    [disabled]="processando()"
+                  >
+                </label>
+
+                <label class="ea-campo">
+                  <span>Data prevista de fim *</span>
+
+                  <input
+                    type="date"
+                    [value]="fimFormulario()"
+                    (input)="fimFormulario.set($any($event.target).value)"
+                    [disabled]="processando()"
+                  >
+                </label>
+
+              </div>
+
+              @if (pedeMotivoSuspensao()) {
+
+                <label class="ea-campo">
+                  <span>Motivo da suspensão *</span>
+
+                  <textarea
+                    rows="2"
+                    maxlength="5000"
+                    [value]="motivoSuspensaoFormulario()"
+                    (input)="motivoSuspensaoFormulario.set($any($event.target).value)"
+                    [disabled]="processando()"
+                  ></textarea>
+                </label>
+
+              }
+
+              <div class="ea-form-acoes">
+
+                <button
+                  type="submit"
+                  class="ea-btn ea-btn--primary"
+                  [disabled]="processando()"
+                >
+                  Guardar estado
+                </button>
+
+              </div>
+
+            </form>
+
+          }
+
+        </div>
+
+      }
+
+    </section>
+
+  }
+
+</section>

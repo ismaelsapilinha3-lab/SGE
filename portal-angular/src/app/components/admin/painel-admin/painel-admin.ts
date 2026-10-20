@@ -5,6 +5,7 @@ import {
   OnDestroy,
   OnInit,
   PLATFORM_ID,
+  computed,
   inject,
   signal
 } from '@angular/core';
@@ -32,12 +33,23 @@ import {
 
 import { AuthService } from '../../../core/auth.service';
 
+import {
+  LayoutPainelComponent,
+  GrupoNavegacaoPainel
+} from '../../shared/layout-painel/layout-painel';
+
+import {
+  EstagioAdminComponent
+} from '../../shared/estagio-admin/estagio-admin';
+
 
 type SecaoAdmin =
   | 'dashboard'
   | 'candidaturas'
   | 'departamentos'
   | 'estagiarios'
+  | 'estagios'
+  | 'assiduidade'
   | 'utilizadores';
 
 
@@ -53,7 +65,9 @@ type EstadoEstagio =
   standalone: true,
 
   imports: [
-    CommonModule
+    CommonModule,
+    LayoutPainelComponent,
+    EstagioAdminComponent
   ],
 
   templateUrl: './painel-admin.html',
@@ -66,6 +80,56 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   secaoAtiva = signal<SecaoAdmin>('dashboard');
+
+  readonly gruposNavegacao: GrupoNavegacaoPainel[] = [
+    {
+      titulo: 'GESTÃO',
+      itens: [
+        {
+          id: 'dashboard',
+          rotulo: 'Dashboard',
+          icone: '▦'
+        },
+        {
+          id: 'candidaturas',
+          rotulo: 'Candidaturas',
+          icone: '▤'
+        },
+        {
+          id: 'departamentos',
+          rotulo: 'Departamentos',
+          icone: '⌂'
+        },
+        {
+          id: 'estagiarios',
+          rotulo: 'Estagiários',
+          icone: '♙'
+        },
+        {
+          id: 'estagios',
+          rotulo: 'Estágios',
+          icone: '▣'
+        },
+        {
+          id: 'assiduidade',
+          rotulo: 'Assiduidade',
+          icone: '◷',
+          desativado: true,
+          nota: 'Em breve'
+        }
+      ]
+    },
+    {
+      titulo: 'SISTEMA',
+      itens: [
+        {
+          id: 'utilizadores',
+          rotulo: 'Utilizadores',
+          icone: '♙'
+        }
+      ]
+    }
+  ];
 
 
   // ============================================================
@@ -256,6 +320,66 @@ export class PainelAdmin implements OnInit, OnDestroy {
   sucessoGestaoEstagio = signal('');
 
   duracaoMesesFormulario = signal(2);
+
+  // ============================================================
+  // GRÁFICOS DE ACOMPANHAMENTO
+  // ============================================================
+
+  /** Percentagem de candidaturas em análise. */
+  readonly percentEmAnalise = computed(() =>
+    this.calcularPercentagem(this.dashboard().em_analise)
+  );
+
+  /** Percentagem de candidaturas aprovadas. */
+  readonly percentAprovadas = computed(() =>
+    this.calcularPercentagem(this.dashboard().aprovadas)
+  );
+
+  /** Percentagem de candidaturas recusadas. */
+  readonly percentRecusadas = computed(() =>
+    this.calcularPercentagem(this.dashboard().recusadas)
+  );
+
+  /** Total de candidaturas já decididas (aprovadas + recusadas). */
+  private readonly candidaturasDecididas = computed(
+    () => (this.dashboard().aprovadas || 0) + (this.dashboard().recusadas || 0)
+  );
+
+  /** Taxa de aprovação sobre as candidaturas decididas. */
+  readonly taxaAprovacao = computed(() => {
+    const decididas = this.candidaturasDecididas();
+
+    if (decididas === 0) {
+      return 0;
+    }
+
+    return Math.round(((this.dashboard().aprovadas || 0) / decididas) * 100);
+  });
+
+  /** Taxa de recusa sobre as candidaturas decididas. */
+  readonly taxaRejeicao = computed(() => {
+    const decididas = this.candidaturasDecididas();
+
+    if (decididas === 0) {
+      return 0;
+    }
+
+    return Math.round(((this.dashboard().recusadas || 0) / decididas) * 100);
+  });
+
+  /**
+   * Converte um valor absoluto numa percentagem do total de
+   * candidaturas, arredondada e protegida contra divisão por zero.
+   */
+  private calcularPercentagem(valor: number): number {
+    const total = this.dashboard().total_candidaturas || 0;
+
+    if (total === 0) {
+      return 0;
+    }
+
+    return Math.round(((valor || 0) / total) * 100);
+  }
 
 
   // ============================================================
@@ -1426,7 +1550,7 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // NAVEGAÇÃO ENTRE SECÇÕES
   // ============================================================
 
-  irParaSecao(secao: SecaoAdmin): void {
+  irParaSecao(secao: string): void {
 
     // A gestão de utilizadores é uma página independente.
     if (secao === 'utilizadores') {
@@ -1435,7 +1559,11 @@ export class PainelAdmin implements OnInit, OnDestroy {
       return;
     }
 
-    this.secaoAtiva.set(secao);
+    if (secao === 'assiduidade') {
+      return;
+    }
+
+    this.secaoAtiva.set(secao as SecaoAdmin);
 
     if (secao === 'estagiarios') {
       this.carregarEstagiarios();

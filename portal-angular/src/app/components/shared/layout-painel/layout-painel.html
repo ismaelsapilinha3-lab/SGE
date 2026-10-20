@@ -1,0 +1,155 @@
+<!--
+  Estrutura partilhada dos painéis autenticados.
+  Linguagem visual derivada da página inicial pública.
+-->
+
+<a class="lp-skip" href="#lp-conteudo">
+  Saltar para o conteúdo principal
+</a>
+
+<div class="lp-shell">
+
+  <!-- =====================================================
+       BARRA INSTITUCIONAL
+       ===================================================== -->
+  <div class="lp-faixa">
+    <div class="lp-faixa-conteudo">
+      <span>Portal de Estágios Multitel</span>
+
+      <span class="lp-faixa-direita">
+        Linha de apoio · 223 530 000
+        <span class="lp-faixa-separador" aria-hidden="true">•</span>
+        {{ notaInstitucional }}
+      </span>
+    </div>
+  </div>
+
+
+  <!-- =====================================================
+       BARRA SUPERIOR
+       ===================================================== -->
+  <header class="lp-topo">
+
+    <button
+      type="button"
+      class="lp-menu-toggle"
+      [attr.aria-expanded]="menuAberto()"
+      aria-controls="lp-navegacao"
+      aria-label="Abrir menu de navegação"
+      (click)="alternarMenu()"
+    >
+      <span aria-hidden="true">☰</span>
+    </button>
+
+    <div class="lp-marca">
+      <img
+        class="lp-logo"
+        [src]="logoUrl"
+        alt="Logótipo Multitel"
+      >
+
+      <div class="lp-marca-texto">
+        <strong>{{ marcaSigla }}</strong>
+        <small>{{ marcaDescricao }}</small>
+      </div>
+    </div>
+
+    <div class="lp-topo-acoes">
+
+      <app-sino-notificacoes></app-sino-notificacoes>
+
+      <div class="lp-perfil">
+        <div class="lp-avatar" aria-hidden="true">
+          {{ nomePerfil.charAt(0) }}
+        </div>
+
+        <div class="lp-perfil-info">
+          <strong>{{ nomePerfil }}</strong>
+
+          @if (descricaoPerfil) {
+            <span>{{ descricaoPerfil }}</span>
+          }
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="lp-btn-sair"
+        (click)="terminarSessao.emit()"
+      >
+        <span aria-hidden="true">⎋</span>
+        Sair
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <!-- =====================================================
+       CORPO: NAVEGAÇÃO + CONTEÚDO
+       ===================================================== -->
+  <div class="lp-corpo">
+
+    <nav
+      id="lp-navegacao"
+      class="lp-lateral"
+      [class.aberto]="menuAberto()"
+      aria-label="Navegação do painel"
+    >
+
+      @for (grupo of grupos; track $index) {
+
+        <div class="lp-grupo">
+
+          @if (grupo.titulo) {
+            <div class="lp-grupo-titulo">
+              {{ grupo.titulo }}
+            </div>
+          }
+
+          @for (item of grupo.itens; track item.id) {
+
+            <button
+              type="button"
+              class="lp-item"
+              [class.ativo]="secaoAtiva === item.id"
+              [class.desativado]="item.desativado"
+              [disabled]="item.desativado"
+              [attr.aria-current]="secaoAtiva === item.id ? 'page' : null"
+              [attr.title]="item.desativado ? (item.nota || 'Em breve') : null"
+              (click)="selecionar(item)"
+            >
+              @if (item.icone) {
+                <span class="lp-item-icone" aria-hidden="true">
+                  {{ item.icone }}
+                </span>
+              }
+
+              <span class="lp-item-rotulo">{{ item.rotulo }}</span>
+            </button>
+
+          }
+
+        </div>
+
+      }
+
+    </nav>
+
+    @if (menuAberto()) {
+      <button
+        type="button"
+        class="lp-overlay"
+        aria-label="Fechar menu"
+        (click)="fecharMenu()"
+      ></button>
+    }
+
+    <main id="lp-conteudo" class="lp-conteudo" tabindex="-1">
+      <ng-content></ng-content>
+    </main>
+
+  </div>
+
+</div>

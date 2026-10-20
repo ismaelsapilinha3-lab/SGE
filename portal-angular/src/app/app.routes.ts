@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 import { adminGuard } from './core/admin.guard';
 import { coordenadorGuard } from './core/coordenador.guard';
+import { supervisorGuard } from './core/supervisor.guard';
 
 import { AcessoComponent } from './components/first-component/acesso';
 import { PainelestagiarioComponent } from './components/first-component/painelestagiario';
@@ -14,6 +15,10 @@ import { UtilizadoresAdminComponent } from './components/admin/utilizadores-admi
 import {
   PainelCoordenadorComponent
 } from './components/coordenador/painel-coordenador/painel-coordenador';
+
+import {
+  PainelSupervisorComponent
+} from './components/supervisor/painel-supervisor/painel-supervisor';
 
 
 export const routes: Routes = [
@@ -67,6 +72,19 @@ export const routes: Routes = [
     canActivate: [
       authGuard,
       coordenadorGuard
+    ]
+  },
+
+
+  // ============================================================
+  // PAINEL DO SUPERVISOR
+  // ============================================================
+  {
+    path: 'supervisor',
+    component: PainelSupervisorComponent,
+    canActivate: [
+      authGuard,
+      supervisorGuard
     ]
   },
 
