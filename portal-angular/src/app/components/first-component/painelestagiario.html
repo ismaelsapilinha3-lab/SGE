@@ -9,32 +9,32 @@
        ========================================================= -->
   <div class="topo">
     <div class="topo-conteudo">
-      <span>Portal de EstÃ¡gios Multitel</span>
+      <span>Portal de Estágios Multitel</span>
 
       <span class="topo-direita">
-        Linha de apoio Â· 223 530 000
+        Linha de apoio · 223 530 000
 
         <span
           class="topo-separador"
           aria-hidden="true"
         >
-          â€¢
+          •
         </span>
 
-        Dias Ãºteis
+        Dias úteis
       </span>
     </div>
   </div>
 
 
   <!-- =========================================================
-       NAVEGAÃ‡ÃƒO PRINCIPAL
+       NAVEGAÇÃO PRINCIPAL
        ========================================================= -->
   <header class="cabecalho-principal">
 
     <nav
       class="barra"
-      aria-label="NavegaÃ§Ã£o principal"
+      aria-label="Navegação principal"
     >
 
       <div class="barra-conteudo">
@@ -43,17 +43,17 @@
         <a
           class="marca"
           href="#est-inicio" (click)="$event.preventDefault(); navegarSecao('est-inicio')"
-          aria-label="Multitel â€” Portal de EstÃ¡gios"
+          aria-label="Multitel — Portal de Estágios"
         >
 
           <img
             src="assets/img/multitel.png"
-            alt="LogÃ³tipo Multitel"
+            alt="Logótipo Multitel"
           >
 
           <div class="marca-texto">
             <strong>MULTITEL</strong>
-            <small>PORTAL DE ESTÃGIOS</small>
+            <small>PORTAL DE ESTÁGIOS</small>
           </div>
 
         </a>
@@ -66,7 +66,7 @@
             <a
               href="#est-inicio" (click)="$event.preventDefault(); navegarSecao('est-inicio')"
               class="nav-link"
-              aria-label="Ir para o inÃ­cio"
+              aria-label="Ir para o início"
             >
               <svg
                 class="ic"
@@ -79,7 +79,7 @@
                 <path d="M9.5 20v-5.5h5V20"></path>
               </svg>
 
-              <span>InÃ­cio</span>
+              <span>Início</span>
             </a>
           </li>
 
@@ -165,8 +165,8 @@
         <div class="user">
 
           <div class="user-info">
-            <strong>OlÃ¡, {{ primeiroNome() }}</strong>
-            <span>Candidato a estÃ¡gio</span>
+            <strong>Olá, {{ primeiroNome() }}</strong>
+            <span>Candidato a estágio</span>
           </div>
 
           <div
@@ -182,7 +182,7 @@
             type="button"
             class="sair"
             (click)="sair()"
-            aria-label="Encerrar sessÃ£o"
+            aria-label="Encerrar sessão"
           >
             <svg
               class="ic"
@@ -208,7 +208,7 @@
 
 
   <!-- =========================================================
-       CABEÃ‡ALHO / HERO
+       CABEÇALHO / HERO
        ========================================================= -->
   <header
     id="est-inicio"
@@ -218,7 +218,7 @@
     <div class="cab-conteudo">
 
       <span class="cab-label">
-        ÃREA DO CANDIDATO
+        ÁREA DO CANDIDATO
       </span>
 
       <h1>
@@ -227,9 +227,9 @@
 
       <p>
         Consulta o estado do teu processo, os teus dados,
-        documentos enviados e todas as atualizaÃ§Ãµes
+        documentos enviados e todas as atualizações
         relacionadas com a candidatura ao programa
-        de estÃ¡gio da Multitel.
+        de estágio da Multitel.
       </p>
 
       <div class="est-hero-actions">
@@ -269,7 +269,7 @@
 
 
   <!-- =========================================================
-       CONTEÃšDO PRINCIPAL
+       CONTEÚDO PRINCIPAL
        ========================================================= -->
   <main
     id="conteudo-principal"
@@ -298,7 +298,7 @@
           <strong>A carregar o teu painel</strong>
 
           <span>
-            Estamos a preparar as informaÃ§Ãµes da candidatura.
+            Estamos a preparar as informações da candidatura.
           </span>
         </div>
 
@@ -343,7 +343,7 @@
 
         <div>
           <strong>
-            NÃ£o foi possÃ­vel carregar o painel
+            Não foi possível carregar o painel
           </strong>
 
           <span>
@@ -420,7 +420,7 @@
               class="est-step-circle"
               aria-hidden="true"
             >
-              âœ“
+              ✓
             </div>
 
             <span>Candidatura</span>
@@ -439,13 +439,13 @@
               aria-hidden="true"
             >
               @if (estado().p2 === 'done') {
-                âœ“
+                ✓
               } @else {
                 2
               }
             </div>
 
-            <span>AnÃ¡lise</span>
+            <span>Análise</span>
 
           </div>
 
@@ -495,7 +495,7 @@
             </h2>
 
             <p>
-              InformaÃ§Ãµes fornecidas durante a candidatura.
+              Informações fornecidas durante a candidatura.
             </p>
           </div>
 
@@ -533,7 +533,7 @@
 
               <div>
                 <span class="card-label">
-                  IDENTIFICAÃ‡ÃƒO
+                  IDENTIFICAÇÃO
                 </span>
 
                 <h3>Dados pessoais</h3>
@@ -550,7 +550,7 @@
               </div>
 
               <div class="est-data-row">
-                <span>N.Âº de identificaÃ§Ã£o</span>
+                <span>N.º de identificação</span>
                 <strong>{{ c.bi }}</strong>
               </div>
 
@@ -581,7 +581,7 @@
           </article>
 
 
-          <!-- FormaÃ§Ã£o acadÃ©mica -->
+          <!-- Formação académica -->
           <article class="est-card">
 
             <div class="est-card-top">
@@ -604,10 +604,10 @@
 
               <div>
                 <span class="card-label">
-                  FORMAÃ‡ÃƒO
+                  FORMAÇÃO
                 </span>
 
-                <h3>Dados acadÃ©micos</h3>
+                <h3>Dados académicos</h3>
               </div>
 
             </div>
@@ -621,12 +621,12 @@
               </div>
 
               <div class="est-data-row">
-                <span>InstituiÃ§Ã£o</span>
+                <span>Instituição</span>
                 <strong>{{ c.universidade }}</strong>
               </div>
 
               <div class="est-data-row est-data-full">
-                <span>DireÃ§Ã£o pretendida</span>
+                <span>Direção pretendida</span>
 
                 <strong>
                   {{ c.departamento || 'A definir' }}
@@ -655,7 +655,7 @@
 
           <div>
             <span class="section-kicker">
-              DOCUMENTAÃ‡ÃƒO
+              DOCUMENTAÇÃO
             </span>
 
             <h2 id="titulo-documentos">
@@ -663,14 +663,14 @@
             </h2>
 
             <p>
-              Consulta os documentos associados Ã  tua candidatura.
+              Consulta os documentos associados à tua candidatura.
             </p>
           </div>
 
         </div>
 
 
-        <!-- InformaÃ§Ã£o de seguranÃ§a -->
+        <!-- Informação de segurança -->
         <div class="est-bloqueio">
 
           <div
@@ -692,11 +692,11 @@
           </div>
 
           <div>
-            <strong>DocumentaÃ§Ã£o protegida</strong>
+            <strong>Documentação protegida</strong>
 
             <span>
-              Os documentos sÃ£o armazenados de forma segura
-              e apenas ficam disponÃ­veis ao utilizador autorizado.
+              Os documentos são armazenados de forma segura
+              e apenas ficam disponíveis ao utilizador autorizado.
             </span>
           </div>
 
@@ -733,7 +733,7 @@
           >
 
             <strong>
-              NÃ£o foi possÃ­vel substituir o documento
+              Não foi possível substituir o documento
             </strong>
 
             <span>
@@ -755,7 +755,7 @@
 
             <article class="est-doc">
 
-              <!-- IdentificaÃ§Ã£o do documento -->
+              <!-- Identificação do documento -->
               <div class="est-doc-prev">
 
                 <div class="doc-type">
@@ -765,7 +765,7 @@
               </div>
 
 
-              <!-- InformaÃ§Ã£o e aÃ§Ãµes -->
+              <!-- Informação e ações -->
               <div class="est-doc-content">
 
                 <div class="est-doc-head">
@@ -880,19 +880,19 @@
                 </div>
 
 
-                <!-- ExplicaÃ§Ã£o da substituiÃ§Ã£o -->
+                <!-- Explicação da substituição -->
                 @if (c.estado === 'analise') {
 
                   <small class="est-doc-ajuda">
                     Formatos aceites: PDF, JPG e PNG.
-                    Tamanho mÃ¡ximo: 5 MB.
+                    Tamanho máximo: 5 MB.
                   </small>
 
                 } @else {
 
                   <small class="est-doc-ajuda">
-                    A substituiÃ§Ã£o sÃ³ estÃ¡ disponÃ­vel
-                    enquanto a candidatura estiver em anÃ¡lise.
+                    A substituição só está disponível
+                    enquanto a candidatura estiver em análise.
                   </small>
 
                 }
@@ -906,12 +906,12 @@
             <div class="est-vazio">
 
               <strong>
-                Ainda nÃ£o existem documentos
+                Ainda não existem documentos
               </strong>
 
               <p>
-                NÃ£o foram encontrados documentos associados
-                Ã  tua candidatura.
+                Não foram encontrados documentos associados
+                à tua candidatura.
               </p>
 
             </div>
@@ -925,7 +925,7 @@
 
 
       <!-- =====================================================
-           HISTÃ“RICO DA CANDIDATURA
+           HISTÓRICO DA CANDIDATURA
            ===================================================== -->
       <section
         id="est-historico"
@@ -941,7 +941,7 @@
             </span>
 
             <h2 id="titulo-historico">
-              HistÃ³rico da candidatura
+              Histórico da candidatura
             </h2>
 
             <p>
@@ -994,11 +994,11 @@
             <div class="est-vazio">
 
               <strong>
-                Sem histÃ³rico disponÃ­vel
+                Sem histórico disponível
               </strong>
 
               <p>
-                Ainda nÃ£o existem atualizaÃ§Ãµes registadas
+                Ainda não existem atualizações registadas
                 para apresentar.
               </p>
 
@@ -1012,7 +1012,7 @@
 
 
       <!-- =====================================================
-           INFORMAÃ‡Ã•ES ADICIONAIS
+           INFORMAÇÕES ADICIONAIS
            ===================================================== -->
       <section
         class="est-section"
@@ -1021,7 +1021,7 @@
 
         <div class="est-info">
 
-          <!-- PrÃ³ximos passos -->
+          <!-- Próximos passos -->
           <article class="est-note">
 
             <div
@@ -1051,7 +1051,7 @@
             <div>
 
               <span class="section-kicker">
-                INFORMAÃ‡ÃƒO
+                INFORMAÇÃO
               </span>
 
               <h2 id="titulo-informacoes">
@@ -1059,12 +1059,12 @@
               </h2>
 
               <p>
-                MantÃ©m os teus contactos atualizados e
+                Mantém os teus contactos atualizados e
                 acompanha regularmente este painel.
 
-                Caso a candidatura seja aceite, receberÃ¡s
-                informaÃ§Ãµes sobre os prÃ³ximos passos
-                do processo de estÃ¡gio.
+                Caso a candidatura seja aceite, receberás
+                informações sobre os próximos passos
+                do processo de estágio.
               </p>
 
             </div>
@@ -1084,7 +1084,7 @@
             </strong>
 
             <small>
-              DireÃ§Ã£o:
+              Direção:
 
               <b>
                 {{ c.departamento || 'A definir' }}
@@ -1209,7 +1209,7 @@
 
 
   <!-- =========================================================
-       RODAPÃ‰
+       RODAPÉ
        ========================================================= -->
   <footer class="rodape">
 
@@ -1222,7 +1222,7 @@
 
           <img
             src="assets/img/multitel.png"
-            alt="LogÃ³tipo Multitel"
+            alt="Logótipo Multitel"
           >
 
           <span>MULTITEL</span>
@@ -1230,8 +1230,8 @@
         </div>
 
         <p>
-          Portal de gestÃ£o e acompanhamento
-          de candidaturas ao programa de estÃ¡gios.
+          Portal de gestão e acompanhamento
+          de candidaturas ao programa de estágios.
         </p>
 
       </div>
@@ -1307,7 +1307,7 @@
       </div>
 
 
-      <!-- NavegaÃ§Ã£o do rodapÃ© -->
+      <!-- Navegação do rodapé -->
       <nav
         class="rodape-links"
         aria-label="Links do portal"
@@ -1338,7 +1338,7 @@
 
     <!-- Copyright -->
     <div class="rodape-fim">
-      Â© 2026 Multitel Â· Portal de EstÃ¡gios
+      © 2026 Multitel · Portal de Estágios
     </div>
 
   </footer>
