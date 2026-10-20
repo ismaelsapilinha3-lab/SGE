@@ -31,7 +31,9 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::statement('ALTER TABLE estagios ADD CONSTRAINT chk_estagios_datas CHECK (data_fim_prevista > data_inicio)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE estagios ADD CONSTRAINT chk_estagios_datas CHECK (data_fim_prevista > data_inicio)');
+        }
     }
 
     public function down(): void

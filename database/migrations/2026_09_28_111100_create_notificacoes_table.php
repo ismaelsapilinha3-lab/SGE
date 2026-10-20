@@ -28,8 +28,10 @@ return new class extends Migration
             $table->index(['id_utilizador', 'lida_em']);
         });
 
-        DB::statement('ALTER TABLE notificacoes ADD CONSTRAINT chk_notificacao_destinatario
-            CHECK (id_utilizador IS NOT NULL OR id_candidatura IS NOT NULL)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE notificacoes ADD CONSTRAINT chk_notificacao_destinatario
+                CHECK (id_utilizador IS NOT NULL OR id_candidatura IS NOT NULL)');
+        }
     }
 
     public function down(): void

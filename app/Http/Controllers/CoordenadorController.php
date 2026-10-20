@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Candidatura;
+use App\Models\Estagio;
 use App\Models\HistoricoEstado;
+use App\Models\Notificacao;
 use App\Models\Perfil;
+use App\Models\PlanoEstagio;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -240,6 +244,12 @@ class CoordenadorController extends Controller
                 'id_utilizador' => $request->user()->id_utilizador,
             ]);
 
+            Notificacao::paraCandidato(
+                $candidatura,
+                'Candidatura aprovada',
+                'A tua candidatura foi aprovada.'
+            );
+
             return response()->json([
                 'message' => 'Candidatura aprovada com sucesso.',
 
@@ -316,6 +326,12 @@ class CoordenadorController extends Controller
 
                 'id_utilizador' => $request->user()->id_utilizador,
             ]);
+
+            Notificacao::paraCandidato(
+                $candidatura,
+                'Candidatura recusada',
+                "A tua candidatura foi recusada. Motivo: {$dados['motivo']}."
+            );
 
             return response()->json([
                 'message' => 'Candidatura recusada com sucesso.',
@@ -418,5 +434,588 @@ class CoordenadorController extends Controller
                 'id_departamento' => $idDepartamento,
             ],
         ], 201);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Obter um estágio atribuído ao coordenador autenticado
+    |--------------------------------------------------------------------------
+    |
+    | Um estágio pertence ao coordenador cuja candidatura de origem foi por
+    | ele decidida dentro da sua direção. Fora desse âmbito responde 404,
+    | para não revelar a existência do estágio a terceiros.
+    |
+    */
+
+    private function estagioDoCoordenador(
+        Request $request,
+        int $id
+    ): Estagio {
+
+        $user = $request->user();
+
+        $idDepartamento =
+            $this->idDepartamentoDoCoordenador($request);
+
+        $estagio = Estagio::query()
+            ->where('id_estagio', $id)
+            ->whereHas('candidatura', function ($q) use (
+                $user,
+                $idDepartamento
+            ) {
+                $q->where('id_coordenador', $user->id_utilizador)
+                    ->where(
+                        'id_departamento_selecionado',
+                        $idDepartamento
+                    );
+            })
+            ->first();
+
+        if (! $estagio) {
+            abort(response()->json([
+                'message' => 'Estágio não encontrado ou não atribuído a este coordenador.',
+            ], 404));
+        }
+
+        return $estagio;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Listar os estágios da direção do coordenador
+    |--------------------------------------------------------------------------
+    */
+
+    public function estagios(Request $request)
+    {
+        $dados = $request->validate([
+            'pesquisa' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
+
+            'estado' => [
+                'nullable',
+                'in:ativo,suspenso,concluido,cancelado',
+            ],
+
+            'por_pagina' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:100',
+            ],
+        ]);
+
+        $user = $request->user();
+
+        $idDepartamento =
+            $this->idDepartamentoDoCoordenador($request);
+
+        $query = Estagio::query()
+            ->whereHas('candidatura', function ($q) use (
+                $user,
+                $idDepartamento
+            ) {
+                $q->where('id_coordenador', $user->id_utilizador)
+                    ->where(
+                        'id_departamento_selecionado',
+                        $idDepartamento
+                    );
+            })
+            ->with([
+                'estagiario',
+                'candidatura.departamento',
+                'supervisoresAtivos.supervisor',
+            ])
+            ->orderByDesc('created_at');
+
+        if (! empty($dados['pesquisa'])) {
+            $pesquisa = $dados['pesquisa'];
+
+            $query->whereHas('estagiario', function ($q) use ($pesquisa) {
+                $q->where('nome', 'like', "%{$pesquisa}%")
+                    ->orWhere('email', 'like', "%{$pesquisa}%");
+            });
+        }
+
+        if (! empty($dados['estado'])) {
+            $query->where('estado', $dados['estado']);
+        }
+
+        return response()->json(
+            $query->paginate($dados['por_pagina'] ?? 15)
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Listar os supervisores de um estágio
+    |--------------------------------------------------------------------------
+    */
+
+    public function supervisores(
+        Request $request,
+        int $id
+    ) {
+
+        $estagio = $this->estagioDoCoordenador($request, $id);
+
+        return response()->json([
+            'id_estagio' => $estagio->id_estagio,
+
+            'supervisores' => $estagio->supervisores()
+                ->with('supervisor')
+                ->orderByDesc('atribuido_em')
+                ->get(),
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Atribuir um supervisor a um estágio
+    |--------------------------------------------------------------------------
+    */
+
+    public function atribuirSupervisor(
+        Request $request,
+        int $id
+    ) {
+
+        $estagio = $this->estagioDoCoordenador($request, $id);
+
+        if ($estagio->estaTerminado()) {
+            return response()->json([
+                'message' => 'Não é possível atribuir supervisores a um estágio terminado.',
+            ], 422);
+        }
+
+        $dados = $request->validate([
+            'id_supervisor' => [
+                'required',
+                'integer',
+                'min:1',
+            ],
+        ]);
+
+        $idDepartamento =
+            $this->idDepartamentoDoCoordenador($request);
+
+        $supervisor = User::query()
+            ->with('perfil')
+            ->where(
+                'id_utilizador',
+                $dados['id_supervisor']
+            )
+            ->where('tipo_utilizador', 'supervisor')
+            ->where('ativo', true)
+            ->first();
+
+        if (! $supervisor) {
+            return response()->json([
+                'message' => 'O supervisor indicado não existe, está inativo ou não tem o perfil correto.',
+            ], 422);
+        }
+
+        if (
+            (int) $supervisor->perfil?->id_departamento
+            !== $idDepartamento
+        ) {
+            return response()->json([
+                'message' => 'O supervisor não pertence à direção do coordenador.',
+            ], 422);
+        }
+
+        try {
+            $vinculo = $estagio->supervisores()->create([
+                'id_supervisor' => $supervisor->id_utilizador,
+
+                'id_coordenador' => $request->user()->id_utilizador,
+
+                'atribuido_em' => now(),
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            return response()->json([
+                'message' => 'Este supervisor já está atribuído a este estágio.',
+            ], 422);
+        }
+
+        Notificacao::paraUtilizador(
+            $supervisor,
+            'Novo estágio atribuído',
+            "Foi-te atribuído o acompanhamento do estágio #{$estagio->id_estagio}."
+        );
+
+        Notificacao::paraUtilizador(
+            $estagio->id_estagiario,
+            'Supervisor atribuído',
+            "Foi-te atribuído o supervisor {$supervisor->nome}."
+        );
+
+        return response()->json([
+            'message' => 'Supervisor atribuído com sucesso.',
+
+            'supervisor' => $vinculo
+                ->fresh()
+                ->load('supervisor'),
+        ], 201);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Remover um supervisor de um estágio
+    |--------------------------------------------------------------------------
+    |
+    | A remoção é lógica (preenche removido_em) para preservar o histórico
+    | de quem acompanhou o estágio.
+    |
+    */
+
+    public function removerSupervisor(
+        Request $request,
+        int $id,
+        int $idSupervisor
+    ) {
+
+        $estagio = $this->estagioDoCoordenador($request, $id);
+
+        if ($estagio->estaTerminado()) {
+            return response()->json([
+                'message' => 'Este estágio já terminou e não aceita alterações.',
+            ], 422);
+        }
+
+        $vinculo = $estagio->supervisores()
+            ->where('id_supervisor', $idSupervisor)
+            ->whereNull('removido_em')
+            ->first();
+
+        if (! $vinculo) {
+            return response()->json([
+                'message' => 'Este supervisor não está atribuído ao estágio.',
+            ], 404);
+        }
+
+        $vinculo->update([
+            'removido_em' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Supervisor removido do estágio.',
+
+            'supervisor' => $vinculo
+                ->fresh()
+                ->load('supervisor'),
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Consultar o plano de estágio
+    |--------------------------------------------------------------------------
+    */
+
+    public function mostrarPlano(
+        Request $request,
+        int $id
+    ) {
+
+        $estagio = $this->estagioDoCoordenador($request, $id);
+
+        $plano = $estagio->planoVigente();
+
+        return response()->json([
+            'id_estagio' => $estagio->id_estagio,
+
+            'plano' => $plano,
+
+            'historico' => $plano
+                ? $plano->historico()
+                    ->orderByDesc('id_plano_historico')
+                    ->get()
+                : [],
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Aprovar o plano de estágio
+    |--------------------------------------------------------------------------
+    */
+
+    public function aprovarPlano(
+        Request $request,
+        int $id
+    ) {
+
+        $estagio = $this->estagioDoCoordenador($request, $id);
+
+        if ($estagio->estaTerminado()) {
+            return response()->json([
+                'message' => 'Este estágio já terminou e não aceita alterações.',
+            ], 422);
+        }
+
+        return DB::transaction(function () use (
+            $request,
+            $estagio
+        ) {
+
+            $plano = $this->planoSubmetido($estagio);
+
+            if (! $plano) {
+                return response()->json([
+                    'message' => 'Não há plano de estágio submetido para aprovar.',
+                ], 422);
+            }
+
+            $estadoAnterior = $plano->estado;
+
+            $plano->update([
+                'estado' => 'aprovado',
+
+                'motivo_recusa' => null,
+
+                'id_coordenador' => $request->user()->id_utilizador,
+
+                'data_decisao' => now(),
+            ]);
+
+            HistoricoEstado::create([
+                'id_plano_estagio' => $plano->id_plano_estagio,
+
+                'estado_anterior' => $estadoAnterior,
+
+                'estado_novo' => 'aprovado',
+
+                'motivo' => null,
+
+                'id_utilizador' => $request->user()->id_utilizador,
+            ]);
+
+            Notificacao::paraUtilizadores(
+                $estagio->supervisoresUtilizadores(),
+                'Plano de estágio aprovado',
+                "O plano de estágio #{$plano->id_plano_estagio} foi aprovado."
+            );
+
+            return response()->json([
+                'message' => 'Plano de estágio aprovado com sucesso.',
+
+                'plano' => $plano->fresh(),
+            ]);
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Recusar o plano de estágio
+    |--------------------------------------------------------------------------
+    */
+
+    public function recusarPlano(
+        Request $request,
+        int $id
+    ) {
+
+        $dados = $request->validate([
+            'motivo' => [
+                'required',
+                'string',
+                'min:5',
+                'max:1000',
+            ],
+        ]);
+
+        $estagio = $this->estagioDoCoordenador($request, $id);
+
+        if ($estagio->estaTerminado()) {
+            return response()->json([
+                'message' => 'Este estágio já terminou e não aceita alterações.',
+            ], 422);
+        }
+
+        return DB::transaction(function () use (
+            $request,
+            $estagio,
+            $dados
+        ) {
+
+            $plano = $this->planoSubmetido($estagio);
+
+            if (! $plano) {
+                return response()->json([
+                    'message' => 'Não há plano de estágio submetido para recusar.',
+                ], 422);
+            }
+
+            $estadoAnterior = $plano->estado;
+
+            $plano->update([
+                'estado' => 'recusado',
+
+                'motivo_recusa' => $dados['motivo'],
+
+                'id_coordenador' => $request->user()->id_utilizador,
+
+                'data_decisao' => now(),
+            ]);
+
+            HistoricoEstado::create([
+                'id_plano_estagio' => $plano->id_plano_estagio,
+
+                'estado_anterior' => $estadoAnterior,
+
+                'estado_novo' => 'recusado',
+
+                'motivo' => $dados['motivo'],
+
+                'id_utilizador' => $request->user()->id_utilizador,
+            ]);
+
+            Notificacao::paraUtilizadores(
+                $estagio->supervisoresUtilizadores(),
+                'Plano de estágio recusado',
+                "O plano de estágio #{$plano->id_plano_estagio} foi recusado. Motivo: {$dados['motivo']}."
+            );
+
+            return response()->json([
+                'message' => 'Plano de estágio recusado.',
+
+                'plano' => $plano->fresh(),
+            ]);
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Documentos e relatórios do estágio (visão da direção)
+    |--------------------------------------------------------------------------
+    */
+
+    public function documentos(
+        Request $request,
+        int $id
+    ) {
+
+        $estagio = $this->estagioDoCoordenador($request, $id);
+
+        return response()->json([
+            'id_estagio' => $estagio->id_estagio,
+
+            'documentos' => $estagio->documentos()
+                ->orderByDesc('versao')
+                ->get(),
+        ]);
+    }
+
+    public function relatorios(
+        Request $request,
+        int $id
+    ) {
+
+        $estagio = $this->estagioDoCoordenador($request, $id);
+
+        return response()->json([
+            'id_estagio' => $estagio->id_estagio,
+
+            'relatorios' => $estagio->relatorios()
+                ->whereNotNull('submetido_em')
+                ->orderByDesc('periodo_referencia')
+                ->get(),
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Avaliações e feedback do estágio (visão da direção)
+    |--------------------------------------------------------------------------
+    */
+
+    public function avaliacoes(
+        Request $request,
+        int $id
+    ) {
+
+        $estagio = $this->estagioDoCoordenador($request, $id);
+
+        return response()->json([
+            'id_estagio' => $estagio->id_estagio,
+
+            'avaliacoes' => $estagio->avaliacoes()
+                ->orderByDesc('periodo_referencia')
+                ->get(),
+        ]);
+    }
+
+    public function feedback(
+        Request $request,
+        int $id
+    ) {
+
+        $estagio = $this->estagioDoCoordenador($request, $id);
+
+        return response()->json([
+            'id_estagio' => $estagio->id_estagio,
+
+            'feedback' => $estagio->feedback,
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Assiduidade e atividades do estágio (visão da direção)
+    |--------------------------------------------------------------------------
+    */
+
+    public function assiduidades(
+        Request $request,
+        int $id
+    ) {
+
+        $estagio = $this->estagioDoCoordenador($request, $id);
+
+        return response()->json([
+            'id_estagio' => $estagio->id_estagio,
+
+            'assiduidades' => $estagio->assiduidades()
+                ->orderByDesc('data')
+                ->get(),
+        ]);
+    }
+
+    public function atividades(
+        Request $request,
+        int $id
+    ) {
+
+        $estagio = $this->estagioDoCoordenador($request, $id);
+
+        return response()->json([
+            'id_estagio' => $estagio->id_estagio,
+
+            'atividades' => $estagio->atividades()
+                ->orderByDesc('data')
+                ->orderByDesc('id_atividade')
+                ->get(),
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Plano submetido à espera de decisão
+    |--------------------------------------------------------------------------
+    */
+
+    private function planoSubmetido(
+        Estagio $estagio
+    ): ?PlanoEstagio {
+
+        return $estagio->planos()
+            ->where('estado', 'submetido')
+            ->latest('id_plano_estagio')
+            ->lockForUpdate()
+            ->first();
     }
 }

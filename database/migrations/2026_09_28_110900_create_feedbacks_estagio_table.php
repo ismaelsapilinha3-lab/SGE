@@ -13,13 +13,15 @@ return new class extends Migration
             $table->id('id_feedback');
             $table->foreignId('id_estagio')->unique()
                 ->constrained('estagios', 'id_estagio')->restrictOnDelete();
-            $table->unsignedTinyInteger('nota_geral'); // 1 a 5
+            $table->unsignedTinyInteger('nota_geral'); // 0 a 10
             $table->text('comentario')->nullable();
             $table->text('sugestoes')->nullable();
             $table->timestamps();
         });
 
-        DB::statement('ALTER TABLE feedbacks_estagio ADD CONSTRAINT chk_feedback_nota CHECK (nota_geral BETWEEN 0 AND 10)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE feedbacks_estagio ADD CONSTRAINT chk_feedback_nota CHECK (nota_geral BETWEEN 0 AND 10)');
+        }
     }
 
     public function down(): void
