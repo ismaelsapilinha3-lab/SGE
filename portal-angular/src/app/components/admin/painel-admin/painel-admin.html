@@ -928,17 +928,41 @@
               ) {
 
                 <tr>
-                  <td>{{ estagiario.nome }}</td>
-                  <td>{{ estagiario.email }}</td>
-                  <td>{{ estagiario.telefone || '' }}</td>
-                  <td>{{ estagiario.curso || '' }}</td>
-                  <td>{{ estagiario.universidade || '' }}</td>
-                  <td>{{ estagiario.departamento || '' }}</td>
-                  <td>{{ estagiario.data_inicio || '' }}</td>
-                  <td>{{ estagiario.data_fim_prevista || '' }}</td>
-                  <td>{{ estagiario.estado_estagio || '' }}</td>
-
                   <td>
+                    <div class="estagiario-identidade">
+                      <span class="estagiario-avatar" aria-hidden="true">
+                        {{ iniciais(estagiario.nome) }}
+                      </span>
+                      <span class="estagiario-nome">
+                        {{ estagiario.nome }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>{{ estagiario.email }}</td>
+                  <td>{{ estagiario.telefone || '—' }}</td>
+                  <td>{{ estagiario.curso || '—' }}</td>
+                  <td>{{ estagiario.universidade || '—' }}</td>
+                  <td>
+                    <span class="etiqueta-departamento">
+                      {{ estagiario.departamento || 'Não atribuído' }}
+                    </span>
+                  </td>
+                  <td>{{ estagiario.data_inicio || '—' }}</td>
+                  <td>{{ estagiario.data_fim_prevista || '—' }}</td>
+                  <td>
+                    <span
+                      class="estado-badge"
+                      [class.estado-ativo]="estagiario.estado_estagio === 'ativo'"
+                      [class.estado-aprovada]="estagiario.estado_estagio === 'aprovada'"
+                      [class.estado-suspenso]="estagiario.estado_estagio === 'suspenso'"
+                      [class.estado-concluido]="estagiario.estado_estagio === 'concluido'"
+                      [class.estado-recusada]="estagiario.estado_estagio === 'cancelado'"
+                    >
+                      {{ estagiario.estado_estagio || 'Sem estágio' }}
+                    </span>
+                  </td>
+
+                  <td class="info-estagio">
 
                     @if (estagiario.estado_estagio === 'ativo') {
 
@@ -974,6 +998,7 @@
                   <td>
                     <button
                       type="button"
+                      class="btn-gerir-estagio"
                       (click)="abrirGestaoEstagio(estagiario)"
                     >
                       Gerir estágio

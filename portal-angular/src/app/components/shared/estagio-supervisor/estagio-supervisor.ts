@@ -57,24 +57,65 @@ interface AbaDefinicao {
 
   rotulo: string;
 
+  /** Glifo mostrado no botão do menu de gestão. */
+  icone: string;
+
+  /** Texto curto que explica a funcionalidade do botão. */
+  descricao: string;
+
 }
 
 
 const ABAS: AbaDefinicao[] = [
 
-  { id: 'plano', rotulo: 'Plano' },
+  {
+    id: 'plano',
+    rotulo: 'Plano de estágio',
+    icone: '🗒',
+    descricao: 'Criar e submeter o plano de atividades.'
+  },
 
-  { id: 'contrato', rotulo: 'Contrato' },
+  {
+    id: 'contrato',
+    rotulo: 'Contrato',
+    icone: '📄',
+    descricao: 'Validar ou rejeitar os documentos do contrato.'
+  },
 
-  { id: 'relatorios', rotulo: 'Relatórios' },
+  {
+    id: 'relatorios',
+    rotulo: 'Relatórios',
+    icone: '📊',
+    descricao: 'Consultar os relatórios enviados pelo estagiário.'
+  },
 
-  { id: 'assiduidade', rotulo: 'Assiduidade' },
+  {
+    id: 'assiduidade',
+    rotulo: 'Assiduidade',
+    icone: '🗓',
+    descricao: 'Registar presenças, faltas e justificações.'
+  },
 
-  { id: 'avaliacoes', rotulo: 'Avaliações' },
+  {
+    id: 'avaliacoes',
+    rotulo: 'Avaliações',
+    icone: '⭐',
+    descricao: 'Avaliar o desempenho do estagiário.'
+  },
 
-  { id: 'feedback', rotulo: 'Feedback' },
+  {
+    id: 'feedback',
+    rotulo: 'Feedback',
+    icone: '💬',
+    descricao: 'Ler o feedback partilhado pelo estagiário.'
+  },
 
-  { id: 'atividades', rotulo: 'Atividades' }
+  {
+    id: 'atividades',
+    rotulo: 'Atividades',
+    icone: '✅',
+    descricao: 'Acompanhar as atividades registadas.'
+  }
 
 ];
 

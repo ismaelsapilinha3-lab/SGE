@@ -35,6 +35,20 @@ export interface RespostaCriarSupervisor {
 }
 
 
+export interface SupervisorListado {
+  id_utilizador: number;
+  nome: string;
+  email: string;
+  telefone: string | null;
+  id_departamento: number | null;
+}
+
+
+export interface RespostaListarSupervisores {
+  supervisores: SupervisorListado[];
+}
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -69,6 +83,28 @@ export class SupervisorService {
     return this.http.post<RespostaCriarSupervisor>(
       this.apiUrl,
       dados,
+      { headers }
+    );
+  }
+
+
+  listar(): Observable<RespostaListarSupervisores> {
+
+    const token = this.authService.token();
+
+    if (!token) {
+      throw new Error(
+        'A sessão expirou. Inicia sessão novamente.'
+      );
+    }
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json'
+    });
+
+    return this.http.get<RespostaListarSupervisores>(
+      this.apiUrl,
       { headers }
     );
   }

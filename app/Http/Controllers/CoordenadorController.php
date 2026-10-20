@@ -117,7 +117,7 @@ class CoordenadorController extends Controller
                 'nullable',
                 'integer',
                 'min:1',
-                'max:100',
+                'max:50',
             ],
         ]);
 
@@ -348,6 +348,47 @@ class CoordenadorController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | Listar os supervisores da direção do coordenador
+    |--------------------------------------------------------------------------
+    */
+
+    public function listarSupervisores(Request $request)
+    {
+
+        $idDepartamento =
+            $this->idDepartamentoDoCoordenador($request);
+
+        $supervisores = User::query()
+            ->with('perfil')
+            ->where('tipo_utilizador', 'supervisor')
+            ->where('ativo', true)
+            ->whereHas('perfil', function ($q) use ($idDepartamento) {
+                $q->where('id_departamento', $idDepartamento);
+            })
+            ->orderBy('nome')
+            ->get()
+            ->map(function (User $supervisor) {
+                return [
+                    'id_utilizador' => $supervisor->id_utilizador,
+
+                    'nome' => $supervisor->nome,
+
+                    'email' => $supervisor->email,
+
+                    'telefone' => $supervisor->telefone,
+
+                    'id_departamento' => $supervisor->perfil?->id_departamento,
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'supervisores' => $supervisores,
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Criar supervisor
     |--------------------------------------------------------------------------
     */
@@ -504,7 +545,7 @@ class CoordenadorController extends Controller
                 'nullable',
                 'integer',
                 'min:1',
-                'max:100',
+                'max:50',
             ],
         ]);
 

@@ -59,6 +59,14 @@ export interface CandidaturaCoordenador {
 
     nome_arquivo: string;
 
+    caminho_arquivo?: string;
+
+    versao?: number;
+
+    estado?: string;
+
+    descricao?: string | null;
+
   }[];
 
 }
@@ -132,7 +140,7 @@ export class CoordenadorService {
     pesquisa: string = '',
     estado: string = '',
     pagina: number = 1,
-    porPagina: number = 15
+    porPagina: number = 50
   ): Observable<PaginaResposta<CandidaturaCoordenador>> {
 
     let parametros = new HttpParams()
@@ -170,6 +178,26 @@ export class CoordenadorService {
 
     return this.http.get<CandidaturaCoordenador>(
       `${this.apiUrl}/candidaturas/${id}`
+    );
+
+  }
+
+
+  /* =======================================================
+     DOCUMENTOS DA CANDIDATURA
+     ======================================================= */
+
+  /**
+   * Devolve o conteúdo do documento como blob, para pré-visualização
+   * no próprio painel (imagens e PDF).
+   */
+  visualizarDocumento(idDocumento: number): Observable<Blob> {
+
+    return this.http.get(
+      `${environment.apiUrl}/documentos/${idDocumento}`,
+      {
+        responseType: 'blob'
+      }
     );
 
   }

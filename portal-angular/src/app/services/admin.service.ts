@@ -347,7 +347,7 @@ export class AdminService {
     estado?: string,
     idDepartamento?: number,
     pagina: number = 1,
-    porPagina: number = 15
+    porPagina: number = 50
   ): Observable<CandidaturasResponse> {
 
     let params = new HttpParams()
@@ -420,7 +420,7 @@ export class AdminService {
     pesquisa: string = '',
     estado: string = '',
     pagina: number = 1,
-    porPagina: number = 15
+    porPagina: number = 50
   ): Observable<EstagiariosResponse> {
 
     let params = new HttpParams()
@@ -488,7 +488,7 @@ export class AdminService {
     pesquisa: string = '',
     estado: string = '',
     pagina: number = 1,
-    porPagina: number = 15
+    porPagina: number = 50
   ): Observable<EstagiosAdminResponse> {
 
     let params = new HttpParams()

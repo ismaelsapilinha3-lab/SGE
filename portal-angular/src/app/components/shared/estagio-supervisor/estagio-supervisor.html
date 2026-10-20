@@ -104,28 +104,46 @@
 
 
     <!-- =====================================================
-         ABAS
+         MENU DE GESTÃO DO ESTÁGIO
          ===================================================== -->
     <nav
-      class="es-abas"
-      role="tablist"
-      aria-label="Secções do estágio"
+      class="es-menu"
+      aria-label="Gestão do estágio"
     >
 
-      @for (definicao of abas; track definicao.id) {
+      <span class="es-menu-titulo">
+        GESTÃO DO ESTÁGIO
+      </span>
 
-        <button
-          type="button"
-          role="tab"
-          class="es-aba"
-          [class.ativa]="aba() === definicao.id"
-          [attr.aria-selected]="aba() === definicao.id"
-          (click)="definirAba(definicao.id)"
-        >
-          {{ definicao.rotulo }}
-        </button>
+      <div class="es-menu-grelha" role="tablist">
 
-      }
+        @for (definicao of abas; track definicao.id) {
+
+          <button
+            type="button"
+            role="tab"
+            class="es-menu-btn"
+            [class.ativa]="aba() === definicao.id"
+            [attr.aria-selected]="aba() === definicao.id"
+            [attr.title]="definicao.descricao"
+            (click)="definirAba(definicao.id)"
+          >
+            <span class="es-menu-icone" aria-hidden="true">
+              {{ definicao.icone }}
+            </span>
+
+            <span class="es-menu-rotulo">
+              {{ definicao.rotulo }}
+            </span>
+
+            <span class="es-menu-descricao">
+              {{ definicao.descricao }}
+            </span>
+          </button>
+
+        }
+
+      </div>
 
     </nav>
 

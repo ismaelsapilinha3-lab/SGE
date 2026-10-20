@@ -7,13 +7,19 @@ import {
   signal
 } from '@angular/core';
 
+import {
+  DomSanitizer,
+  SafeResourceUrl
+} from '@angular/platform-browser';
+
 import { FormsModule } from '@angular/forms';
 
 import { Router } from '@angular/router';
 
 import {
   SupervisorService,
-  CriarSupervisor
+  CriarSupervisor,
+  SupervisorListado
 } from '../../../services/supervisor';
 
 import {
@@ -21,6 +27,12 @@ import {
   CandidaturaCoordenador,
   DashboardCoordenador
 } from '../../../services/coordenador.service';
+
+import {
+  EstagioCoordenadorService,
+  EstagioCoordenado,
+  SupervisorVinculo
+} from '../../../services/estagio-coordenador.service';
 
 import { AuthService } from '../../../core/auth.service';
 
@@ -31,6 +43,55 @@ import {
 import {
   EstagioCoordenadorComponent
 } from '../../shared/estagio-coordenador/estagio-coordenador';
+
+
+// ============================================================
+// SECÇÕES DO PAINEL (MENU DE BOTÕES)
+// ============================================================
+
+type SecaoCoordenador =
+  | 'candidaturas'
+  | 'estagios'
+  | 'supervisores';
+
+interface SecaoDefinicao {
+
+  id: SecaoCoordenador;
+
+  rotulo: string;
+
+  /** Glifo mostrado no botão do menu. */
+  icone: string;
+
+  /** Texto curto que explica a funcionalidade do botão. */
+  descricao: string;
+
+}
+
+const SECOES: SecaoDefinicao[] = [
+
+  {
+    id: 'candidaturas',
+    rotulo: 'Candidaturas',
+    icone: '✉',
+    descricao: 'Analisar e decidir as candidaturas atribuídas.'
+  },
+
+  {
+    id: 'estagios',
+    rotulo: 'Estágios',
+    icone: '★',
+    descricao: 'Acompanhar os estágios e atribuir supervisores.'
+  },
+
+  {
+    id: 'supervisores',
+    rotulo: 'Supervisores',
+    icone: '＋',
+    descricao: 'Criar e gerir contas de supervisor da direção.'
+  }
+
+];
 
 
 @Component({
@@ -53,11 +114,26 @@ export class PainelCoordenadorComponent implements OnInit {
   private readonly coordenadorService =
     inject(CoordenadorService);
 
+  private readonly estagioService =
+    inject(EstagioCoordenadorService);
+
+  private readonly sanitizer =
+    inject(DomSanitizer);
+
   private readonly authService =
     inject(AuthService);
 
   private readonly router =
     inject(Router);
+
+
+  // ============================================================
+  // MENU DE SECÇÕES
+  // ============================================================
+
+  readonly secoes = SECOES;
+
+  secao = signal<SecaoCoordenador>('candidaturas');
 
 
   // ============================================================
@@ -150,6 +226,31 @@ export class PainelCoordenadorComponent implements OnInit {
     this.carregarDashboard();
 
     this.carregarCandidaturas();
+
+    this.carregarSupervisores();
+  }
+
+
+  alterarSecao(secao: SecaoCoordenador): void {
+
+    this.secao.set(secao);
+
+    this.erro.set('');
+
+    this.sucesso.set('');
+
+    if (secao === 'estagios') {
+
+      this.carregarEstagios();
+
+    }
+
+    if (secao === 'supervisores') {
+
+      this.carregarSupervisores();
+
+    }
+
   }
 
 
@@ -595,6 +696,409 @@ export class PainelCoordenadorComponent implements OnInit {
     this.erro.set('');
 
     this.sucesso.set('');
+  }
+
+
+  // ============================================================
+  // VISUALIZAÇÃO DE DOCUMENTOS
+  // ============================================================
+
+  abrindoDocumento = signal(false);
+
+  erroDocumento = signal('');
+
+  documentoPreviewAberto = signal(false);
+
+  documentoPreviewUrl = signal<string | null>(null);
+
+  documentoPreviewPdfUrl = signal<SafeResourceUrl | null>(null);
+
+  documentoPreviewTipo = signal('');
+
+  documentoPreviewNome = signal('');
+
+  private documentoPreviewBlobUrl: string | null = null;
+
+
+  visualizarDocumento(documento: {
+    id_documento: number;
+    nome_arquivo: string;
+    tipo_documento: string;
+  }): void {
+
+    if (this.abrindoDocumento()) {
+      return;
+    }
+
+    this.abrindoDocumento.set(true);
+
+    this.erroDocumento.set('');
+
+    this.limparPreviewDocumento();
+
+    this.coordenadorService
+      .visualizarDocumento(documento.id_documento)
+      .subscribe({
+        next: (blob: Blob) => {
+
+          const tipo = this.inferirMimeType(documento, blob);
+
+          const url = URL.createObjectURL(blob);
+
+          this.documentoPreviewBlobUrl = url;
+
+          this.documentoPreviewTipo.set(tipo);
+
+          this.documentoPreviewNome.set(documento.nome_arquivo);
+
+          if (tipo === 'application/pdf') {
+
+            this.documentoPreviewPdfUrl.set(
+              this.sanitizer.bypassSecurityTrustResourceUrl(url)
+            );
+
+            this.documentoPreviewUrl.set(null);
+
+          } else {
+
+            this.documentoPreviewUrl.set(url);
+
+            this.documentoPreviewPdfUrl.set(null);
+
+          }
+
+          this.documentoPreviewAberto.set(true);
+
+          this.abrindoDocumento.set(false);
+
+        },
+
+        error: (erro: unknown) => {
+
+          console.error('Erro ao visualizar documento:', erro);
+
+          this.abrindoDocumento.set(false);
+
+          this.erroDocumento.set(
+            'Não foi possível abrir o documento.'
+          );
+
+        }
+      });
+  }
+
+
+  fecharPreviewDocumento(): void {
+
+    this.limparPreviewDocumento();
+
+    this.documentoPreviewAberto.set(false);
+
+  }
+
+
+  private limparPreviewDocumento(): void {
+
+    if (this.documentoPreviewBlobUrl) {
+
+      URL.revokeObjectURL(this.documentoPreviewBlobUrl);
+
+      this.documentoPreviewBlobUrl = null;
+
+    }
+
+    this.documentoPreviewUrl.set(null);
+
+    this.documentoPreviewPdfUrl.set(null);
+
+    this.documentoPreviewTipo.set('');
+
+    this.documentoPreviewNome.set('');
+
+  }
+
+
+  private inferirMimeType(
+    documento: { nome_arquivo: string; tipo_documento: string },
+    blob: Blob
+  ): string {
+
+    if (blob.type) {
+      return blob.type;
+    }
+
+    const extensao = documento.nome_arquivo
+      .split('.')
+      .pop()
+      ?.toLowerCase();
+
+    switch (extensao) {
+
+      case 'pdf':
+        return 'application/pdf';
+
+      case 'png':
+        return 'image/png';
+
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+
+      default:
+        return 'application/octet-stream';
+
+    }
+
+  }
+
+
+  // ============================================================
+  // SUPERVISORES DA DIREÇÃO
+  // ============================================================
+
+  supervisores = signal<SupervisorListado[]>([]);
+
+  carregandoSupervisores = signal(false);
+
+  erroSupervisores = signal('');
+
+
+  carregarSupervisores(): void {
+
+    this.carregandoSupervisores.set(true);
+
+    this.erroSupervisores.set('');
+
+    this.supervisorService.listar().subscribe({
+
+      next: (resposta) => {
+
+        this.supervisores.set(resposta.supervisores ?? []);
+
+        this.carregandoSupervisores.set(false);
+
+      },
+
+      error: (erro: unknown) => {
+
+        console.error('Erro ao carregar supervisores:', erro);
+
+        this.carregandoSupervisores.set(false);
+
+        this.erroSupervisores.set(
+          'Não foi possível carregar os supervisores.'
+        );
+
+      }
+
+    });
+  }
+
+
+  // ============================================================
+  // ESTÁGIOS E ATRIBUIÇÃO DE SUPERVISORES
+  // ============================================================
+
+  estagios = signal<EstagioCoordenado[]>([]);
+
+  carregandoEstagios = signal(false);
+
+  erroEstagios = signal('');
+
+  supervisorSelecionado = signal<Record<number, number | null>>({});
+
+  processandoAtribuicao = signal<number | null>(null);
+
+
+  carregarEstagios(): void {
+
+    this.carregandoEstagios.set(true);
+
+    this.erroEstagios.set('');
+
+    this.estagioService.estagios().subscribe({
+
+      next: (resposta) => {
+
+        this.estagios.set(resposta.data ?? []);
+
+        this.carregandoEstagios.set(false);
+
+      },
+
+      error: (erro: unknown) => {
+
+        console.error('Erro ao carregar estágios:', erro);
+
+        this.carregandoEstagios.set(false);
+
+        this.erroEstagios.set(
+          'Não foi possível carregar os estágios.'
+        );
+
+      }
+
+    });
+  }
+
+
+  alterarSupervisorSelecionado(
+    idEstagio: number,
+    valor: unknown
+  ): void {
+
+    const id = valor === '' || valor === null
+      ? null
+      : Number(valor);
+
+    this.supervisorSelecionado.update((mapa) => ({
+      ...mapa,
+      [idEstagio]: id
+    }));
+
+  }
+
+
+  atribuirSupervisor(estagio: EstagioCoordenado): void {
+
+    const idSupervisor =
+      this.supervisorSelecionado()[estagio.id_estagio];
+
+    if (!idSupervisor) {
+
+      this.erro.set('Seleciona o supervisor a atribuir.');
+
+      return;
+
+    }
+
+    this.erro.set('');
+
+    this.sucesso.set('');
+
+    this.processandoAtribuicao.set(estagio.id_estagio);
+
+    this.estagioService
+      .atribuirSupervisor(estagio.id_estagio, idSupervisor)
+      .subscribe({
+
+        next: (resposta) => {
+
+          this.processandoAtribuicao.set(null);
+
+          this.sucesso.set(
+            resposta.message || 'Supervisor atribuído.'
+          );
+
+          this.alterarSupervisorSelecionado(
+            estagio.id_estagio,
+            ''
+          );
+
+          this.carregarEstagios();
+
+        },
+
+        error: (erro: unknown) => {
+
+          console.error('Erro ao atribuir supervisor:', erro);
+
+          this.processandoAtribuicao.set(null);
+
+          this.erro.set(
+            (erro as { error?: { message?: string } })
+              ?.error?.message ||
+            'Não foi possível atribuir o supervisor.'
+          );
+
+        }
+
+      });
+  }
+
+
+  removerSupervisor(
+    estagio: EstagioCoordenado,
+    vinculo: SupervisorVinculo
+  ): void {
+
+    this.erro.set('');
+
+    this.sucesso.set('');
+
+    this.processandoAtribuicao.set(estagio.id_estagio);
+
+    this.estagioService
+      .removerSupervisor(estagio.id_estagio, vinculo.id_supervisor)
+      .subscribe({
+
+        next: (resposta) => {
+
+          this.processandoAtribuicao.set(null);
+
+          this.sucesso.set(
+            resposta.message || 'Supervisor removido.'
+          );
+
+          this.carregarEstagios();
+
+        },
+
+        error: (erro: unknown) => {
+
+          console.error('Erro ao remover supervisor:', erro);
+
+          this.processandoAtribuicao.set(null);
+
+          this.erro.set(
+            (erro as { error?: { message?: string } })
+              ?.error?.message ||
+            'Não foi possível remover o supervisor.'
+          );
+
+        }
+
+      });
+  }
+
+
+  nomeEstagiario(estagio: EstagioCoordenado): string {
+
+    return estagio.estagiario?.nome
+      || estagio.candidatura?.nome
+      || `Estágio #${estagio.id_estagio}`;
+
+  }
+
+
+  rotuloEstadoEstagio(estado: string | null): string {
+
+    switch (estado) {
+
+      case 'ativo':
+        return 'Ativo';
+
+      case 'suspenso':
+        return 'Suspenso';
+
+      case 'concluido':
+        return 'Concluído';
+
+      case 'cancelado':
+        return 'Cancelado';
+
+      default:
+        return estado || '—';
+
+    }
+
+  }
+
+
+  supervisoresDoEstagio(estagio: EstagioCoordenado): SupervisorVinculo[] {
+
+    return estagio.supervisores_ativos ?? [];
+
   }
 
 

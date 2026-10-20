@@ -229,7 +229,7 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
   totalCandidaturas = signal(0);
 
-  porPagina = signal(15);
+  porPagina = signal(50);
 
 
   // ============================================================

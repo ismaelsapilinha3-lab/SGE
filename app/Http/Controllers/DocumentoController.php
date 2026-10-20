@@ -50,11 +50,32 @@ class DocumentoController extends Controller
             ], 403);
         }
 
-        // Por enquanto, apenas estagiários e administradores.
-        // O acesso dos coordenadores será definido pelo encaminhamento.
+        /*
+         * O coordenador só pode consultar os documentos das candidaturas
+         * que lhe foram atribuídas dentro da sua direção.
+         */
+        if ($user->tipo_utilizador === 'coordenador') {
+            $idDepartamento = $user->perfil?->id_departamento;
+
+            $atribuidaAoCoordenador =
+                (int) $candidatura->id_coordenador
+                    === (int) $user->id_utilizador
+                && $idDepartamento !== null
+                && (int) $candidatura->id_departamento_selecionado
+                    === (int) $idDepartamento;
+
+            if (! $atribuidaAoCoordenador) {
+                return response()->json([
+                    'message' => 'Não tem autorização para consultar este documento.',
+                ], 403);
+            }
+        }
+
+        // Estagiários, administradores e coordenadores (com candidatura
+        // atribuída) podem consultar o documento.
         if (! in_array(
             $user->tipo_utilizador,
-            ['estagiario', 'administrador'],
+            ['estagiario', 'administrador', 'coordenador'],
             true
         )) {
             return response()->json([

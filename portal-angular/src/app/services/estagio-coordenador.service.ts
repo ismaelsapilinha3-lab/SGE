@@ -140,7 +140,7 @@ export class EstagioCoordenadorService {
     pesquisa: string = '',
     estado: string = '',
     pagina: number = 1,
-    porPagina: number = 100
+    porPagina: number = 50
   ): Observable<PaginaResposta<EstagioCoordenado>> {
 
     let parametros = new HttpParams()
@@ -167,6 +167,64 @@ export class EstagioCoordenadorService {
       {
         params: parametros
       }
+    );
+
+  }
+
+
+  /* =======================================================
+     SUPERVISORES DO ESTÁGIO
+     ======================================================= */
+
+  supervisores(idEstagio: number): Observable<{
+    id_estagio: number;
+    supervisores: SupervisorVinculo[];
+  }> {
+
+    return this.http.get<{
+      id_estagio: number;
+      supervisores: SupervisorVinculo[];
+    }>(
+      `${this.apiUrl}/estagios/${idEstagio}/supervisores`
+    );
+
+  }
+
+
+  atribuirSupervisor(
+    idEstagio: number,
+    idSupervisor: number
+  ): Observable<{
+    message: string;
+    supervisor: SupervisorVinculo;
+  }> {
+
+    return this.http.post<{
+      message: string;
+      supervisor: SupervisorVinculo;
+    }>(
+      `${this.apiUrl}/estagios/${idEstagio}/supervisores`,
+      {
+        id_supervisor: idSupervisor
+      }
+    );
+
+  }
+
+
+  removerSupervisor(
+    idEstagio: number,
+    idSupervisor: number
+  ): Observable<{
+    message: string;
+    supervisor: SupervisorVinculo;
+  }> {
+
+    return this.http.delete<{
+      message: string;
+      supervisor: SupervisorVinculo;
+    }>(
+      `${this.apiUrl}/estagios/${idEstagio}/supervisores/${idSupervisor}`
     );
 
   }

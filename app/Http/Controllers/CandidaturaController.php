@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Candidatura;
 use App\Models\Departamento;
 use App\Models\Documento;
+use App\Models\Notificacao;
 use App\Models\User;
+use App\Services\LimiteCandidaturasTrimestrais;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,12 +24,31 @@ class CandidaturaController extends Controller
         'cv',
     ];
 
+    public function __construct(
+        private readonly LimiteCandidaturasTrimestrais $limiteCandidaturas
+    ) {}
+
     /**
      * Criar uma conta de estagiário, uma candidatura
      * e guardar os documentos enviados.
      */
     public function store(Request $request)
     {
+        /*
+         * Limite de candidaturas por trimestre.
+         */
+        if ($this->limiteCandidaturas->limiteAtingido()) {
+            return response()->json([
+                'message' => $this->limiteCandidaturas
+                    ->mensagemLimiteAtingido(),
+
+                'vagas_restantes' => $this->limiteCandidaturas
+                    ->vagasRestantes(),
+
+                'limite_atingido' => true,
+            ], 422);
+        }
+
         $validated = $request->validate([
             'nome' => [
                 'required',
@@ -285,6 +306,20 @@ class CandidaturaController extends Controller
                 ->createToken('angular-sge')
                 ->plainTextToken;
 
+            /*
+             * Avisar os administradores de que há uma candidatura nova
+             * a aguardar análise.
+             */
+            Notificacao::paraUtilizadores(
+                User::where('tipo_utilizador', 'administrador')
+                    ->where('ativo', true)
+                    ->get(),
+
+                'Nova candidatura recebida',
+
+                "Foi submetida uma nova candidatura de {$resultado['candidatura']->nome}."
+            );
+
         } catch (UniqueConstraintViolationException $e) {
             if ($pasta) {
                 Storage::deleteDirectory($pasta);
@@ -326,6 +361,33 @@ class CandidaturaController extends Controller
                 'tipo_utilizador' => $resultado['utilizador']->tipo_utilizador,
             ],
         ], 201);
+    }
+
+    /**
+     * Informar o portal sobre a disponibilidade de candidaturas
+     * no trimestre corrente.
+     */
+    public function limite()
+    {
+        $trimestre = $this->limiteCandidaturas->trimestreDe();
+
+        return response()->json([
+            'limite' => LimiteCandidaturasTrimestrais::MAXIMO_POR_TRIMESTRE,
+
+            'submetidas' => $this->limiteCandidaturas->totalNoTrimestre(),
+
+            'vagas_restantes' => $this->limiteCandidaturas->vagasRestantes(),
+
+            'limite_atingido' => $this->limiteCandidaturas->limiteAtingido(),
+
+            'trimestre' => $trimestre['numero'],
+
+            'ano' => $trimestre['ano'],
+
+            'inicio' => $trimestre['inicio']->toDateString(),
+
+            'fim' => $trimestre['fim']->toDateString(),
+        ]);
     }
 
     /**

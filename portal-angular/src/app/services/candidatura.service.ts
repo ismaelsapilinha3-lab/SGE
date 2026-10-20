@@ -21,6 +21,17 @@ export interface RespostaCandidatura {
   user: UtilizadorAuth;
 }
 
+export interface LimiteCandidaturas {
+  limite: number;
+  submetidas: number;
+  vagas_restantes: number;
+  limite_atingido: boolean;
+  trimestre: number;
+  ano: number;
+  inicio: string;
+  fim: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -33,6 +44,12 @@ export class CandidaturaService {
   listarDepartamentos(): Observable<Departamento[]> {
     return this.http.get<Departamento[]>(
       `${this.baseUrl}/departamentos`
+    );
+  }
+
+  limiteTrimestral(): Observable<LimiteCandidaturas> {
+    return this.http.get<LimiteCandidaturas>(
+      `${this.baseUrl}/candidaturas/limite`
     );
   }
 

@@ -15,7 +15,7 @@
   max-width: 1500px;
   margin: 0 auto;
   padding: 30px;
-  background: #f5f7fb;
+  background: #ffffff;
   min-height: 100%;
 }
 
@@ -35,6 +35,13 @@
 .pagina-header {
   margin-bottom: 26px;
   align-items: flex-start;
+}
+
+.pagina-header-acoes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .etiqueta,
@@ -97,6 +104,20 @@
 
 .btn-secondary:hover:not(:disabled) {
   background: #f1f5f9;
+}
+
+.btn-voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: #174a7e;
+  border-color: #cbd9e8;
+}
+
+.btn-voltar:hover:not(:disabled) {
+  background: #eef4fb;
+  border-color: #174a7e;
 }
 
 .alerta {

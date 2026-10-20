@@ -59,7 +59,7 @@ class AdminController extends Controller
                 'nullable',
                 'integer',
                 'min:1',
-                'max:100',
+                'max:50',
             ],
         ]);
 
@@ -358,7 +358,10 @@ class AdminController extends Controller
         return response()->json(
             $query->orderByDesc('c.data_decisao')
                 ->paginate(
-                    $request->integer('por_pagina', 15)
+                    min(
+                        max($request->integer('por_pagina', 15), 1),
+                        50
+                    )
                 )
         );
     }

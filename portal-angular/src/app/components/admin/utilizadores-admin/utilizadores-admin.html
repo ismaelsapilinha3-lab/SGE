@@ -7,14 +7,27 @@
       <p>Gere as contas e os acessos ao sistema de estágios.</p>
     </div>
 
-    <button
-      type="button"
-      class="btn btn-primary"
-      (click)="abrirCriacao()"
-    >
-      <span aria-hidden="true">＋</span>
-      Novo utilizador
-    </button>
+    <div class="pagina-header-acoes">
+
+      <button
+        type="button"
+        class="btn btn-voltar"
+        (click)="voltarAoPainel()"
+      >
+        <span aria-hidden="true">←</span>
+        Voltar ao painel
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="abrirCriacao()"
+      >
+        <span aria-hidden="true">＋</span>
+        Novo utilizador
+      </button>
+
+    </div>
   </header>
 
   @if (erro()) {

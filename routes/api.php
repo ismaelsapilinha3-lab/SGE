@@ -37,6 +37,11 @@ Route::get('/departamentos', [
     'index',
 ]);
 
+Route::get('/candidaturas/limite', [
+    CandidaturaController::class,
+    'limite',
+]);
+
 Route::post('/candidaturas', [
     CandidaturaController::class,
     'store',
@@ -498,6 +503,11 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/supervisores', [
                 CoordenadorController::class,
                 'criarSupervisor',
+            ]);
+
+            Route::get('/supervisores', [
+                CoordenadorController::class,
+                'listarSupervisores',
             ]);
 
             /*

@@ -84,38 +84,104 @@
 
 
 /* =========================================================
-   ABAS
+   MENU DE GESTÃO DO ESTÁGIO
    ========================================================= */
 
-.es-abas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding-bottom: 14px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid #e3e8ee;
+.es-menu {
+  margin-bottom: 20px;
 }
 
-.es-aba {
-  padding: 9px 16px;
-  color: #4b5a6e;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 9px;
+.es-menu-titulo {
+  display: block;
+  margin-bottom: 10px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.es-menu-grelha {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.es-menu-btn {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 3px;
+  min-height: 74px;
+  padding: 13px 15px;
+  color: #33465f;
+  background: #ffffff;
+  border: 1px solid #e1e9f2;
+  border-radius: 12px;
   cursor: pointer;
+  text-align: left;
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s,
+    transform 0.2s;
 }
 
-.es-aba:hover {
-  background: #f0f6fc;
+.es-menu-btn:hover {
+  background: #f4f9ff;
+  border-color: #bfd6ec;
+  box-shadow: 0 6px 16px rgba(8, 60, 110, 0.08);
+  transform: translateY(-1px);
 }
 
-.es-aba.ativa {
+.es-menu-btn:focus-visible {
+  outline: 3px solid rgba(8, 121, 189, 0.5);
+  outline-offset: 2px;
+}
+
+.es-menu-icone {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: #0879bd;
+  background: #e7f2fb;
+  border-radius: 10px;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.es-menu-rotulo {
+  color: #16324f;
+  font-size: 13.5px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.es-menu-descricao {
+  color: #64748b;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.es-menu-btn.ativa {
   color: #ffffff;
   background: #0879bd;
+  border-color: #0879bd;
+  box-shadow: 0 8px 20px rgba(8, 121, 189, 0.25);
+}
+
+.es-menu-btn.ativa .es-menu-icone {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.es-menu-btn.ativa .es-menu-rotulo {
+  color: #ffffff;
+}
+
+.es-menu-btn.ativa .es-menu-descricao {
+  color: #d6e9f7;
 }
 
 
@@ -643,6 +709,22 @@
   .es-campo--seletor {
     max-width: 100%;
     width: 100%;
+  }
+
+  .es-menu-grelha {
+    grid-template-columns: 1fr;
+  }
+
+  .es-menu-btn {
+    min-height: 0;
+  }
+
+}
+
+@media (min-width: 621px) and (max-width: 900px) {
+
+  .es-menu-grelha {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
 
 }

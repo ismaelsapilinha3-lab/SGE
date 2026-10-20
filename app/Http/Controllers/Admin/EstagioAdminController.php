@@ -43,7 +43,7 @@ class EstagioAdminController extends Controller
                 'nullable',
                 'integer',
                 'min:1',
-                'max:100',
+                'max:50',
             ],
         ]);
 

@@ -19,7 +19,8 @@ import {
 
 import {
   CandidaturaService,
-  Departamento
+  Departamento,
+  LimiteCandidaturas
 } from '../../services/candidatura.service';
 
 import {
@@ -135,6 +136,13 @@ export class AcessoComponent implements OnInit {
 
 
   // ==========================================================
+  // LIMITE DE CANDIDATURAS POR TRIMESTRE
+  // ==========================================================
+
+  limite: LimiteCandidaturas | null = null;
+
+
+  // ==========================================================
   // DOCUMENTOS EXIGIDOS
   // ==========================================================
 
@@ -201,6 +209,36 @@ export class AcessoComponent implements OnInit {
   ngOnInit(): void {
 
     this.carregarDepartamentos();
+
+    this.carregarLimite();
+  }
+
+
+  // ==========================================================
+  // CARREGAR LIMITE TRIMESTRAL
+  // ==========================================================
+
+  private carregarLimite(): void {
+
+    this.candidaturaService
+      .limiteTrimestral()
+      .subscribe({
+
+        next: (limite: LimiteCandidaturas) => {
+
+          this.limite = limite;
+        },
+
+        error: () => {
+
+          /*
+           * A indisponibilidade do indicador não bloqueia o
+           * formulário: o servidor continua a validar o limite.
+           */
+          this.limite = null;
+        }
+
+      });
   }
 
 
@@ -317,6 +355,24 @@ export class AcessoComponent implements OnInit {
       texto: '',
       tipo: ''
     };
+
+
+    // ----------------------------------------------------------
+    // VALIDAR LIMITE TRIMESTRAL
+    // ----------------------------------------------------------
+
+    if (this.limite?.limite_atingido) {
+
+      this.cadastroMensagem = {
+        texto:
+          `O limite de ${this.limite.limite} candidaturas para o ` +
+          `${this.limite.trimestre}.º trimestre de ${this.limite.ano} ` +
+          'já foi atingido. Volta a tentar no próximo trimestre.',
+        tipo: 'erro'
+      };
+
+      return;
+    }
 
 
     // ----------------------------------------------------------
