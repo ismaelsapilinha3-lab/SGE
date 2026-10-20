@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 import { adminGuard } from './core/admin.guard';
 import { coordenadorGuard } from './core/coordenador.guard';
+import { estagiarioGuard } from './core/estagiario.guard';
 import { supervisorGuard } from './core/supervisor.guard';
 
 import { AcessoComponent } from './components/first-component/acesso';
@@ -58,7 +59,8 @@ export const routes: Routes = [
     path: 'estagiario',
     component: PainelestagiarioComponent,
     canActivate: [
-      authGuard
+      authGuard,
+      estagiarioGuard
     ]
   },
 

@@ -88,129 +88,143 @@ Route::middleware('auth:sanctum')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Candidatura do estagiário
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get('/estagiario/candidatura', [
-        CandidaturaController::class,
-        'minhaCandidatura',
-    ]);
-
-    /*
-    |--------------------------------------------------------------------------
-    | Estágio do estagiário
+    | Rotas exclusivas do estagiário
     |--------------------------------------------------------------------------
     |
-    | O estágio é resolvido a partir do utilizador autenticado, pelo que
-    | não é preciso indicar o identificador do estágio.
+    | Estas rotas exigem perfil de estagiário, para além da autenticação.
     |
     */
 
-    Route::get('/estagiario/estagio', [
-        EstagiarioController::class,
-        'estagio',
-    ]);
+    Route::middleware('estagiario')
+        ->prefix('estagiario')
+        ->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | Contrato de estágio
-    |--------------------------------------------------------------------------
-    */
+            /*
+            |--------------------------------------------------------------------------
+            | Candidatura do estagiário
+            |--------------------------------------------------------------------------
+            */
 
-    Route::post('/estagiario/estagio/contrato', [
-        EstagiarioController::class,
-        'submeterContrato',
-    ]);
+            Route::get('/candidatura', [
+                CandidaturaController::class,
+                'minhaCandidatura',
+            ]);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Relatórios de estágio do estagiário
-    |--------------------------------------------------------------------------
-    */
+            /*
+            |--------------------------------------------------------------------------
+            | Estágio do estagiário
+            |--------------------------------------------------------------------------
+            |
+            | O estágio é resolvido a partir do utilizador autenticado, pelo que
+            | não é preciso indicar o identificador do estágio.
+            |
+            */
 
-    Route::get('/estagiario/estagio/relatorios', [
-        EstagiarioController::class,
-        'relatorios',
-    ]);
+            Route::get('/estagio', [
+                EstagiarioController::class,
+                'estagio',
+            ]);
 
-    Route::post('/estagiario/estagio/relatorios', [
-        EstagiarioController::class,
-        'criarRelatorio',
-    ]);
+            /*
+            |--------------------------------------------------------------------------
+            | Contrato de estágio
+            |--------------------------------------------------------------------------
+            */
 
-    Route::put('/estagiario/estagio/relatorios/{relatorio}', [
-        EstagiarioController::class,
-        'atualizarRelatorio',
-    ]);
+            Route::post('/estagio/contrato', [
+                EstagiarioController::class,
+                'submeterContrato',
+            ]);
 
-    Route::post('/estagiario/estagio/relatorios/{relatorio}/submeter', [
-        EstagiarioController::class,
-        'submeterRelatorio',
-    ]);
+            /*
+            |--------------------------------------------------------------------------
+            | Relatórios de estágio do estagiário
+            |--------------------------------------------------------------------------
+            */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Assiduidade do estagiário
-    |--------------------------------------------------------------------------
-    */
+            Route::get('/estagio/relatorios', [
+                EstagiarioController::class,
+                'relatorios',
+            ]);
 
-    Route::get('/estagiario/estagio/assiduidades', [
-        EstagiarioController::class,
-        'assiduidades',
-    ]);
+            Route::post('/estagio/relatorios', [
+                EstagiarioController::class,
+                'criarRelatorio',
+            ]);
 
-    Route::post('/estagiario/estagio/assiduidades/{assiduidade}/justificar', [
-        EstagiarioController::class,
-        'justificarFalta',
-    ]);
+            Route::put('/estagio/relatorios/{relatorio}', [
+                EstagiarioController::class,
+                'atualizarRelatorio',
+            ]);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Atividades do estagiário
-    |--------------------------------------------------------------------------
-    */
+            Route::post('/estagio/relatorios/{relatorio}/submeter', [
+                EstagiarioController::class,
+                'submeterRelatorio',
+            ]);
 
-    Route::get('/estagiario/estagio/atividades', [
-        EstagiarioController::class,
-        'atividades',
-    ]);
+            /*
+            |--------------------------------------------------------------------------
+            | Assiduidade do estagiário
+            |--------------------------------------------------------------------------
+            */
 
-    Route::post('/estagiario/estagio/atividades', [
-        EstagiarioController::class,
-        'criarAtividade',
-    ]);
+            Route::get('/estagio/assiduidades', [
+                EstagiarioController::class,
+                'assiduidades',
+            ]);
 
-    Route::put('/estagiario/estagio/atividades/{atividade}', [
-        EstagiarioController::class,
-        'atualizarAtividade',
-    ]);
+            Route::post('/estagio/assiduidades/{assiduidade}/justificar', [
+                EstagiarioController::class,
+                'justificarFalta',
+            ]);
 
-    Route::delete('/estagiario/estagio/atividades/{atividade}', [
-        EstagiarioController::class,
-        'removerAtividade',
-    ]);
+            /*
+            |--------------------------------------------------------------------------
+            | Atividades do estagiário
+            |--------------------------------------------------------------------------
+            */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Avaliações e feedback do estagiário
-    |--------------------------------------------------------------------------
-    */
+            Route::get('/estagio/atividades', [
+                EstagiarioController::class,
+                'atividades',
+            ]);
 
-    Route::get('/estagiario/estagio/avaliacoes', [
-        EstagiarioController::class,
-        'avaliacoes',
-    ]);
+            Route::post('/estagio/atividades', [
+                EstagiarioController::class,
+                'criarAtividade',
+            ]);
 
-    Route::get('/estagiario/estagio/feedback', [
-        EstagiarioController::class,
-        'feedback',
-    ]);
+            Route::put('/estagio/atividades/{atividade}', [
+                EstagiarioController::class,
+                'atualizarAtividade',
+            ]);
 
-    Route::post('/estagiario/estagio/feedback', [
-        EstagiarioController::class,
-        'guardarFeedback',
-    ]);
+            Route::delete('/estagio/atividades/{atividade}', [
+                EstagiarioController::class,
+                'removerAtividade',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Avaliações e feedback do estagiário
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagio/avaliacoes', [
+                EstagiarioController::class,
+                'avaliacoes',
+            ]);
+
+            Route::get('/estagio/feedback', [
+                EstagiarioController::class,
+                'feedback',
+            ]);
+
+            Route::post('/estagio/feedback', [
+                EstagiarioController::class,
+                'guardarFeedback',
+            ]);
+        });
 
     /*
     |--------------------------------------------------------------------------

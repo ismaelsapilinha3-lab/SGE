@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\CoordenadorMiddleware;
+use App\Http\Middleware\EstagiarioMiddleware;
 use App\Http\Middleware\SupervisorMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => AdminMiddleware::class,
             'coordenador' => CoordenadorMiddleware::class,
             'supervisor' => SupervisorMiddleware::class,
+            'estagiario' => EstagiarioMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
