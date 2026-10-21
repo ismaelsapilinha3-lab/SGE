@@ -77,6 +77,12 @@ export class LayoutPainelComponent {
   /** Descrição do perfil apresentada sob o nome. */
   @Input() descricaoPerfil = '';
 
+  /** URL da foto de perfil; quando ausente mostra-se a inicial do nome. */
+  @Input() fotoUrl: string | null = null;
+
+  /** Quando `false` o avatar não é clicável (ex.: perfil só de leitura). */
+  @Input() fotoEditavel = true;
+
   /** Secção atualmente ativa; controla o estado `[class.ativo]`. */
   @Input() secaoAtiva = '';
 
@@ -95,12 +101,32 @@ export class LayoutPainelComponent {
   /** Emitido quando o utilizador termina a sessão. */
   @Output() terminarSessao = new EventEmitter<void>();
 
+  /** Emitido quando o utilizador escolhe um ficheiro para a foto de perfil. */
+  @Output() fotoSelecionada = new EventEmitter<File>();
+
   /** Estado do menu em ecrãs estreitos. */
   readonly menuAberto = signal(false);
 
   /** Abre ou fecha a barra lateral em ecrãs estreitos. */
   alternarMenu(): void {
     this.menuAberto.update((aberto) => !aberto);
+  }
+
+  /**
+   * Valida e emite o ficheiro escolhido para a foto de perfil,
+   * repondo o valor do campo para permitir escolher o mesmo ficheiro.
+   */
+  escolherFoto(evento: Event): void {
+    const campo = evento.target as HTMLInputElement;
+    const ficheiro = campo.files?.[0];
+
+    campo.value = '';
+
+    if (!ficheiro) {
+      return;
+    }
+
+    this.fotoSelecionada.emit(ficheiro);
   }
 
   /** Fecha a barra lateral (usado após escolher uma secção). */

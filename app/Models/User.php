@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -38,6 +39,18 @@ class User extends Authenticatable
             'password' => 'hashed',
             'ativo' => 'boolean',
         ];
+    }
+
+    /**
+     * URL público da foto de perfil, ou `null` quando não existe.
+     */
+    public function fotoUrl(): ?string
+    {
+        if (! $this->foto) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->foto);
     }
 
     /**

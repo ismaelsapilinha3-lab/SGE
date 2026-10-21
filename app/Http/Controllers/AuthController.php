@@ -19,9 +19,9 @@ class AuthController extends Controller
         $user = User::where('email', $credentials['email'])->first();
 
         if (
-            !$user ||
-            !$user->ativo ||
-            !Hash::check($credentials['password'], $user->password)
+            ! $user ||
+            ! $user->ativo ||
+            ! Hash::check($credentials['password'], $user->password)
         ) {
             throw ValidationException::withMessages([
                 'email' => ['E-mail ou palavra-passe incorretos.'],
@@ -46,6 +46,7 @@ class AuthController extends Controller
                 'nome' => $user->nome,
                 'email' => $user->email,
                 'tipo_utilizador' => $user->tipo_utilizador,
+                'foto_url' => $user->fotoUrl(),
             ],
         ]);
     }
@@ -59,10 +60,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Sessão encerrada com sucesso.'
+            'message' => 'Sessão encerrada com sucesso.',
         ]);
     }
 }
-
-
-

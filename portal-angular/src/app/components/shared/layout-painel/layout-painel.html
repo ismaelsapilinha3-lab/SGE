@@ -59,9 +59,37 @@
       <app-sino-notificacoes></app-sino-notificacoes>
 
       <div class="lp-perfil">
-        <div class="lp-avatar" aria-hidden="true">
-          {{ nomePerfil.charAt(0) }}
-        </div>
+
+        @if (fotoEditavel) {
+          <label
+            class="lp-avatar lp-avatar--botao"
+            title="Alterar foto de perfil"
+          >
+            @if (fotoUrl) {
+              <img [src]="fotoUrl" [alt]="'Foto de ' + nomePerfil">
+            } @else {
+              <span aria-hidden="true">{{ nomePerfil.charAt(0) }}</span>
+            }
+
+            <span class="lp-avatar-emoji" aria-hidden="true">📷</span>
+
+            <input
+              type="file"
+              class="lp-avatar-campo"
+              accept="image/png,image/jpeg,image/webp"
+              aria-label="Escolher foto de perfil"
+              (change)="escolherFoto($event)"
+            >
+          </label>
+        } @else {
+          <div class="lp-avatar" aria-hidden="true">
+            @if (fotoUrl) {
+              <img [src]="fotoUrl" [alt]="''">
+            } @else {
+              {{ nomePerfil.charAt(0) }}
+            }
+          </div>
+        }
 
         <div class="lp-perfil-info">
           <strong>{{ nomePerfil }}</strong>

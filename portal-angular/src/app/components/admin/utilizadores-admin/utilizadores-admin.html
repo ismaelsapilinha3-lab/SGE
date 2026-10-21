@@ -154,7 +154,11 @@
                 <td>
                   <div class="utilizador-identidade">
                     <div class="avatar">
-                      {{ u.nome.charAt(0).toUpperCase() }}
+                      @if (u.foto_url) {
+                        <img [src]="u.foto_url" [alt]="'Foto de ' + u.nome">
+                      } @else {
+                        {{ u.nome.charAt(0).toUpperCase() }}
+                      }
                     </div>
 
                     <div class="identidade-texto">

@@ -21,6 +21,10 @@ import {
 } from '../../core/auth.service';
 
 import {
+  PerfilService
+} from '../../services/perfil.service';
+
+import {
   CandidaturaEstagiario,
   CandidaturaEstagiarioService,
   DocumentoEstagiario
@@ -191,6 +195,67 @@ export class PainelestagiarioComponent
 
   private readonly candidaturaService =
     inject(CandidaturaEstagiarioService);
+
+  private readonly perfilService = inject(PerfilService);
+
+
+  // ==========================================================
+  // FOTO DE PERFIL
+  // ==========================================================
+
+  /** URL da foto de perfil do utilizador autenticado, se existir. */
+  readonly fotoPerfil = this.authService.fotoUrl;
+
+  /**
+   * Envia a foto escolhida para o servidor e atualiza a sessão.
+   */
+  alterarFotoPerfil(ficheiro: File): void {
+
+    this.perfilService
+      .atualizarFoto(ficheiro)
+      .subscribe({
+
+        next: (resposta) => {
+
+          this.authService.definirFoto(
+            resposta.foto_url
+          );
+
+        },
+
+        error: (erro: unknown) => {
+
+          console.error(
+            'Erro ao atualizar a foto de perfil:',
+            erro
+          );
+
+        }
+
+      });
+
+  }
+
+  /**
+   * Lê o ficheiro escolhido no campo de foto e delega o envio.
+   */
+  escolherFotoPerfil(evento: Event): void {
+
+    const campo = evento.target as HTMLInputElement;
+
+    const ficheiro = campo.files?.[0];
+
+    campo.value = '';
+
+    if (!ficheiro) {
+
+      return;
+
+    }
+
+    this.alterarFotoPerfil(ficheiro);
+
+  }
 
 
   // ==========================================================

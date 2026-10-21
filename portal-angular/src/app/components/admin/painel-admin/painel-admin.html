@@ -4,6 +4,8 @@
     marcaDescricao="Gestão de Estágios"
     nomePerfil="Administrador"
     descricaoPerfil="Gestão do sistema"
+    [fotoUrl]="fotoPerfil()"
+    (fotoSelecionada)="alterarFotoPerfil($event)"
     [secaoAtiva]="secaoAtiva()"
     [grupos]="gruposNavegacao"
     (secaoSelecionada)="irParaSecao($event)"

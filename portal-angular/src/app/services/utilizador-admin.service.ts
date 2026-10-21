@@ -18,6 +18,7 @@ export interface UtilizadorAdmin {
   email: string;
   telefone: string | null;
   foto?: string | null;
+  foto_url?: string | null;
   tipo_utilizador: TipoUtilizador;
   ativo: boolean;
   created_at?: string;

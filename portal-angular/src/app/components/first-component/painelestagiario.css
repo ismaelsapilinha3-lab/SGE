@@ -1058,6 +1058,50 @@ button {
   background: #174a7e;
   border-radius: 50%;
   font-weight: 800;
+  overflow: hidden;
+}
+
+#pagina-estagiario .av img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Avatar clicável para alterar a foto de perfil. */
+#pagina-estagiario .av-editar {
+  position: relative;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+#pagina-estagiario .av-editar:hover { border-color: #2d6db0; }
+
+#pagina-estagiario .av-camera {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  background: rgba(10, 37, 64, 0.55);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+#pagina-estagiario .av-editar:hover .av-camera,
+#pagina-estagiario .av-editar:focus-within .av-camera { opacity: 1; }
+
+#pagina-estagiario .av-campo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 #pagina-estagiario .sair {

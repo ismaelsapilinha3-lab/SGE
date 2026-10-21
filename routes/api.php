@@ -11,6 +11,7 @@ use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\DocumentoEstagioController;
 use App\Http\Controllers\EstagiarioController;
 use App\Http\Controllers\NotificacaoController;
+use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\SupervisorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -64,6 +65,30 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Perfil do utilizador autenticado
+    |--------------------------------------------------------------------------
+    |
+    | Cada utilizador consulta e atualiza a sua própria foto de perfil.
+    |
+    */
+
+    Route::get('/perfil', [
+        PerfilController::class,
+        'mostrar',
+    ]);
+
+    Route::post('/perfil/foto', [
+        PerfilController::class,
+        'atualizarFoto',
+    ]);
+
+    Route::delete('/perfil/foto', [
+        PerfilController::class,
+        'removerFoto',
+    ]);
 
     /*
     |--------------------------------------------------------------------------

@@ -17,6 +17,8 @@ import {
 
 import { AuthService } from '../../../core/auth.service';
 
+import { PerfilService } from '../../../services/perfil.service';
+
 import {
   LayoutPainelComponent,
   GrupoNavegacaoPainel
@@ -50,6 +52,9 @@ export class PainelSupervisorComponent implements OnInit {
 
   private readonly authService =
     inject(AuthService);
+
+  private readonly perfilService =
+    inject(PerfilService);
 
   private readonly router =
     inject(Router);
@@ -231,6 +236,39 @@ export class PainelSupervisorComponent implements OnInit {
   // ============================================================
   // ENCERRAR SESSÃO
   // ============================================================
+
+  /** Foto de perfil do utilizador autenticado. */
+  readonly fotoPerfil = this.authService.fotoUrl;
+
+  /**
+   * Envia a foto escolhida no topo para o servidor e atualiza a sessão.
+   */
+  alterarFotoPerfil(ficheiro: File): void {
+
+    this.perfilService
+      .atualizarFoto(ficheiro)
+      .subscribe({
+
+        next: (resposta) => {
+
+          this.authService.definirFoto(
+            resposta.foto_url
+          );
+
+        },
+
+        error: (erro: unknown) => {
+
+          console.error(
+            'Erro ao atualizar a foto de perfil:',
+            erro
+          );
+
+        }
+
+      });
+
+  }
 
   sair(): void {
 

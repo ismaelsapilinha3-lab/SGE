@@ -5,6 +5,8 @@
     marcaDescricao="Gestão de Estágios"
     [nomePerfil]="nomeCoordenador()"
     descricaoPerfil="Coordenação de estágios"
+    [fotoUrl]="fotoPerfil()"
+    (fotoSelecionada)="alterarFotoPerfil($event)"
     [secaoAtiva]="secao()"
     [grupos]="gruposNavegacao"
     (secaoSelecionada)="alterarSecao($any($event))"

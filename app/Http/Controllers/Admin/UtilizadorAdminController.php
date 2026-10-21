@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Perfil;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -46,7 +46,7 @@ class UtilizadorAdminController extends Controller
                 'created_at',
             ]);
 
-        if (!empty($dados['pesquisa'])) {
+        if (! empty($dados['pesquisa'])) {
             $pesquisa = $dados['pesquisa'];
 
             $query->where(function ($q) use ($pesquisa) {
@@ -55,7 +55,7 @@ class UtilizadorAdminController extends Controller
             });
         }
 
-        if (!empty($dados['tipo_utilizador'])) {
+        if (! empty($dados['tipo_utilizador'])) {
             $query->where(
                 'tipo_utilizador',
                 $dados['tipo_utilizador']
@@ -66,10 +66,17 @@ class UtilizadorAdminController extends Controller
             $query->where('ativo', $dados['ativo']);
         }
 
-        return response()->json(
-            $query->orderBy('nome')
-                ->paginate($dados['per_page'] ?? 15)
-        );
+        $pagina = $query->orderBy('nome')
+            ->paginate($dados['per_page'] ?? 15);
+
+        $pagina->getCollection()->each(function (User $utilizador) {
+            $utilizador->setAttribute(
+                'foto_url',
+                $utilizador->fotoUrl()
+            );
+        });
+
+        return response()->json($pagina);
     }
 
     /**
@@ -109,7 +116,7 @@ class UtilizadorAdminController extends Controller
 
             if (
                 $utilizador->tipo_utilizador === 'coordenador'
-                && !empty($dados['id_departamento'])
+                && ! empty($dados['id_departamento'])
             ) {
                 Perfil::create([
                     'id_utilizador' => $utilizador->id_utilizador,
@@ -143,16 +150,17 @@ class UtilizadorAdminController extends Controller
             ->findOrFail($id);
 
         return response()->json([
-            'utilizador' => $utilizador->only([
-                'id_utilizador',
-                'nome',
-                'email',
-                'telefone',
-                'foto',
-                'tipo_utilizador',
-                'ativo',
-                'created_at',
-            ]),
+            'utilizador' => [
+                'id_utilizador' => $utilizador->id_utilizador,
+                'nome' => $utilizador->nome,
+                'email' => $utilizador->email,
+                'telefone' => $utilizador->telefone,
+                'foto' => $utilizador->foto,
+                'foto_url' => $utilizador->fotoUrl(),
+                'tipo_utilizador' => $utilizador->tipo_utilizador,
+                'ativo' => $utilizador->ativo,
+                'created_at' => $utilizador->created_at,
+            ],
             'perfil' => $utilizador->perfil,
         ]);
     }
@@ -230,7 +238,7 @@ class UtilizadorAdminController extends Controller
             ]);
         }
 
-        $utilizador->ativo = !$utilizador->ativo;
+        $utilizador->ativo = ! $utilizador->ativo;
         $utilizador->save();
 
         return response()->json([
@@ -247,4 +255,3 @@ class UtilizadorAdminController extends Controller
         ]);
     }
 }
-

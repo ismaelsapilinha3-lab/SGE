@@ -165,12 +165,26 @@
             <span>Candidato a estágio</span>
           </div>
 
-          <div
-            class="av"
-            aria-hidden="true"
+          <label
+            class="av av-editar"
+            title="Alterar foto de perfil"
           >
-            {{ inicial() }}
-          </div>
+            @if (fotoPerfil()) {
+              <img [src]="fotoPerfil()" alt="Foto de perfil">
+            } @else {
+              <span aria-hidden="true">{{ inicial() }}</span>
+            }
+
+            <span class="av-camera" aria-hidden="true">📷</span>
+
+            <input
+              type="file"
+              class="av-campo"
+              accept="image/png,image/jpeg,image/webp"
+              aria-label="Escolher foto de perfil"
+              (change)="escolherFotoPerfil($event)"
+            >
+          </label>
 
           <app-sino-notificacoes></app-sino-notificacoes>
 
