@@ -214,6 +214,7 @@
               @if (estagioAtivo()) {
 
                 <form
+                  id="es-form-plano"
                   class="es-form"
                   (ngSubmit)="guardarPlano()"
                   novalidate
@@ -343,6 +344,81 @@
                   </ul>
 
                 }
+
+              }
+
+
+              @if (historicoPlano().length > 0) {
+
+                <div class="es-historico">
+
+                  <h4 class="es-historico-titulo">
+                    Histórico de versões
+                  </h4>
+
+                  <ul class="es-lista es-lista--historico">
+
+                    @for (
+                      versao of historicoPlano();
+                      track versao.id_plano_historico
+                    ) {
+
+                      <li class="es-item es-item--compacto">
+
+                        <div class="es-item-corpo">
+
+                          <div class="es-item-titulo">
+
+                            <strong>
+                              Versão de
+                              {{ formatarData(versao.alterado_em) }}
+                            </strong>
+
+                            <span
+                              class="es-etiqueta"
+                              [attr.data-estado]="versao.estado"
+                            >
+                              {{ rotuloEstadoPlano(versao.estado) }}
+                            </span>
+
+                          </div>
+
+                          <span class="es-item-meta">
+                            {{ formatarData(versao.data_inicio) }}
+                            a {{ formatarData(versao.data_fim) }}
+                          </span>
+
+                          @if (versao.motivo_recusa) {
+
+                            <p class="es-texto es-texto--erro">
+                              <strong>Motivo:</strong>
+                              {{ versao.motivo_recusa }}
+                            </p>
+
+                          }
+
+                        </div>
+
+                        <div class="es-item-acoes">
+
+                          <button
+                            type="button"
+                            class="es-btn es-btn--ghost"
+                            (click)="reutilizarVersaoPlano(versao)"
+                            [disabled]="processando() || !estagioAtivo()"
+                          >
+                            Reutilizar
+                          </button>
+
+                        </div>
+
+                      </li>
+
+                    }
+
+                  </ul>
+
+                </div>
 
               }
 
@@ -594,6 +670,28 @@
 
           <div class="es-seccao">
 
+            <!--
+              A assiduidade é registada individualmente, por estagiário.
+              Esta faixa fixa o estagiário em causa para não haver troca.
+            -->
+            <div class="es-seccao-entidade">
+              <span class="es-entidade-etiqueta">Estagiário</span>
+              <strong class="es-entidade-nome">{{ nomeEstagiarioAtual() }}</strong>
+              <span class="es-entidade-ref">
+                Estágio {{ referenciaEstagioAtual() }}
+              </span>
+            </div>
+
+            @if (supervisionaVarios()) {
+
+              <p class="es-nota">
+                Acompanhas mais do que um estagiário. Cada registo de
+                assiduidade é individual: confirma o estagiário
+                selecionado antes de guardar.
+              </p>
+
+            }
+
             <div class="es-resumos">
 
               <div class="es-resumo">
@@ -682,6 +780,19 @@
                 novalidate
               >
 
+                <div class="es-form-cabecalho">
+
+                  <span class="es-form-etiqueta">
+                    Assiduidade de {{ nomeEstagiarioAtual() }}
+                  </span>
+
+                  <small class="es-form-contexto">
+                    Estágio {{ referenciaEstagioAtual() }} · um registo por
+                    dia e por estagiário
+                  </small>
+
+                </div>
+
                 <div class="es-form-grelha">
 
                   <label class="es-campo">
@@ -690,7 +801,8 @@
                     <input
                       type="date"
                       name="assiduidadeData"
-                      [(ngModel)]="assiduidadeData"
+                      [ngModel]="assiduidadeData()"
+                      (ngModelChange)="assiduidadeData.set($event)"
                       [disabled]="processando()"
                     >
                   </label>
@@ -761,12 +873,22 @@
 
                 <div class="es-form-acoes">
 
+                  @if (assiduidadeDoDia(); as existente) {
+
+                    <p class="es-form-aviso" role="status">
+                      Já existe um registo a
+                      {{ formatarData(existente.data) }}.
+                      Guardar irá atualizá-lo.
+                    </p>
+
+                  }
+
                   <button
                     type="submit"
                     class="es-btn es-btn--primary"
                     [disabled]="processando()"
                   >
-                    Registar assiduidade
+                    {{ assiduidadeDoDia() ? 'Atualizar registo' : 'Registar assiduidade' }}
                   </button>
 
                 </div>
@@ -985,10 +1107,42 @@
             @if (aceitaRegistosDeFecho()) {
 
               <form
+                id="es-form-avaliacao"
                 class="es-form"
+                [class.es-form--edicao]="avaliacaoEmEdicao()"
                 (ngSubmit)="guardarAvaliacao()"
                 novalidate
               >
+
+                @if (avaliacaoEmEdicao(); as emEdicao) {
+
+                  <div class="es-form-cabecalho">
+
+                    <div>
+
+                      <span class="es-form-etiqueta">
+                        A EDITAR AVALIAÇÃO
+                      </span>
+
+                      <strong>
+                        {{ rotuloTipo(emEdicao.tipo) }} ·
+                        {{ formatarData(emEdicao.periodo_referencia) }}
+                      </strong>
+
+                    </div>
+
+                    <button
+                      type="button"
+                      class="es-btn es-btn--light"
+                      (click)="cancelarEdicaoAvaliacao()"
+                      [disabled]="processando()"
+                    >
+                      Cancelar edição
+                    </button>
+
+                  </div>
+
+                }
 
                 <div class="es-form-grelha">
 
@@ -1125,12 +1279,29 @@
 
                 <div class="es-form-acoes">
 
+                  @if (avaliacaoEmEdicao()) {
+
+                    <button
+                      type="button"
+                      class="es-btn es-btn--light"
+                      (click)="cancelarEdicaoAvaliacao()"
+                      [disabled]="processando()"
+                    >
+                      Cancelar
+                    </button>
+
+                  }
+
                   <button
                     type="submit"
                     class="es-btn es-btn--primary"
                     [disabled]="processando()"
                   >
-                    Registar avaliação
+                    @if (avaliacaoEmEdicao()) {
+                      Guardar alterações
+                    } @else {
+                      Registar avaliação
+                    }
                   </button>
 
                 </div>
@@ -1162,7 +1333,13 @@
 
                 @for (avaliacao of avaliacoes(); track avaliacao.id_avaliacao) {
 
-                  <li class="es-item es-item--bloco">
+                  <li
+                    class="es-item es-item--bloco"
+                    [class.es-item--em-edicao]="
+                      avaliacaoEmEdicao()?.id_avaliacao ===
+                      avaliacao.id_avaliacao
+                    "
+                  >
 
                     <div class="es-item-corpo">
 
@@ -1229,6 +1406,15 @@
                     </div>
 
                     <div class="es-item-acoes">
+
+                      <button
+                        type="button"
+                        class="es-btn es-btn--ghost"
+                        (click)="editarAvaliacao(avaliacao)"
+                        [disabled]="processando()"
+                      >
+                        Editar
+                      </button>
 
                       <button
                         type="button"

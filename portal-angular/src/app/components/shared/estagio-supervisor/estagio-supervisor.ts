@@ -32,6 +32,7 @@ import {
   EstagioSupervisionado,
   FiltrosAssiduidade,
   PlanoEstagio,
+  PlanoHistorico,
   ResumoAssiduidade,
   ResumoAvaliacoes
 } from '../../../services/estagio-supervisor.service';
@@ -214,6 +215,8 @@ export class EstagioSupervisorComponent {
 
   readonly plano = signal<PlanoEstagio | null>(null);
 
+  readonly historicoPlano = signal<PlanoHistorico[]>([]);
+
   readonly carregandoPlano = signal(false);
 
   planoObjetivos = '';
@@ -265,7 +268,7 @@ export class EstagioSupervisorComponent {
 
   estadoFiltro = '';
 
-  assiduidadeData = '';
+  assiduidadeData = signal('');
 
   assiduidadeEstado = signal<Assiduidade['estado']>('presente');
 
@@ -291,6 +294,14 @@ export class EstagioSupervisorComponent {
 
   readonly resumoAvaliacoes =
     signal<ResumoAvaliacoes | null>(null);
+
+  /**
+   * Avaliação em edição; `null` significa que o formulário está em
+   * modo de criação. Ao editar, o formulário é preenchido com os
+   * valores atuais e o upsert do backend atualiza esse registo.
+   */
+  readonly avaliacaoEmEdicao =
+    signal<Avaliacao | null>(null);
 
   avaliacaoTipo: Avaliacao['tipo'] = 'mensal';
 
@@ -349,6 +360,38 @@ export class EstagioSupervisorComponent {
 
     return estado === 'falta'
       || estado === 'falta_justificada';
+
+  });
+
+  /**
+   * O supervisor pode acompanhar vários estagiários. A assiduidade é
+   * registada individualmente, por isso há que deixar claro de quem é o
+   * registo. Com mais do que um estágio atribuído, a interface passa a
+   * mostrar o estagiário em destaque.
+   */
+  readonly supervisionaVarios = computed(() => {
+
+    return this.estagios().length > 1;
+
+  });
+
+  /**
+   * Registo já existente para a data introduzida. Permite avisar que
+   * guardar irá atualizar (upsert) em vez de criar um novo.
+   */
+  readonly assiduidadeDoDia = computed(() => {
+
+    const data = this.assiduidadeData();
+
+    if (!data) {
+
+      return null;
+
+    }
+
+    return this.assiduidades().find(
+      registo => (registo.data ?? '').substring(0, 10) === data
+    ) ?? null;
 
   });
 
@@ -471,6 +514,8 @@ export class EstagioSupervisorComponent {
 
     this.plano.set(null);
 
+    this.historicoPlano.set([]);
+
     this.documentos.set([]);
 
     this.relatorios.set([]);
@@ -581,6 +626,8 @@ export class EstagioSupervisorComponent {
 
         this.plano.set(resposta.plano);
 
+        this.historicoPlano.set(resposta.historico ?? []);
+
         this.preencherFormularioPlano(resposta.plano);
 
         this.carregandoPlano.set(false);
@@ -592,6 +639,8 @@ export class EstagioSupervisorComponent {
         console.error('Erro ao carregar o plano:', erro);
 
         this.plano.set(null);
+
+        this.historicoPlano.set([]);
 
         this.carregandoPlano.set(false);
 
@@ -628,6 +677,33 @@ export class EstagioSupervisorComponent {
       estagio?.data_fim_prevista ??
       ''
     ).substring(0, 10);
+
+  }
+
+
+  /**
+   * Copia o conteúdo de uma versão anterior para o formulário, para
+   * que o supervisor a possa reeditar e submeter como versão nova.
+   */
+  reutilizarVersaoPlano(versao: PlanoHistorico): void {
+
+    this.planoObjetivos = versao.objetivos;
+
+    this.planoAtividadesPrevistas = versao.atividades_previstas;
+
+    this.planoCronograma = versao.cronograma;
+
+    this.planoDataInicio = (versao.data_inicio ?? '')
+      .substring(0, 10);
+
+    this.planoDataFim = (versao.data_fim ?? '')
+      .substring(0, 10);
+
+    this.sucesso.set(null);
+
+    this.erroAcao.set(null);
+
+    this.scrollParaFormulario('es-form-plano');
 
   }
 
@@ -1083,7 +1159,7 @@ export class EstagioSupervisorComponent {
 
     }
 
-    if (!this.assiduidadeData) {
+    if (!this.assiduidadeData()) {
 
       this.erroAcao.set('Indica a data do registo.');
 
@@ -1108,7 +1184,7 @@ export class EstagioSupervisorComponent {
 
     const dados: DadosAssiduidade = {
 
-      data: this.assiduidadeData,
+      data: this.assiduidadeData(),
 
       estado: this.assiduidadeEstado(),
 
@@ -1173,7 +1249,7 @@ export class EstagioSupervisorComponent {
 
   private limparFormularioAssiduidade(): void {
 
-    this.assiduidadeData = '';
+    this.assiduidadeData.set('');
 
     this.assiduidadeEstado.set('presente');
 
@@ -1576,8 +1652,6 @@ export class EstagioSupervisorComponent {
 
         error: erro => {
 
-          console.error('Erro ao registar avaliação:', erro);
-
           this.processando.set(false);
 
           this.erroAcao.set(
@@ -1596,6 +1670,8 @@ export class EstagioSupervisorComponent {
 
   private limparFormularioAvaliacao(): void {
 
+    this.avaliacaoEmEdicao.set(null);
+
     this.avaliacaoPeriodo = '';
 
     this.avaliacaoNota = null;
@@ -1611,6 +1687,89 @@ export class EstagioSupervisorComponent {
     this.avaliacaoPontosFortes = '';
 
     this.avaliacaoAreasMelhoria = '';
+
+  }
+
+
+  /**
+   * Carrega uma avaliação existente no formulário para edição.
+   * O backend identifica o registo por (tipo, período), pelo que
+   * guardar de novo atualiza a avaliação em vez de criar outra.
+   */
+  editarAvaliacao(avaliacao: Avaliacao): void {
+
+    this.avaliacaoEmEdicao.set(avaliacao);
+
+    this.avaliacaoTipo = avaliacao.tipo;
+
+    this.avaliacaoPeriodo = (
+      avaliacao.periodo_referencia ?? ''
+    ).substring(0, 10);
+
+    this.avaliacaoNota = this.paraNumero(avaliacao.nota);
+
+    this.avaliacaoNotaAtividades =
+      this.paraNumero(avaliacao.nota_atividades);
+
+    this.avaliacaoNotaAssiduidade =
+      this.paraNumero(avaliacao.nota_assiduidade);
+
+    this.avaliacaoNotaPontualidade =
+      this.paraNumero(avaliacao.nota_pontualidade);
+
+    this.avaliacaoComentarios = avaliacao.comentarios ?? '';
+
+    this.avaliacaoPontosFortes = avaliacao.pontos_fortes ?? '';
+
+    this.avaliacaoAreasMelhoria = avaliacao.areas_melhoria ?? '';
+
+    this.sucesso.set(null);
+
+    this.erroAcao.set(null);
+
+    this.scrollParaFormulario('es-form-avaliacao');
+
+  }
+
+
+  cancelarEdicaoAvaliacao(): void {
+
+    this.limparFormularioAvaliacao();
+
+    this.sucesso.set(null);
+
+    this.erroAcao.set(null);
+
+  }
+
+
+  private paraNumero(valor: string | number | null): number | null {
+
+    if (valor === null || valor === undefined || valor === '') {
+
+      return null;
+
+    }
+
+    const numero = Number(valor);
+
+    return Number.isFinite(numero) ? numero : null;
+
+  }
+
+
+  private scrollParaFormulario(id: string): void {
+
+    if (!isPlatformBrowser(this.platformId)) {
+
+      return;
+
+    }
+
+    document.getElementById(id)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
 
   }
 
@@ -1653,6 +1812,15 @@ export class EstagioSupervisorComponent {
           this.sucesso.set(
             resposta.message || 'Avaliação removida.'
           );
+
+          if (
+            this.avaliacaoEmEdicao()?.id_avaliacao ===
+            avaliacao.id_avaliacao
+          ) {
+
+            this.limparFormularioAvaliacao();
+
+          }
 
           this.carregarAvaliacoes(idEstagio);
 
@@ -1757,6 +1925,45 @@ export class EstagioSupervisorComponent {
     return estagio.estagiario?.nome
       || estagio.candidatura?.nome
       || `Estágio #${estagio.id_estagio}`;
+
+  }
+
+
+  /**
+   * Nome do estagiário do estágio em seleção. A assiduidade é individual,
+   * pelo que este nome acompanha sempre o formulário e a listagem.
+   */
+  nomeEstagiarioAtual(): string {
+
+    const estagio = this.estagioSelecionado();
+
+    if (! estagio) {
+
+      return 'Estagiário';
+
+    }
+
+    return estagio.estagiario?.nome
+      || estagio.candidatura?.nome
+      || `Estagiário #${estagio.id_estagiario ?? '—'}`;
+
+  }
+
+
+  /**
+   * Identificação curta do estágio em seleção, usada nos avisos.
+   */
+  referenciaEstagioAtual(): string {
+
+    const estagio = this.estagioSelecionado();
+
+    if (! estagio) {
+
+      return '—';
+
+    }
+
+    return `#${estagio.id_estagio}`;
 
   }
 

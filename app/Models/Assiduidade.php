@@ -30,7 +30,7 @@ class Assiduidade extends Model
     protected function casts(): array
     {
         return [
-            'data' => 'date',
+            'data' => 'date:Y-m-d',
             'justificacao_submetida_em' => 'datetime',
             'justificacao_decidida_em' => 'datetime',
         ];

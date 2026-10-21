@@ -504,11 +504,21 @@ class CoordenadorController extends Controller
                 $user,
                 $idDepartamento
             ) {
-                $q->where('id_coordenador', $user->id_utilizador)
-                    ->where(
-                        'id_departamento_selecionado',
-                        $idDepartamento
-                    );
+                $q->where(
+                    'id_departamento_selecionado',
+                    $idDepartamento
+                )->where(function ($sub) use ($user) {
+                    /*
+                     * O coordenador vê as candidaturas que lhe foram
+                     * atribuídas e também as da sua direção que ainda não
+                     * têm coordenador definido (estágios iniciados antes
+                     * do encaminhamento), para as poder assumir.
+                     */
+                    $sub->where(
+                        'id_coordenador',
+                        $user->id_utilizador
+                    )->orWhereNull('id_coordenador');
+                });
             })
             ->first();
 
@@ -559,11 +569,15 @@ class CoordenadorController extends Controller
                 $user,
                 $idDepartamento
             ) {
-                $q->where('id_coordenador', $user->id_utilizador)
-                    ->where(
-                        'id_departamento_selecionado',
-                        $idDepartamento
-                    );
+                $q->where(
+                    'id_departamento_selecionado',
+                    $idDepartamento
+                )->where(function ($sub) use ($user) {
+                    $sub->where(
+                        'id_coordenador',
+                        $user->id_utilizador
+                    )->orWhereNull('id_coordenador');
+                });
             })
             ->with([
                 'estagiario',
@@ -585,9 +599,18 @@ class CoordenadorController extends Controller
             $query->where('estado', $dados['estado']);
         }
 
-        return response()->json(
-            $query->paginate($dados['por_pagina'] ?? 15)
-        );
+        $pagina = $query->paginate($dados['por_pagina'] ?? 15);
+
+        /*
+         * Assume as candidaturas da direção que ainda não tinham coordenador
+         * definido (estágios iniciados antes do encaminhamento). A atribuição
+         * passa a ficar registada para as decisões seguintes.
+         */
+        $pagina->getCollection()->each(function (Estagio $estagio) {
+            $estagio->candidatura?->garantirCoordenador();
+        });
+
+        return response()->json($pagina);
     }
 
     /*

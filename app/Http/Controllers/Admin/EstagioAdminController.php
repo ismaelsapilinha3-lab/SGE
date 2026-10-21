@@ -220,6 +220,13 @@ class EstagioAdminController extends Controller
             ], 422);
         }
 
+        /*
+        | Ao iniciar o estágio o candidato passa a estagiário ativo, pelo que a
+        | candidatura tem de ficar atribuída a um coordenador da sua direção.
+        | Sem isto o coordenador não a encontra para lhe atribuir supervisor.
+        */
+        $candidatura->garantirCoordenador();
+
         $inicio = $dados['data_inicio'] ?? null;
 
         $fimPrevisto = $dados['data_fim_prevista'] ?? null;

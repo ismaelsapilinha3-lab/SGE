@@ -75,6 +75,57 @@ class Candidatura extends Model
 
     /*
     |--------------------------------------------------------------------------
+    | Garantir o coordenador da direção
+    |--------------------------------------------------------------------------
+    |
+    | Atribui a candidatura a um coordenador ativo da direção escolhida caso
+    | esta ainda não tenha um. Usado ao iniciar o estágio: o candidato passa a
+    | estagiário ativo e o coordenador precisa de o encontrar para lhe
+    | atribuir supervisor. É idempotente.
+    |
+    */
+
+    public function garantirCoordenador(): ?User
+    {
+        if ($this->id_coordenador !== null) {
+            return User::query()
+                ->where(
+                    'id_utilizador',
+                    $this->id_coordenador
+                )
+                ->first();
+        }
+
+        if ($this->id_departamento_selecionado === null) {
+            return null;
+        }
+
+        $coordenador = User::query()
+            ->where('tipo_utilizador', 'coordenador')
+            ->where('ativo', true)
+            ->whereHas('perfil', function ($q) {
+                $q->where(
+                    'id_departamento',
+                    $this->id_departamento_selecionado
+                );
+            })
+            ->with('perfil')
+            ->first();
+
+        if (! $coordenador) {
+            return null;
+        }
+
+        $this->update([
+            'id_coordenador' => $coordenador->id_utilizador,
+            'encaminhada_em' => $this->encaminhada_em ?? now(),
+        ]);
+
+        return $coordenador;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Verificação de propriedade
     |--------------------------------------------------------------------------
     |

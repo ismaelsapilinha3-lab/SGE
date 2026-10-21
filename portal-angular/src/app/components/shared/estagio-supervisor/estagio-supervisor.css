@@ -501,6 +501,7 @@
 .es-form-acoes {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
 }
@@ -719,12 +720,151 @@
     min-height: 0;
   }
 
+  .es-form-cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
 }
 
 @media (min-width: 621px) and (max-width: 900px) {
 
   .es-menu-grelha {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+}
+
+
+/* =========================================================
+   EDIÇÃO DE AVALIAÇÃO
+   ========================================================= */
+
+.es-form--edicao {
+  background: #fffaf2;
+  border-color: #ffd9a8;
+}
+
+.es-form-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #ffd9a8;
+}
+
+.es-form-cabecalho > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.es-form-etiqueta {
+  color: #b45309;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.es-form-cabecalho strong {
+  color: #16375f;
+  font-size: 13.5px;
+}
+
+.es-item--em-edicao {
+  background: #fffaf2;
+  border-color: #ffd9a8;
+  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.12);
+}
+
+
+/* =========================================================
+   HISTÓRICO DE VERSÕES DO PLANO
+   ========================================================= */
+
+.es-historico {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px dashed #d4dfeb;
+}
+
+.es-historico-titulo {
+  margin: 0 0 12px;
+  color: #16375f;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.es-lista--historico {
+  gap: 10px;
+}
+
+.es-item--compacto {
+  padding: 12px 14px;
+  background: #f8fafc;
+}
+
+.es-item--compacto .es-item-titulo strong {
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   ASSIDUIDADE INDIVIDUAL
+   ========================================================= */
+
+.es-seccao-entidade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  background: #f2f7fc;
+  border: 1px solid #d4dfeb;
+  border-radius: 10px;
+}
+
+.es-entidade-etiqueta {
+  color: #64748b;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.es-entidade-nome {
+  color: #16375f;
+  font-size: 15px;
+}
+
+.es-entidade-ref {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.es-form-contexto {
+  color: #64748b;
+  font-size: 11.5px;
+}
+
+.es-form-aviso {
+  flex: 1;
+  margin: 0;
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 620px) {
+
+  .es-entidade-ref {
+    margin-left: 0;
   }
 
 }
