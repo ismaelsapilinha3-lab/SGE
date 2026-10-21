@@ -267,6 +267,143 @@
 
       </section>
 
+  <!-- =====================================================
+       ESCADA DE ESTAGIÁRIOS POR DIREÇÃO / DEPARTAMENTO
+       (reutilizada no dashboard e na secção de departamentos)
+       ===================================================== -->
+  <ng-template #escadaEstagiarios>
+
+      <section
+        class="escada-painel"
+        aria-label="Estagiários por direção e departamento"
+      >
+
+        <header class="escada-cabecalho">
+
+          <div>
+            <h2>Estagiários por direção e departamento</h2>
+
+            <p>
+              Número de estagiários registados no sistema. A barra mais
+              alta é a direção ou departamento com mais estagiários.
+            </p>
+          </div>
+
+          <div class="escada-total">
+            <span>Total de estagiários</span>
+
+            <strong>
+              @if (carregandoEstagiariosDepartamento()) {
+                …
+              } @else {
+                {{ totalEstagiariosDepartamento() }}
+              }
+            </strong>
+          </div>
+
+        </header>
+
+        @if (erroEstagiariosDepartamento()) {
+          <div class="mensagem-erro faixa" role="alert">
+            {{ erroEstagiariosDepartamento() }}
+          </div>
+        }
+
+        @if (carregandoEstagiariosDepartamento()) {
+
+          <p class="escada-vazio">
+            A carregar estagiários por departamento…
+          </p>
+
+        } @else if (escadaDepartamentos().length === 0) {
+
+          <p class="escada-vazio">
+            Ainda não existem estagiários registados no sistema.
+          </p>
+
+        } @else {
+
+          <div class="escada">
+
+            @for (item of escadaDepartamentos(); track item.nome) {
+
+              <article
+                class="escada-item"
+                [class.escada-item-destaque]="item.destaque"
+              >
+
+                <span class="escada-valor">
+                  {{ item.total_estagiarios }}
+                </span>
+
+                <div class="escada-pista">
+                  <div
+                    class="escada-barra"
+                    [style.height.%]="item.altura"
+                    [class.escada-barra-vazia]="
+                      item.total_estagiarios === 0
+                    "
+                    [attr.title]="
+                      item.nome + ': ' +
+                      item.total_estagiarios +
+                      ' estagiário(s)'
+                    "
+                  >
+                    @for (
+                      segmento of item.segmentos;
+                      track segmento.estado
+                    ) {
+                      <span
+                        class="escada-segmento"
+                        [style.background]="segmento.cor"
+                        [style.flex-grow]="segmento.quantidade"
+                        [attr.title]="
+                          segmento.etiqueta + ': ' +
+                          segmento.quantidade
+                        "
+                      ></span>
+                    }
+                  </div>
+
+                </div>
+
+                <span class="escada-nome" [attr.title]="item.nome">
+                  {{ item.nome }}
+                </span>
+
+              </article>
+
+            }
+
+          </div>
+
+          <ul class="escada-legenda">
+            @for (entrada of legendaEscada(); track entrada.estado) {
+              <li class="escada-legenda-item">
+                <span
+                  class="escada-legenda-cor"
+                  aria-hidden="true"
+                  [style.background]="entrada.cor"
+                ></span>
+
+                <span class="escada-legenda-texto">
+                  {{ entrada.etiqueta }}
+                  <strong>{{ entrada.total }}</strong>
+                </span>
+              </li>
+            }
+          </ul>
+
+        }
+
+      </section>
+
+  </ng-template>
+
+      <ng-container
+        [ngTemplateOutlet]="escadaEstagiarios"
+      ></ng-container>
+
     </section>
 
 
@@ -598,6 +735,10 @@
           </div>
 
         </article>
+
+        <ng-container
+          [ngTemplateOutlet]="escadaEstagiarios"
+        ></ng-container>
 
       }
 
@@ -1002,6 +1143,47 @@
         <input id="data-fim-estagio" type="date" readonly
           [value]="fimEstagioFormulario()" />
 
+        <label for="dia-limite-relatorio">
+          Dia limite de entrega do relatório (1 a 28)
+        </label>
+        <input id="dia-limite-relatorio" type="number" min="1" max="28" step="1"
+          [value]="diaLimiteRelatorioFormulario()"
+          (input)="alterarDiaLimiteRelatorio($any($event.target).value)" />
+        <p class="texto-ajuda">
+          O relatório de cada mês deve ser entregue até este dia do mês seguinte.
+        </p>
+
+        @if (estagioSelecionado.id_estagio) {
+
+          <label for="plano-estagio">Plano de estágio (PDF ou Word)</label>
+          <input id="plano-estagio" type="file" accept=".pdf,.doc,.docx"
+            [disabled]="aCarregarPlano()"
+            (change)="carregarPlanoEstagio($event)" />
+          <p class="texto-ajuda">
+            O plano fica disponível para o estagiário na área reservada.
+          </p>
+
+          @if (planoEstagioAtual(); as plano) {
+            <p class="texto-ajuda">
+              Plano actual: <strong>{{ plano.nome_arquivo }}</strong>
+              ({{ plano.formato_legivel }}, versão {{ plano.versao }})
+            </p>
+          }
+
+          @if (erroPlanoEstagio()) {
+            <p role="alert" class="mensagem-erro">
+              {{ erroPlanoEstagio() }}
+            </p>
+          }
+
+          @if (sucessoPlanoEstagio()) {
+            <p role="status" class="mensagem-sucesso">
+              {{ sucessoPlanoEstagio() }}
+            </p>
+          }
+
+        }
+
               @if (estadoEstagioFormulario() === 'suspenso') {
 
                 <label for="motivo-suspensao">Motivo da suspensão</label>
@@ -1065,6 +1247,14 @@
         </button>
       </header>
 
+      @if (relatoriosEmAtraso().length > 0) {
+        <div class="relatorios-alerta-atraso" role="alert">
+          <strong>Atenção:</strong>
+          {{ relatoriosEmAtraso().length }}
+          relatório(s) em atraso aguardam entrega ou avaliação.
+        </div>
+      }
+
       <form class="relatorios-filtros"
         (submit)="$event.preventDefault(); pesquisarRelatorios()">
 
@@ -1081,6 +1271,7 @@
           <option value="pendente">Pendente</option>
           <option value="aprovado">Aprovado</option>
           <option value="rejeitado">Rejeitado</option>
+          <option value="em_atraso">Em atraso</option>
         </select>
 
         <select aria-label="Filtrar por tipo"
@@ -1118,25 +1309,28 @@
                 <th>Estagiário</th>
                 <th>E-mail</th>
                 <th>Tipo</th>
-                <th>Período</th>
-                <th>Submetido em</th>
+                <th>Mês</th>
+                <th>Prazo</th>
+                <th>Enviado em</th>
                 <th>Estado</th>
                 <th>Acção</th>
               </tr>
             </thead>
             <tbody>
               @for (relatorio of relatorios(); track relatorio.id_relatorio) {
-                <tr>
+                <tr [class.linha-atraso]="relatorio.em_atraso">
                   <td>{{ relatorio.estagio?.estagiario?.nome || '' }}</td>
                   <td>{{ relatorio.estagio?.estagiario?.email || '' }}</td>
                   <td>{{ relatorio.tipo }}</td>
-                  <td>{{ relatorio.periodo_referencia || '' }}</td>
-                  <td>{{ relatorio.submetido_em || '' }}</td>
+                  <td>{{ relatorio.mes_referencia_legivel || relatorio.periodo_referencia || '' }}</td>
+                  <td>{{ relatorio.prazo_envio_legivel || '' }}</td>
+                  <td>{{ relatorio.data_envio_legivel || 'Ainda não enviado' }}</td>
                   <td>
                     <span class="relatorios-estado-tag"
                       [class.pendente]="relatorio.estado_avaliacao === 'pendente'"
                       [class.aprovado]="relatorio.estado_avaliacao === 'aprovado'"
-                      [class.rejeitado]="relatorio.estado_avaliacao === 'rejeitado'">
+                      [class.rejeitado]="relatorio.estado_avaliacao === 'rejeitado'"
+                      [class.atrasado]="relatorio.estado_avaliacao === 'em_atraso' || relatorio.em_atraso">
                       {{ relatorio.estado_avaliacao }}
                     </span>
                   </td>
@@ -1162,7 +1356,7 @@
           <header class="relatorio-modal-cabecalho">
             <div>
               <span class="relatorio-modal-subtitulo">Relatório de estágio</span>
-              <h2>{{ relatorio.tipo }}  {{ relatorio.periodo_referencia }}</h2>
+              <h2>{{ relatorio.tipo }} · {{ relatorio.mes_referencia_legivel || relatorio.periodo_referencia }}</h2>
               <p>{{ relatorio.estagio?.estagiario?.nome || 'Estagiário' }}</p>
               <p>{{ relatorio.estagio?.estagiario?.email || '' }}</p>
             </div>
@@ -1193,13 +1387,30 @@
 
             <div class="relatorio-detalhe">
               <h3>Data de submissão</h3>
-              <p>{{ relatorio.submetido_em || '' }}</p>
+              <p>{{ relatorio.data_envio_legivel || relatorio.submetido_em || 'Ainda não enviado' }}</p>
             </div>
 
-            @if (relatorio.ficheiro_nome) {
+            <div class="relatorio-detalhe">
+              <h3>Prazo de entrega</h3>
+              <p>
+                {{ relatorio.prazo_envio_legivel || 'Não definido' }}
+                @if (relatorio.em_atraso) {
+                  <span class="relatorios-estado-tag atrasado">Em atraso</span>
+                }
+              </p>
+            </div>
+
+            @if (relatorio.tem_ficheiro) {
               <div class="relatorio-detalhe">
                 <h3>Ficheiro anexado</h3>
                 <p>{{ relatorio.ficheiro_nome }}</p>
+                <button type="button" class="relatorios-botao"
+                  [disabled]="aCarregarFicheiroRelatorio() === relatorio.id_relatorio"
+                  (click)="verFicheiroRelatorio(relatorio)">
+                  {{ aCarregarFicheiroRelatorio() === relatorio.id_relatorio
+                    ? 'A abrir...'
+                    : 'Visualizar relatório' }}
+                </button>
               </div>
             }
 
@@ -1216,11 +1427,11 @@
             }
 
             <label class="relatorio-label" for="comentario-avaliacao">
-              Comentário da avaliação
+              Descrição da avaliação
             </label>
             <textarea id="comentario-avaliacao"
               rows="4"
-              placeholder="Escreve um comentário. É obrigatório ao rejeitar."
+              placeholder="Escreve a descrição. É obrigatória ao recusar o relatório."
               [value]="comentarioAvaliacaoRelatorio()"
               (input)="comentarioAvaliacaoRelatorio.set($any($event.target).value)">
             </textarea>
@@ -1242,17 +1453,21 @@
             <button type="button" class="relatorio-botao-secundario"
               (click)="fecharRelatorio()">Fechar</button>
 
-            <button type="button" class="relatorio-botao-rejeitar"
-              [disabled]="avaliandoRelatorioId() === relatorio.id_relatorio"
-              (click)="avaliarRelatorio('rejeitado')">
-              Rejeitar
-            </button>
+            @if (relatorio.estado_avaliacao === 'aprovado') {
+              <span class="relatorios-sucesso">Relatório já aprovado.</span>
+            } @else {
+              <button type="button" class="relatorio-botao-rejeitar"
+                [disabled]="avaliandoRelatorioId() === relatorio.id_relatorio"
+                (click)="avaliarRelatorio('rejeitado')">
+                Recusar
+              </button>
 
-            <button type="button" class="relatorio-botao-aprovar"
-              [disabled]="avaliandoRelatorioId() === relatorio.id_relatorio"
-              (click)="avaliarRelatorio('aprovado')">
-              Aprovar
-            </button>
+              <button type="button" class="relatorio-botao-aprovar"
+                [disabled]="avaliandoRelatorioId() === relatorio.id_relatorio"
+                (click)="avaliarRelatorio('aprovado')">
+                Aprovar
+              </button>
+            }
           </footer>
         </div>
       </div>

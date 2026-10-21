@@ -74,6 +74,19 @@ Route::middleware('auth:sanctum')->group(function () {
         CandidaturaController::class,
         'estagioAtivo'
     ]);    
+
+    // Área reservada do estagiário com estágio ativo.
+    Route::get('/estagiario/painel', [
+        RelatorioController::class,
+        'painel'
+    ]);
+
+    // Plano de estágio carregado pelo administrador.
+    Route::get('/estagiario/planos/{id}/ficheiro', [
+        RelatorioController::class,
+        'verPlano'
+    ]);
+
     // Relatórios do estágio do utilizador autenticado.
     Route::get('/estagiario/relatorios', [
         RelatorioController::class,
@@ -83,6 +96,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/estagiario/relatorios', [
         RelatorioController::class,
         'guardarRelatorio'
+    ]);
+
+    // Segunda forma de envio: ficheiro em PDF ou Word.
+    Route::post('/estagiario/relatorios/ficheiro', [
+        RelatorioController::class,
+        'carregarRelatorio'
+    ]);
+
+    Route::get('/estagiario/relatorios/{id}/ficheiro', [
+        RelatorioController::class,
+        'verFicheiro'
+    ]);
+
+    // Relatórios fora do prazo de entrega.
+    Route::get('/estagiario/relatorios-atraso', [
+        RelatorioController::class,
+        'atrasos'
     ]);
 
 
@@ -135,6 +165,27 @@ Route::middleware('auth:sanctum')->group(function () {
                 AdminRelatorioController::class,
                 'avaliar'
             ]);
+
+            Route::get('/relatorios/atraso', [
+                AdminRelatorioController::class,
+                'atrasos'
+            ]);
+
+            Route::get('/relatorios/{id}/ficheiro', [
+                RelatorioController::class,
+                'verFicheiro'
+            ]);
+
+            Route::post('/planos-estagio', [
+                RelatorioController::class,
+                'carregarPlano'
+            ]);
+
+            Route::get('/estagios/{id}/plano', [
+                RelatorioController::class,
+                'planoDoEstagio'
+            ]);
+
             // Painel do administrador.
             Route::get('/dashboard', [
                 AdminController::class,
@@ -171,6 +222,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/estagiarios/{idCandidatura}/estado', [
                 AdminController::class,
                 'atualizarEstadoEstagio'
+            ]);
+
+            // Estagiários por direção/departamento (dashboard em escada).
+            Route::get('/estagiarios-por-departamento', [
+                AdminController::class,
+                'estagiariosPorDepartamento'
             ]);
 
             // Gestão de departamentos.

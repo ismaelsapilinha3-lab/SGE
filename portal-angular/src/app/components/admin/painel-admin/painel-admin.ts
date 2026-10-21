@@ -5,6 +5,7 @@ import {
   OnDestroy,
   OnInit,
   PLATFORM_ID,
+  computed,
   inject,
   signal
 } from '@angular/core';
@@ -27,6 +28,7 @@ import {
   DepartamentoDados,
   Documento,
   Estagiario,
+  EstagiariosPorDepartamentoItem,
   EstagiariosResponse,
   RelatorioAdmin,
   RelatoriosAdminResponse
@@ -98,6 +100,124 @@ export class PainelAdmin implements OnInit, OnDestroy {
     aprovadas: 0,
     recusadas: 0
   });
+
+
+  // ============================================================
+  // ESTAGIÁRIOS POR DEPARTAMENTO (DASHBOARD EM ESCADA)
+  // ============================================================
+
+  estagiariosDepartamento = signal<EstagiariosPorDepartamentoItem[]>([]);
+
+  totalEstagiariosDepartamento = signal(0);
+
+  estadosEscada = signal<string[]>([]);
+
+  totaisPorEstado = signal<Record<string, number>>({});
+
+  carregandoEstagiariosDepartamento = signal(false);
+
+  erroEstagiariosDepartamento = signal('');
+
+  /** Etiqueta e cor de cada estado do estágio na escada. */
+  private readonly configuracaoEstados: Record<
+    string,
+    { etiqueta: string; cor: string }
+  > = {
+    sem_estagio: { etiqueta: 'Aprovados por iniciar', cor: '#7A8AA8' },
+    ativo: { etiqueta: 'Estágio ativo', cor: '#137A47' },
+    suspenso: { etiqueta: 'Estágio suspenso', cor: '#FF6B00' },
+    concluido: { etiqueta: 'Concluído', cor: '#1A3D6B' },
+    cancelado: { etiqueta: 'Cancelado', cor: '#C4323F' }
+  };
+
+  /** Ordem dos estados dentro da barra, de baixo para cima. */
+  private readonly ordemEstados = [
+    'sem_estagio',
+    'ativo',
+    'suspenso',
+    'concluido',
+    'cancelado'
+  ];
+
+  /**
+   * Escada: departamentos ordenados do maior para o menor, com a
+   * altura da barra em percentagem e a barra dividida por estado
+   * do estágio.
+   */
+  escadaDepartamentos = computed(() => {
+    const lista = [...this.estagiariosDepartamento()].sort(
+      (a, b) =>
+        b.total_estagiarios - a.total_estagiarios ||
+        a.nome.localeCompare(b.nome)
+    );
+
+    const maior = Math.max(
+      0,
+      ...lista.map(item => item.total_estagiarios)
+    );
+
+    return lista.map(item => {
+      /*
+       * Estados extra (caso apareça algum não previsto) vão para o
+       * topo, para não desaparecerem da barra.
+       */
+      const estados = [
+        ...this.ordemEstados,
+        ...Object.keys(item.por_estado ?? {}).filter(
+          estado => !this.ordemEstados.includes(estado)
+        )
+      ];
+
+      /* Invertido: o template desenha de cima para baixo. */
+      const segmentos = estados
+        .slice()
+        .reverse()
+        .map(estado => ({
+          estado,
+          quantidade: Number(item.por_estado?.[estado] ?? 0),
+          etiqueta: this.etiquetaEstado(estado),
+          cor: this.corEstado(estado)
+        }))
+        .filter(segmento => segmento.quantidade > 0);
+
+      return {
+        ...item,
+        altura:
+          maior === 0
+            ? 0
+            : Math.max(
+                10,
+                Math.round((item.total_estagiarios / maior) * 100)
+              ),
+        segmentos,
+        destaque: maior > 0 && item.total_estagiarios === maior
+      };
+    });
+  });
+
+  /** Legenda da escada, com o total de estagiários por estado. */
+  legendaEscada = computed(() => {
+    const totais = this.totaisPorEstado();
+
+    const estados = this.estadosEscada().length > 0
+      ? this.estadosEscada()
+      : this.ordemEstados;
+
+    return estados.map(estado => ({
+      estado,
+      etiqueta: this.etiquetaEstado(estado),
+      cor: this.corEstado(estado),
+      total: Number(totais[estado] ?? 0)
+    }));
+  });
+
+  private etiquetaEstado(estado: string): string {
+    return this.configuracaoEstados[estado]?.etiqueta ?? estado;
+  }
+
+  private corEstado(estado: string): string {
+    return this.configuracaoEstados[estado]?.cor ?? '#7A8AA8';
+  }
 
 
   // ============================================================
@@ -276,12 +396,41 @@ export class PainelAdmin implements OnInit, OnDestroy {
   pesquisaRelatorios = signal('');
   estadoRelatorios = signal('');
   tipoRelatorios = signal('');
+  relatoriosEmAtraso = signal<RelatorioAdmin[]>([]);
   relatorioSelecionado = signal<RelatorioAdmin | null>(null);
   comentarioAvaliacaoRelatorio = signal('');
   avaliandoRelatorioId = signal<number | null>(null);
   erroAvaliacaoRelatorio = signal('');
+
+  /*
+   * Ficheiro do relatório mostrado no painel.
+   */
+  aCarregarFicheiroRelatorio = signal<number | null>(null);
+
+  /*
+   * Plano de estágio do estagiário em gestão.
+   */
+  planoEstagioAtual = signal<{
+    id_plano_estagio: number;
+    nome_arquivo: string;
+    formato_legivel: string;
+    versao: number;
+    data_upload_legivel?: string | null;
+  } | null>(null);
+
+  aCarregarPlano = signal(false);
+  erroPlanoEstagio = signal('');
+  sucessoPlanoEstagio = signal('');
+
+  /*
+   * Dia limite de entrega dos relatórios.
+   */
+  diaLimiteRelatorioFormulario = signal(5);
+
   ngOnInit(): void {
     this.carregarDashboard();
+
+    this.carregarEstagiariosPorDepartamento();
 
     this.carregarDepartamentos();
 
@@ -322,6 +471,50 @@ export class PainelAdmin implements OnInit, OnDestroy {
         );
       }
     });
+
+    this.subscriptions.add(sub);
+  }
+
+
+  // ============================================================
+  // CARREGAR ESTAGIÁRIOS POR DEPARTAMENTO
+  // ============================================================
+
+  carregarEstagiariosPorDepartamento(): void {
+    this.carregandoEstagiariosDepartamento.set(true);
+
+    this.erroEstagiariosDepartamento.set('');
+
+    const sub = this.adminService
+      .estagiariosPorDepartamento()
+      .subscribe({
+        next: (dados) => {
+          this.estagiariosDepartamento.set(dados.departamentos);
+
+          this.estadosEscada.set(dados.estados ?? []);
+
+          this.totaisPorEstado.set(dados.totais_estado ?? {});
+
+          this.totalEstagiariosDepartamento.set(
+            dados.total_estagiarios
+          );
+
+          this.carregandoEstagiariosDepartamento.set(false);
+        },
+
+        error: (erro: unknown) => {
+          console.error(
+            'Erro ao carregar estagiários por departamento:',
+            erro
+          );
+
+          this.carregandoEstagiariosDepartamento.set(false);
+
+          this.erroEstagiariosDepartamento.set(
+            'Não foi possível carregar os estagiários por departamento.'
+          );
+        }
+      });
 
     this.subscriptions.add(sub);
   }
@@ -531,6 +724,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
             );
 
             this.carregarDepartamentos();
+
+            this.carregarEstagiariosPorDepartamento();
           },
 
           error: (erro: unknown) => {
@@ -569,6 +764,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
         );
 
         this.carregarDepartamentos();
+
+        this.carregarEstagiariosPorDepartamento();
       },
 
       error: (erro: unknown) => {
@@ -762,11 +959,15 @@ export class PainelAdmin implements OnInit, OnDestroy {
   atualizarPainel(): void {
     this.erroDashboard.set('');
 
+    this.erroEstagiariosDepartamento.set('');
+
     this.erroCandidaturas.set('');
 
     this.erroDepartamentos.set('');
 
     this.carregarDashboard();
+
+    this.carregarEstagiariosPorDepartamento();
 
     this.carregarDepartamentos();
 
@@ -1161,6 +1362,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
           this.carregarDashboard();
 
+          this.carregarEstagiariosPorDepartamento();
+
           this.carregarCandidaturas();
         },
 
@@ -1243,6 +1446,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
           );
 
           this.carregarDashboard();
+
+          this.carregarEstagiariosPorDepartamento();
 
           this.carregarCandidaturas();
         },
@@ -1470,6 +1675,17 @@ export class PainelAdmin implements OnInit, OnDestroy {
     });
 
     this.subscriptions.add(sub);
+
+    const subAtrasos = this.adminService.listarRelatoriosAtraso().subscribe({
+      next: (resposta) => {
+        this.relatoriosEmAtraso.set(resposta.data ?? []);
+      },
+      error: () => {
+        this.relatoriosEmAtraso.set([]);
+      }
+    });
+
+    this.subscriptions.add(subAtrasos);
   }
 
   pesquisarRelatorios(): void {
@@ -1737,9 +1953,196 @@ export class PainelAdmin implements OnInit, OnDestroy {
     );
     this.motivoSuspensaoFormulario.set(estagiario.motivo_suspensao ?? '');
 
+    this.diaLimiteRelatorioFormulario.set(
+      estagiario.dia_limite_relatorio ?? 5
+    );
+
+    this.planoEstagioAtual.set(this.planosPorEstagio[estagiario.id_estagio ?? -1] ?? null);
+    this.carregarPlanoDoEstagiario(estagiario);
+
+    this.erroPlanoEstagio.set('');
+    this.sucessoPlanoEstagio.set('');
+
     this.erroGestaoEstagio.set('');
 
     this.sucessoGestaoEstagio.set('');
+  }
+
+
+  // ============================================================
+  // DIA LIMITE DE ENTREGA DOS RELATORIOS
+  // ============================================================
+
+  alterarDiaLimiteRelatorio(valor: string): void {
+    const numero = Number(valor);
+
+    if (Number.isNaN(numero)) {
+      this.diaLimiteRelatorioFormulario.set(5);
+
+      return;
+    }
+
+    this.diaLimiteRelatorioFormulario.set(
+      Math.min(28, Math.max(1, Math.trunc(numero)))
+    );
+  }
+
+
+  // ============================================================
+  // PLANO DE ESTAGIO DO ESTAGIARIO EM GESTAO
+  // ============================================================
+
+  private readonly planosPorEstagio: Record<
+    number,
+    {
+      id_plano_estagio: number;
+      nome_arquivo: string;
+      formato_legivel: string;
+      versao: number;
+      data_upload_legivel?: string | null;
+    }
+  > = {};
+
+  private carregarPlanoDoEstagiario(estagiario: Estagiario): void {
+    if (!estagiario.id_estagio) {
+      this.planoEstagioAtual.set(null);
+
+      return;
+    }
+
+    this.adminService.obterPlanoEstagio(estagiario.id_estagio).subscribe({
+      next: (plano) => {
+        this.planoEstagioAtual.set(plano);
+
+        if (plano) {
+          this.planosPorEstagio[estagiario.id_estagio as number] = plano;
+        } else {
+          delete this.planosPorEstagio[estagiario.id_estagio as number];
+        }
+      },
+      error: () => {
+        this.planoEstagioAtual.set(null);
+      }
+    });
+  }
+
+  carregarPlanoEstagio(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    const ficheiro = input.files?.[0];
+
+    input.value = '';
+
+    const estagiario = this.estagioEmGestao();
+
+    if (!ficheiro || !estagiario?.id_estagio || this.aCarregarPlano()) {
+      return;
+    }
+
+    const extensao = ficheiro.name.split('.').pop()?.toLowerCase();
+
+    if (!extensao || !['pdf', 'doc', 'docx'].includes(extensao)) {
+      this.erroPlanoEstagio.set(
+        'Selecciona um documento PDF ou Word (DOC/DOCX).'
+      );
+      this.sucessoPlanoEstagio.set('');
+
+      return;
+    }
+
+    if (ficheiro.size > 10 * 1024 * 1024) {
+      this.erroPlanoEstagio.set(
+        'O plano não pode ultrapassar 10 MB.'
+      );
+      this.sucessoPlanoEstagio.set('');
+
+      return;
+    }
+
+    this.aCarregarPlano.set(true);
+    this.erroPlanoEstagio.set('');
+    this.sucessoPlanoEstagio.set('');
+
+    const sub = this.adminService
+      .carregarPlanoEstagio(estagiario.id_estagio, ficheiro)
+      .subscribe({
+        next: (resposta) => {
+          this.aCarregarPlano.set(false);
+
+          this.sucessoPlanoEstagio.set(resposta.message);
+
+          this.planoEstagioAtual.set(resposta.data);
+
+          this.planosPorEstagio[estagiario.id_estagio as number] =
+            resposta.data;
+        },
+        error: (erro: unknown) => {
+          console.error('Erro ao carregar o plano de estágio:', erro);
+
+          this.aCarregarPlano.set(false);
+
+          const resposta = erro as {
+            error?: { message?: string };
+          };
+
+          this.erroPlanoEstagio.set(
+            resposta.error?.message ||
+              'Não foi possível carregar o plano de estágio.'
+          );
+        }
+      });
+
+    this.subscriptions.add(sub);
+  }
+
+
+  // ============================================================
+  // VISUALIZAR O FICHEIRO DE UM RELATORIO
+  // ============================================================
+
+  verFicheiroRelatorio(relatorio: RelatorioAdmin): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    const janela = window.open('', '_blank');
+
+    if (!janela) {
+      this.erroAvaliacaoRelatorio.set(
+        'O navegador bloqueou a abertura do ficheiro.'
+      );
+
+      return;
+    }
+
+    this.aCarregarFicheiroRelatorio.set(relatorio.id_relatorio);
+
+    const sub = this.adminService
+      .visualizarFicheiroRelatorio(relatorio.id_relatorio)
+      .subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+
+          janela.location.href = url;
+
+          window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+          this.aCarregarFicheiroRelatorio.set(null);
+        },
+        error: (erro: unknown) => {
+          console.error('Erro ao abrir o ficheiro do relatório:', erro);
+
+          janela.close();
+
+          this.aCarregarFicheiroRelatorio.set(null);
+
+          this.erroAvaliacaoRelatorio.set(
+            'Não foi possível abrir o ficheiro do relatório.'
+          );
+        }
+      });
+
+    this.subscriptions.add(sub);
   }
 
 
@@ -1821,6 +2224,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
           data_fim_prevista: fim || undefined,
 
+          dia_limite_relatorio: this.diaLimiteRelatorioFormulario(),
+
           motivo_suspensao: estado === 'suspenso'
             ? motivo
             : undefined
@@ -1837,6 +2242,10 @@ export class PainelAdmin implements OnInit, OnDestroy {
           this.estagioEmGestao.set(null);
 
           this.carregarEstagiarios();
+
+          this.carregarEstagiariosPorDepartamento();
+
+          this.carregarDepartamentos();
         },
 
         error: (erro: unknown) => {

@@ -286,6 +286,189 @@
 .indicador-valor { font-size: 28px; line-height: 1; font-weight: 800; color: var(--azul); }
 
 /* =========================================================
+   ESCADA DE ESTAGIÁRIOS POR DIREÇÃO / DEPARTAMENTO
+   ========================================================= */
+
+.escada-painel {
+  margin: 0 6% 28px;
+  padding: 22px 22px 26px;
+  background: #fff;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+
+/* Dentro da secção de departamentos a escada já vive num cartão. */
+.area-departamentos .escada-painel {
+  margin: 20px 24px 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.escada-cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.escada-cabecalho h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--azul);
+}
+
+.escada-cabecalho p {
+  margin: 0;
+  max-width: 620px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--suave);
+}
+
+.escada-total {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--azul-claro);
+}
+
+.escada-total span { font-size: 11px; font-weight: 600; color: var(--suave); }
+.escada-total strong { font-size: 24px; line-height: 1; font-weight: 800; color: var(--azul); }
+
+.escada-vazio {
+  margin: 18px 0 0;
+  font-size: 13px;
+  color: var(--cinza);
+}
+
+/* Pista: base comum onde as barras assentam (efeito de escada). */
+.escada {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 0 4px 8px;
+  border-bottom: 2px solid var(--azul-linha);
+}
+
+.escada-item {
+  flex: 1 1 0;
+  min-width: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.escada-valor {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--azul-medio);
+}
+
+.escada-pista {
+  width: 100%;
+  height: 220px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(to top, var(--azul-claro), rgba(238, 243, 249, 0.25));
+}
+
+.escada-barra {
+  width: 72%;
+  max-width: 70px;
+  min-height: 6px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(180deg, var(--azul-medio), var(--azul));
+  box-shadow: 0 -2px 10px rgba(10, 37, 64, 0.12);
+  transition: height 0.35s ease;
+}
+
+/* Cada fatia da barra corresponde a um estado do estágio. */
+.escada-segmento {
+  width: 100%;
+  flex-basis: 0;
+  flex-shrink: 1;
+  flex-grow: 0;
+  min-height: 0;
+}
+
+.escada-barra-vazia {
+  background: repeating-linear-gradient(
+    135deg,
+    #E7ECF3,
+    #E7ECF3 6px,
+    #F4F7FB 6px,
+    #F4F7FB 12px
+  );
+  box-shadow: none;
+}
+
+/* O degrau mais alto fica destacado. */
+.escada-item-destaque .escada-valor { color: var(--laranja); }
+
+.escada-item-destaque .escada-barra:not(.escada-barra-vazia) {
+  box-shadow:
+    0 0 0 2px rgba(255, 107, 0, 0.45),
+    0 -2px 10px rgba(10, 37, 64, 0.12);
+}
+
+/* Legenda das cores (estado do estágio). */
+.escada-legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.escada-legenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--suave);
+}
+
+.escada-legenda-cor {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
+.escada-legenda-item strong {
+  font-size: 13px;
+  color: var(--azul);
+}
+
+.escada-nome {
+  max-width: 140px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--suave);
+  overflow-wrap: anywhere;
+}
+
+/* =========================================================
    MENSAGENS
    ========================================================= */
 
@@ -1147,6 +1330,8 @@ a:focus-visible { outline: 2px solid var(--laranja); outline-offset: 2px; }
   .indicadores { margin: -26px 4% 24px; }
   .area-candidaturas,
   .area-departamentos { margin: 24px 4% 0; }
+  .escada-painel { margin: 0 4% 24px; }
+  .area-departamentos .escada-painel { margin: 20px 16px 0; }
   .mensagem-erro.faixa { margin: 20px 4% 0; }
   .cabecalho-secao { flex-direction: column; align-items: flex-start; padding: 18px 16px; }
   .area-departamentos > *:not(.cabecalho-secao):not(.lista-departamentos) { margin-left: 16px; margin-right: 16px; }
@@ -1183,6 +1368,11 @@ a:focus-visible { outline: 2px solid var(--laranja); outline-offset: 2px; }
   .botao-guardar-departamento { width: 100%; }
   .documento-preview-body { min-height: 320px; }
   .pdf-documento-preview { height: 65vh; }
+  .escada-cabecalho { flex-direction: column; gap: 12px; }
+  .escada-total { align-items: flex-start; }
+  .escada-pista { height: 160px; }
+  .escada-item { min-width: 70px; }
+  .escada-nome { max-width: 96px; }
   .rodape-painel { flex-direction: column; justify-content: center; padding: 10px 4%; }
 }
 /* ==========================================================
@@ -1436,6 +1626,29 @@ a:focus-visible { outline: 2px solid var(--laranja); outline-offset: 2px; }
 .relatorios-estado-tag.rejeitado {
   background: #ffe0e0;
   color: #a12626;
+}
+
+.relatorios-estado-tag.atrasado {
+  background: #ffe8d6;
+  color: #b45309;
+}
+
+.relatorios-tabela tbody tr.linha-atraso {
+  background: #fff8f1;
+}
+
+.relatorios-tabela tbody tr.linha-atraso:hover {
+  background: #fff1e3;
+}
+
+.relatorios-alerta-atraso {
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  border-left: 5px solid #d97706;
+  border-radius: 10px;
+  background: #fff7ed;
+  color: #92400e;
+  line-height: 1.6;
 }
 
 .relatorios-estado,

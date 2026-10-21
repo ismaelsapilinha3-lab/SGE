@@ -16,163 +16,571 @@
   </header>
 
   <main>
-    <section class="cartao-boas-vindas">
-      <h2>Bem-vindo à tua área de estágio</h2>
-      <p>
-        Aqui poderás consultar as informações do teu estágio,
-        acompanhar as actividades e aceder aos documentos disponíveis.
-      </p>
-    </section>
-
     @if (carregando()) {
       <p class="aviso" role="status">A carregar os dados do estágio...</p>
     } @else if (erro()) {
       <p class="aviso" role="alert">{{ erro() }}</p>
-    } @else if (estagio(); as dados) {
-      <section class="cartoes">
-        <article class="cartao">
-          <h3>O meu estágio</h3>
-          <p><strong>Estado:</strong> {{ dados.estado_estagio }}</p>
-          <p><strong>Data de início:</strong> {{ dados.data_inicio || 'Não definida' }}</p>
-          <p><strong>Fim previsto:</strong> {{ dados.data_fim_prevista || 'Não definido' }}</p>
-          <p><strong>Referência:</strong> {{ dados.id_estagio }}</p>
-        </article>
+    } @else if (painel(); as dados) {
 
-        <article class="cartao">
-          <h3>Actividades</h3>
-          <p>O acompanhamento das actividades será apresentado nesta área.</p>
-        </article>
+      <!-- =====================================================
+           CABEÇALHO DO ESTAGIÁRIO (resumo compacto)
+           ===================================================== -->
+      <section class="resumo-estagiario">
+        <div class="resumo-identidade">
+          <h2>{{ dados.candidatura?.nome || 'Estagiário' }}</h2>
+          <p class="texto-suave">
+            {{ dados.candidatura?.curso || 'Curso não indicado' }}
+            @if (dados.candidatura?.universidade) {
+              &middot; {{ dados.candidatura?.universidade }}
+            }
+          </p>
+        </div>
 
-        <article class="cartao">
-          <h3>Documentos</h3>
-          <p>Os documentos do estágio serão apresentados nesta área.</p>
-        </article>
+        <div class="resumo-accoes">
+          <span class="etiqueta-estado"
+            [class.etiqueta-ativo]="dados.estagio.estado_estagio === 'ativo'"
+            [class.etiqueta-suspenso]="dados.estagio.estado_estagio === 'suspenso'"
+            [class.etiqueta-concluido]="dados.estagio.estado_estagio === 'concluido'">
+            {{ dados.estagio.estado_estagio_legivel }}
+          </span>
+
+          @if (dados.departamento; as departamento) {
+            <span class="etiqueta-suave">{{ departamento.nome }}</span>
+          }
+        </div>
       </section>
-    }
 
-    <section id="secao-relatorios" class="cartao secao-relatorios">
-      <div class="cabecalho-relatorios">
-        <div>
-          <h2>Relatórios de estágio</h2>
-          <p>Regista as actividades e os resultados do teu estágio.</p>
-        </div>
-      </div>
-
-      <form class="formulario-relatorio"
-        (submit)="$event.preventDefault(); submeterRelatorio()">
-
-        <div class="campo-relatorio">
-          <label for="tipo-relatorio">Tipo de relatório</label>
-          <select id="tipo-relatorio"
-            [value]="tipoRelatorio()"
-            (change)="tipoRelatorio.set($any($event.target).value)">
-            <option value="semanal">Semanal</option>
-            <option value="mensal">Mensal</option>
-            <option value="final">Final</option>
-          </select>
-        </div>
-
-        <div class="campo-relatorio">
-          <label for="periodo-relatorio">Período de referência</label>
-          <input id="periodo-relatorio"
-            type="date"
-            [value]="periodoReferencia()"
-            (input)="periodoReferencia.set($any($event.target).value)"
-            required />
-        </div>
-
-        <div class="campo-relatorio campo-completo">
-          <label for="atividades-relatorio">Actividades realizadas</label>
-          <textarea id="atividades-relatorio"
-            rows="4"
-            minlength="10"
-            placeholder="Descreve as actividades realizadas..."
-            [value]="atividadesRelatorio()"
-            (input)="atividadesRelatorio.set($any($event.target).value)"
-            required></textarea>
-        </div>
-
-        <div class="campo-relatorio campo-completo">
-          <label for="resultados-relatorio">Resultados alcançados</label>
-          <textarea id="resultados-relatorio"
-            rows="4"
-            minlength="10"
-            placeholder="Indica os resultados alcançados..."
-            [value]="resultadosRelatorio()"
-            (input)="resultadosRelatorio.set($any($event.target).value)"
-            required></textarea>
-        </div>
-
-        <div class="campo-relatorio campo-completo">
-          <label for="constrangimentos-relatorio">Constrangimentos</label>
-          <textarea id="constrangimentos-relatorio"
-            rows="3"
-            placeholder="Dificuldades encontradas (opcional)"
-            [value]="constrangimentosRelatorio()"
-            (input)="constrangimentosRelatorio.set($any($event.target).value)"></textarea>
-        </div>
-
-        <div class="campo-relatorio campo-completo">
-          <label for="objetivos-relatorio">Objectivos seguintes</label>
-          <textarea id="objetivos-relatorio"
-            rows="3"
-            placeholder="Indica os próximos objectivos (opcional)"
-            [value]="objetivosRelatorio()"
-            (input)="objetivosRelatorio.set($any($event.target).value)"></textarea>
-        </div>
-
-        @if (mensagemRelatorio()) {
-          <p class="mensagem-sucesso" role="status">
-            {{ mensagemRelatorio() }}
-          </p>
-        }
-
-        @if (erroRelatorio()) {
-          <p class="mensagem-erro" role="alert">
-            {{ erroRelatorio() }}
-          </p>
-        }
-
-        <button class="botao-submeter-relatorio"
-          type="submit"
-          [disabled]="submetendoRelatorio()">
-          {{ submetendoRelatorio() ? 'A submeter...' : 'Submeter relatório' }}
-        </button>
-      </form>
-
-      <div class="lista-relatorios">
-        <h3>Relatórios enviados</h3>
-
-        @if (carregandoRelatorios()) {
-          <p class="aviso">A carregar relatórios...</p>
-        } @else if (relatorios().length === 0) {
-          <p class="aviso">Ainda não submeteste nenhum relatório.</p>
-        } @else {
-          @for (relatorio of relatorios(); track relatorio.id_relatorio) {
-            <article class="relatorio-enviado">
-              <div>
-                <strong>{{ relatorio.tipo | uppercase }}</strong>
-                <span>Período: {{ relatorio.periodo_referencia }}</span>
+      <!-- =====================================================
+           AVISOS (só aparecem quando existem)
+           ===================================================== -->
+      @if (alertas().length > 0) {
+        <section class="alertas" aria-label="Avisos">
+          @for (alerta of alertas(); track $index) {
+            <article class="alerta"
+              [class.alerta-atraso]="alerta.tipo === 'atraso'"
+              [class.alerta-recusado]="alerta.tipo === 'rejeitado'"
+              [class.alerta-notificacao]="alerta.tipo === 'notificacao'"
+              role="alert">
+              <div class="alerta-cabecalho">
+                <strong>{{ alerta.titulo }}</strong>
+                @if (alerta.data) {
+                  <span class="alerta-data">{{ alerta.data }}</span>
+                }
               </div>
-              <p><strong>Actividades:</strong> {{ relatorio.atividades }}</p>
-              <p><strong>Resultados:</strong> {{ relatorio.resultados }}</p>
-              @if (relatorio.submetido_em) {
-                <small>Submetido em: {{ relatorio.submetido_em }}</small>
-              }
+              <p>{{ alerta.mensagem }}</p>
             </article>
           }
-        }
+        </section>
+      }
 
-        <button type="button"
-          class="botao-atualizar-relatorios"
-          [disabled]="carregandoRelatorios()"
-          (click)="carregarRelatorios()">
-          Actualizar lista
-        </button>
-      </div>
-    </section>
-    <p class="aviso">
-      As informações do estágio são consultadas através do Laravel.
-    </p>
+      <!-- =====================================================
+           SEPARADORES
+           ===================================================== -->
+      <nav class="separadores" aria-label="Secções da área reservada">
+        @for (separador of separadores; track separador.id) {
+          <button type="button"
+            class="separador"
+            [class.activo]="separadorAtivo() === separador.id"
+            [attr.aria-current]="separadorAtivo() === separador.id ? 'page' : null"
+            (click)="selecionarSeparador(separador.id)">
+            {{ separador.rotulo }}
+
+            @switch (separador.id) {
+              @case ('relatorios') {
+                <span class="separador-badge">{{ totalRelatorios }}</span>
+              }
+              @case ('documentos') {
+                <span class="separador-badge">{{ totalDocumentos }}</span>
+              }
+            }
+          </button>
+        }
+      </nav>
+
+      <!-- =====================================================
+           SEPARADOR: VISÃO GERAL
+           ===================================================== -->
+      @if (separadorAtivo() === 'geral') {
+        <div class="painel-separador">
+          <section class="cartoes">
+            <article class="cartao">
+              <h3>O meu estágio</h3>
+              <p>
+                <strong>Estado:</strong>
+                <span class="etiqueta-estado"
+                  [class.etiqueta-ativo]="dados.estagio.estado_estagio === 'ativo'"
+                  [class.etiqueta-suspenso]="dados.estagio.estado_estagio === 'suspenso'"
+                  [class.etiqueta-concluido]="dados.estagio.estado_estagio === 'concluido'">
+                  {{ dados.estagio.estado_estagio_legivel }}
+                </span>
+              </p>
+              <p><strong>Data de início:</strong> {{ formatarData(dados.estagio.data_inicio) }}</p>
+              <p><strong>Fim previsto:</strong> {{ formatarData(dados.estagio.data_fim_prevista) }}</p>
+              @if (dados.estagio.duracao_meses) {
+                <p><strong>Duração:</strong> {{ dados.estagio.duracao_meses }} meses</p>
+              }
+              <p>
+                <strong>Dia limite do relatório:</strong>
+                dia {{ dados.estagio.dia_limite_relatorio }} de cada mês
+              </p>
+              @if (dados.estagio.motivo_suspensao) {
+                <p class="texto-perigo">
+                  <strong>Motivo da suspensão:</strong>
+                  {{ dados.estagio.motivo_suspensao }}
+                </p>
+              }
+            </article>
+
+            <article class="cartao">
+              <h3>Departamento / Direcção</h3>
+              @if (dados.departamento; as departamento) {
+                <p><strong>{{ departamento.nome }}</strong></p>
+                @if (departamento.descricao) {
+                  <p class="descricao-departamento">{{ departamento.descricao }}</p>
+                } @else {
+                  <p class="texto-suave">Sem descrição registada.</p>
+                }
+              } @else {
+                <p class="texto-suave">Departamento não associado.</p>
+              }
+            </article>
+
+            <article class="cartao">
+              <h3>Resumo</h3>
+              <p><strong>Relatórios:</strong> {{ totalRelatorios }}</p>
+              <p><strong>Documentos:</strong> {{ totalDocumentos }}</p>
+              <p>
+                <strong>Plano de estágio:</strong>
+                {{ plano ? 'Disponível' : 'Ainda não disponibilizado' }}
+              </p>
+              <p>
+                <strong>Avisos:</strong>
+                {{ totalAvisos === 0 ? 'Sem avisos' : totalAvisos }}
+              </p>
+            </article>
+          </section>
+
+          <section class="cartao secao-dados">
+            <div class="cabecalho-seccao">
+              <h2>Os meus dados</h2>
+              <p>Informações que submeteste na tua candidatura.</p>
+            </div>
+
+            @if (dados.candidatura; as candidatura) {
+              <dl class="grelha-dados">
+                <div><dt>Nome</dt><dd>{{ candidatura.nome }}</dd></div>
+                <div><dt>BI</dt><dd>{{ candidatura.bi }}</dd></div>
+                <div><dt>Contacto</dt><dd>{{ candidatura.contacto }}</dd></div>
+                <div><dt>Email</dt><dd>{{ candidatura.email }}</dd></div>
+                <div><dt>Data de nascimento</dt><dd>{{ formatarData(candidatura.nascimento) }}</dd></div>
+                <div><dt>Sexo</dt><dd>{{ candidatura.sexo }}</dd></div>
+                <div><dt>Curso</dt><dd>{{ candidatura.curso }}</dd></div>
+                <div><dt>Universidade</dt><dd>{{ candidatura.universidade }}</dd></div>
+                <div><dt>Estado da candidatura</dt><dd>{{ candidatura.estado }}</dd></div>
+              </dl>
+            } @else {
+              <p class="texto-suave">Não foi possível carregar os dados da candidatura.</p>
+            }
+          </section>
+        </div>
+      }
+
+      <!-- =====================================================
+           SEPARADOR: RELATÓRIOS
+           ===================================================== -->
+      @if (separadorAtivo() === 'relatorios') {
+        <div class="painel-separador">
+          <section class="cartao secao-relatorios">
+            <div class="cabecalho-seccao">
+              <h2>Enviar relatório</h2>
+              <p>
+                Tens duas formas de enviar: preenchendo o formulário ou
+                carregando o documento em PDF ou Word.
+              </p>
+            </div>
+
+            <div class="envio-alternar">
+              <button type="button"
+                class="opcao-envio"
+                [class.activa]="modoEnvio() === 'formulario'"
+                (click)="modoEnvio.set('formulario')">
+                Preencher no portal
+              </button>
+              <button type="button"
+                class="opcao-envio"
+                [class.activa]="modoEnvio() === 'ficheiro'"
+                (click)="modoEnvio.set('ficheiro')">
+                Carregar documento
+              </button>
+            </div>
+
+            @if (modoEnvio() === 'formulario') {
+              <form class="formulario-relatorio"
+                (submit)="$event.preventDefault(); submeterRelatorio()">
+
+                <div class="campo-relatorio">
+                  <label for="tipo-relatorio">Tipo de relatório</label>
+                  <select id="tipo-relatorio"
+                    [value]="tipoRelatorio()"
+                    (change)="tipoRelatorio.set($any($event.target).value)">
+                    <option value="semanal">Semanal</option>
+                    <option value="mensal">Mensal</option>
+                    <option value="final">Final</option>
+                  </select>
+                </div>
+
+                <div class="campo-relatorio">
+                  <label for="mes-relatorio">Tempo de envio (mês de referência)</label>
+                  <input id="mes-relatorio"
+                    type="month"
+                    [value]="mesReferencia()"
+                    (input)="mesReferencia.set($any($event.target).value)"
+                    required />
+                </div>
+
+                <div class="campo-relatorio campo-completo">
+                  <label for="atividades-relatorio">Actividades realizadas</label>
+                  <textarea id="atividades-relatorio"
+                    rows="4"
+                    minlength="10"
+                    placeholder="Descreve as actividades realizadas..."
+                    [value]="atividadesRelatorio()"
+                    (input)="atividadesRelatorio.set($any($event.target).value)"
+                    required></textarea>
+                </div>
+
+                <div class="campo-relatorio campo-completo">
+                  <label for="resultados-relatorio">Resultados alcançados</label>
+                  <textarea id="resultados-relatorio"
+                    rows="4"
+                    minlength="10"
+                    placeholder="Indica os resultados alcançados..."
+                    [value]="resultadosRelatorio()"
+                    (input)="resultadosRelatorio.set($any($event.target).value)"
+                    required></textarea>
+                </div>
+
+                <div class="campo-relatorio campo-completo">
+                  <label for="constrangimentos-relatorio">Constrangimentos (opcional)</label>
+                  <textarea id="constrangimentos-relatorio"
+                    rows="3"
+                    placeholder="Dificuldades encontradas"
+                    [value]="constrangimentosRelatorio()"
+                    (input)="constrangimentosRelatorio.set($any($event.target).value)"></textarea>
+                </div>
+
+                <div class="campo-relatorio campo-completo">
+                  <label for="objetivos-relatorio">Objectivos seguintes (opcional)</label>
+                  <textarea id="objetivos-relatorio"
+                    rows="3"
+                    placeholder="Indica os próximos objectivos"
+                    [value]="objetivosRelatorio()"
+                    (input)="objetivosRelatorio.set($any($event.target).value)"></textarea>
+                </div>
+
+                @if (mensagemRelatorio()) {
+                  <p class="mensagem-sucesso" role="status">{{ mensagemRelatorio() }}</p>
+                }
+
+                @if (erroRelatorio()) {
+                  <p class="mensagem-erro" role="alert">{{ erroRelatorio() }}</p>
+                }
+
+                <button class="botao-submeter-relatorio botao-primario"
+                  type="submit"
+                  [disabled]="submetendoRelatorio()">
+                  {{ submetendoRelatorio() ? 'A submeter...' : 'Submeter relatório' }}
+                </button>
+              </form>
+            } @else {
+              <div class="bloco-ficheiro">
+                <p class="texto-suave">
+                  Envia o teu relatório num formato da Multitel: PDF, DOC ou
+                  DOCX, com um máximo de 10 MB. O documento fica associado ao
+                  tipo e ao mês indicados nos campos abaixo.
+                </p>
+
+                <div class="formulario-relatorio">
+                  <div class="campo-relatorio">
+                    <label for="tipo-relatorio-ficheiro">Tipo de relatório</label>
+                    <select id="tipo-relatorio-ficheiro"
+                      [value]="tipoRelatorio()"
+                      (change)="tipoRelatorio.set($any($event.target).value)">
+                      <option value="semanal">Semanal</option>
+                      <option value="mensal">Mensal</option>
+                      <option value="final">Final</option>
+                    </select>
+                  </div>
+
+                  <div class="campo-relatorio">
+                    <label for="mes-relatorio-ficheiro">Tempo de envio (mês de referência)</label>
+                    <input id="mes-relatorio-ficheiro"
+                      type="month"
+                      [value]="mesReferencia()"
+                      (input)="mesReferencia.set($any($event.target).value)" />
+                  </div>
+                </div>
+
+                <label class="botao-carregar-ficheiro"
+                  [class.desactivado]="aCarregarFicheiro()">
+                  <input type="file"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    [disabled]="aCarregarFicheiro()"
+                    (change)="enviarNovoFicheiro($event)"
+                    hidden />
+                  {{ aCarregarFicheiro() ? 'A carregar documento...' : 'Escolher documento e enviar' }}
+                </label>
+
+                @if (mensagemFicheiro()) {
+                  <p class="mensagem-sucesso" role="status">{{ mensagemFicheiro() }}</p>
+                }
+
+                @if (erroFicheiro()) {
+                  <p class="mensagem-erro" role="alert">{{ erroFicheiro() }}</p>
+                }
+              </div>
+            }
+          </section>
+
+          <section class="cartao secao-lista-relatorios">
+            <div class="cabecalho-seccao">
+              <h2>Histórico de relatórios</h2>
+              <p>Consulta o estado e o tempo de envio de cada relatório.</p>
+            </div>
+
+            @if (relatorios().length === 0) {
+              <p class="aviso">Ainda não submeteste nenhum relatório.</p>
+            } @else {
+              <div class="tabela-relatorios">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Mês</th>
+                      <th>Prazo</th>
+                      <th>Tempo de envio</th>
+                      <th>Estado</th>
+                      <th>Documento</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (relatorio of relatorios(); track relatorio.id_relatorio) {
+                      <tr [class.linha-atraso]="relatorio.em_atraso">
+                        <td>{{ rotuloTipo(relatorio.tipo) }}</td>
+                        <td>{{ mesLegivel(relatorio.mes_referencia) }}</td>
+                        <td>{{ relatorio.prazo_envio_legivel || '-' }}</td>
+                        <td>
+                          @if (relatorio.ano_envio) {
+                            <span class="tempo-envio">
+                              {{ relatorio.dia_envio }}/{{ relatorio.mes_envio }}/{{ relatorio.ano_envio }}
+                              {{ relatorio.hora_envio }}
+                            </span>
+                          } @else {
+                            <span class="texto-suave">Por enviar</span>
+                          }
+                        </td>
+                        <td>
+                          <span class="etiqueta-estado"
+                            [class.etiqueta-entregue]="relatorio.entregue && !relatorio.em_atraso"
+                            [class.etiqueta-atraso]="relatorio.em_atraso"
+                            [class.etiqueta-recusado]="relatorio.estado_avaliacao === 'rejeitado'"
+                            [class.etiqueta-aprovado]="relatorio.estado_avaliacao === 'aprovado'">
+                            {{ relatorio.estado_avaliacao_legivel }}
+                          </span>
+
+                          @if (relatorio.estado_avaliacao === 'rejeitado' && relatorio.comentario_admin) {
+                            <p class="comentario-admin">
+                              <strong>Mensagem da Multitel:</strong>
+                              {{ relatorio.comentario_admin }}
+                            </p>
+                          }
+                        </td>
+                        <td class="celula-documento">
+                          @if (relatorio.tem_ficheiro) {
+                            <button type="button"
+                              class="ligacao-ficheiro"
+                              (click)="verRelatorio(relatorio)">
+                              Ver
+                            </button>
+
+                            <label class="ligacao-ficheiro substituir"
+                              [class.desactivado]="aCarregarFicheiro()">
+                              <input type="file"
+                                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                [disabled]="aCarregarFicheiro()"
+                                (change)="selecionarFicheiro(relatorio, $event)"
+                                hidden />
+                              Substituir
+                            </label>
+                          } @else {
+                            <label class="ligacao-ficheiro substituir"
+                              [class.desactivado]="aCarregarFicheiro()">
+                              <input type="file"
+                                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                [disabled]="aCarregarFicheiro()"
+                                (change)="selecionarFicheiro(relatorio, $event)"
+                                hidden />
+                              Enviar ficheiro
+                            </label>
+                          }
+                        </td>
+                      </tr>
+
+                      @if (relatorio.atividades || relatorio.resultados) {
+                        <tr class="linha-descricao">
+                          <td colspan="6">
+                            <strong>Actividades:</strong> {{ relatorio.atividades }}
+                            <br />
+                            <strong>Resultados:</strong> {{ relatorio.resultados }}
+                            @if (relatorio.constrangimentos) {
+                              <br /><strong>Constrangimentos:</strong> {{ relatorio.constrangimentos }}
+                            }
+                            @if (relatorio.objetivos) {
+                              <br /><strong>Objectivos:</strong> {{ relatorio.objetivos }}
+                            }
+                          </td>
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </section>
+        </div>
+      }
+
+      <!-- =====================================================
+           SEPARADOR: DOCUMENTOS
+           ===================================================== -->
+      @if (separadorAtivo() === 'documentos') {
+        <div class="painel-separador">
+          <section class="cartao secao-documentos">
+            <div class="cabecalho-seccao">
+              <h2>Os meus documentos</h2>
+              <p>Consulta e substitui os documentos da tua candidatura.</p>
+            </div>
+
+            @if (mensagemDocumento()) {
+              <p class="mensagem-sucesso" role="status">{{ mensagemDocumento() }}</p>
+            }
+
+            @if (erroDocumento()) {
+              <p class="mensagem-erro" role="alert">{{ erroDocumento() }}</p>
+            }
+
+            @if (documentos.length > 0 && !documentos[0].pode_substituir) {
+              <p class="texto-suave">
+                A substituição de documentos está disponível apenas durante a
+                análise da candidatura.
+              </p>
+            }
+
+            @if (documentos.length === 0) {
+              <p class="aviso">Não existem documentos associados à tua candidatura.</p>
+            } @else {
+              <ul class="lista-documentos">
+                @for (documento of documentos; track documento.id_documento) {
+                  <li class="documento-item">
+                    <div class="documento-info">
+                      <strong>{{ documento.tipo_legivel }}</strong>
+                      <span class="texto-suave">
+                        {{ documento.nome_arquivo }}
+                        &middot; versão {{ documento.versao }}
+                        @if (documento.data_upload_legivel) {
+                          &middot; {{ documento.data_upload_legivel }}
+                        }
+                      </span>
+                      @if (documento.estado) {
+                        <span class="etiqueta-estado">{{ documento.estado }}</span>
+                      }
+                    </div>
+
+                    <div class="documento-accoes">
+                      <button type="button"
+                        class="botao-secundario-pequeno"
+                        (click)="verDocumento(documento)">
+                        Ver documento
+                      </button>
+
+                      @if (documento.pode_substituir) {
+                        <label class="botao-secundario-pequeno"
+                          [class.desactivado]="aCarregarDocumento() === documento.id_documento">
+                          <input type="file"
+                            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                            [disabled]="aCarregarDocumento() === documento.id_documento"
+                            (change)="selecionarDocumento(documento, $event)"
+                            hidden />
+                          {{ aCarregarDocumento() === documento.id_documento
+                            ? 'A substituir...'
+                            : 'Substituir' }}
+                        </label>
+                      }
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        </div>
+      }
+
+      <!-- =====================================================
+           SEPARADOR: PLANO DE ESTÁGIO
+           ===================================================== -->
+      @if (separadorAtivo() === 'plano') {
+        <div class="painel-separador">
+          <section class="cartao secao-plano">
+            <div class="cabecalho-seccao">
+              <h2>Plano de estágio</h2>
+              <p>Documento do plano de estágio definido pela Multitel.</p>
+            </div>
+
+            @if (plano; as planoAtual) {
+              <div class="plano-atual">
+                <div class="plano-info">
+                  <strong>{{ planoAtual.nome_arquivo }}</strong>
+                  <span class="texto-suave">
+                    {{ planoAtual.formato_legivel }}
+                    @if (planoAtual.tamanho_legivel) {
+                      &middot; {{ planoAtual.tamanho_legivel }}
+                    }
+                    &middot; versão {{ planoAtual.versao }}
+                  </span>
+                  @if (planoAtual.data_upload_legivel) {
+                    <span class="texto-suave">
+                      Carregado em {{ planoAtual.data_upload_legivel }}
+                    </span>
+                  }
+                </div>
+
+                <button type="button"
+                  class="botao-primario"
+                  (click)="verPlano(planoAtual)">
+                  Ver plano de estágio
+                </button>
+              </div>
+
+              @if (dados.planos_anteriores.length > 0) {
+                <div class="planos-anteriores">
+                  <p class="texto-suave">Versões anteriores:</p>
+                  @for (anterior of dados.planos_anteriores; track anterior.id_plano_estagio) {
+                    <button type="button"
+                      class="ligacao-ficheiro"
+                      (click)="verPlano(anterior)">
+                      Versão {{ anterior.versao }} &middot; {{ anterior.formato_legivel }}
+                    </button>
+                  }
+                </div>
+              }
+            } @else {
+              <p class="aviso">
+                O plano de estágio ainda não foi disponibilizado pela Multitel.
+              </p>
+            }
+          </section>
+        </div>
+      }
+    }
   </main>
 </div>

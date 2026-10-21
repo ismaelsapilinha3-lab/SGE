@@ -23,6 +23,26 @@ export interface DashboardAdmin {
 
 
 /* =========================================================
+   ESTAGIÁRIOS POR DEPARTAMENTO (DASHBOARD EM ESCADA)
+   ========================================================= */
+
+export interface EstagiariosPorDepartamentoItem {
+  id_departamento: number | null;
+  nome: string;
+  total_estagiarios: number;
+  por_estado: Record<string, number>;
+}
+
+
+export interface EstagiariosPorDepartamento {
+  total_estagiarios: number;
+  estados: string[];
+  totais_estado: Record<string, number>;
+  departamentos: EstagiariosPorDepartamentoItem[];
+}
+
+
+/* =========================================================
    DEPARTAMENTO
    ========================================================= */
 
@@ -146,24 +166,41 @@ export interface Estagiario {
   data_fim_real?: string | null;
   estado_estagio?: string | null;
   motivo_suspensao?: string | null;
+  dia_limite_relatorio?: number | null;
 }
 
+
 export type TipoRelatorioAdmin = 'semanal' | 'mensal' | 'final';
-export type EstadoRelatorioAdmin = 'pendente' | 'aprovado' | 'rejeitado';
+
+export type EstadoRelatorioAdmin =
+  | 'pendente'
+  | 'aprovado'
+  | 'rejeitado'
+  | 'em_atraso';
 
 export interface RelatorioAdmin {
   id_relatorio: number;
   id_estagio: number;
   tipo: TipoRelatorioAdmin;
   periodo_referencia: string;
+  mes_referencia?: string | null;
+  mes_referencia_legivel?: string | null;
+  prazo_envio?: string | null;
+  prazo_envio_legivel?: string | null;
   atividades: string;
   resultados: string;
   constrangimentos?: string | null;
   objetivos?: string | null;
   submetido_em: string;
+  enviado_em?: string | null;
+  data_envio_legivel?: string | null;
+  entregue?: boolean;
+  em_atraso?: boolean;
   estado_avaliacao: EstadoRelatorioAdmin;
   comentario_admin?: string | null;
   ficheiro_nome?: string | null;
+  tem_ficheiro?: boolean;
+  ficheiro_url?: string | null;
   estagio?: {
     estagiario?: {
       id_utilizador: number;
@@ -204,6 +241,17 @@ export class AdminService {
   dashboard(): Observable<DashboardAdmin> {
     return this.http.get<DashboardAdmin>(
       `${this.apiUrl}/dashboard`
+    );
+  }
+
+
+  /* =======================================================
+     ESTAGIÁRIOS POR DEPARTAMENTO
+     ======================================================= */
+
+  estagiariosPorDepartamento(): Observable<EstagiariosPorDepartamento> {
+    return this.http.get<EstagiariosPorDepartamento>(
+      `${this.apiUrl}/estagiarios-por-departamento`
     );
   }
 
@@ -349,6 +397,74 @@ export class AdminService {
      RELATORIOS ADMINISTRATIVOS
      ======================================================= */
 
+  listarRelatoriosAtraso(): Observable<{
+    total: number;
+    data: RelatorioAdmin[];
+  }> {
+    return this.http.get<{ total: number; data: RelatorioAdmin[] }>(
+      `${this.apiUrl}/relatorios/atraso`
+    );
+  }
+
+  visualizarFicheiroRelatorio(id: number): Observable<Blob> {
+    return this.http.get(
+      `${this.apiUrl}/relatorios/${id}/ficheiro`,
+      { responseType: 'blob' }
+    );
+  }
+
+  /* =======================================================
+     PLANO DE ESTAGIO
+     ======================================================= */
+
+  obterPlanoEstagio(
+    idEstagio: number
+  ): Observable<{
+    id_plano_estagio: number;
+    nome_arquivo: string;
+    formato_legivel: string;
+    versao: number;
+    data_upload_legivel?: string | null;
+  } | null> {
+    return this.http.get<{
+      id_plano_estagio: number;
+      nome_arquivo: string;
+      formato_legivel: string;
+      versao: number;
+      data_upload_legivel?: string | null;
+    } | null>(`${this.apiUrl}/estagios/${idEstagio}/plano`);
+  }
+
+  carregarPlanoEstagio(
+    idEstagio: number,
+    ficheiro: File
+  ): Observable<{
+    message: string;
+    data: {
+      id_plano_estagio: number;
+      nome_arquivo: string;
+      formato_legivel: string;
+      versao: number;
+      data_upload_legivel?: string | null;
+    };
+  }> {
+    const formData = new FormData();
+
+    formData.append('id_estagio', String(idEstagio));
+    formData.append('ficheiro', ficheiro);
+
+    return this.http.post<{
+      message: string;
+      data: {
+        id_plano_estagio: number;
+        nome_arquivo: string;
+        formato_legivel: string;
+        versao: number;
+        data_upload_legivel?: string | null;
+      };
+    }>(`${this.apiUrl}/planos-estagio`, formData);
+  }
+
   listarRelatoriosAdmin(
     pesquisa: string = '',
     estado: string = '',
@@ -436,6 +552,7 @@ export class AdminService {
       duracao_meses?: number;
       data_fim_prevista?: string;
       motivo_suspensao?: string;
+      dia_limite_relatorio?: number;
     }
   ): Observable<{ message: string; data: unknown }> {
     return this.http.patch<{ message: string; data: unknown }>(

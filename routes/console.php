@@ -14,3 +14,9 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('app:atualizar-estagios-concluidos')
     ->dailyAt('00:05')
     ->timezone('Africa/Luanda');
+
+// Marcar os relatórios fora de prazo e avisar o administrador.
+// Corre depois da conclusão automática dos estágios.
+Schedule::command('app:alertar-relatorios-em-atraso')
+    ->dailyAt('00:15')
+    ->timezone('Africa/Luanda');

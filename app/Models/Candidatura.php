@@ -50,5 +50,14 @@ class Candidatura extends Model
             'id_departamento'
         );
     }
+
+    public function estagio()
+    {
+        return $this->hasOne(
+            Estagio::class,
+            'id_candidatura',
+            'id_candidatura'
+        );
+    }
 }
 

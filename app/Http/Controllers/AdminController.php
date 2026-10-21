@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Candidatura;
+use App\Models\Departamento;
 use App\Models\HistoricoEstado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -306,6 +307,7 @@ class AdminController extends Controller
                 'e.duracao_meses',
                 'e.data_fim_prevista',
                 'e.data_fim_real',
+                'e.dia_limite_relatorio',
               'e.motivo_suspensao',
                 DB::raw('COALESCE(e.estado, c.estado) as estado_estagio'),
                 'u.id_utilizador as id_estagiario',
@@ -344,6 +346,176 @@ class AdminController extends Controller
         );
     }
 
+    /**
+     * Número de estagiários registados por direção/departamento.
+     *
+     * Serve o dashboard em "escada" do painel administrativo: o
+     * departamento com mais estagiários aparece com a barra mais alta.
+     *
+     * Cada barra é decomposta por estado do estágio, para o
+     * administrador ver logo quantos estão ativos, suspensos,
+     * concluídos, cancelados ou ainda por iniciar.
+     */
+    public function estagiariosPorDepartamento()
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Estagiários registados no sistema
+        |--------------------------------------------------------------------------
+        |
+        | A mesma regra usada na listagem de estagiários: candidaturas
+        | aprovadas ou que já tenham um estágio criado.
+        |
+        */
+        $linhas = DB::table('candidaturas as c')
+            ->leftJoin('estagios as e', 'e.id_candidatura', '=', 'c.id_candidatura')
+            ->where(function ($q) {
+                $q->where('c.estado', 'aprovada')
+                    ->orWhereNotNull('e.id_estagio');
+            })
+            ->select(
+                'c.id_departamento_selecionado',
+                DB::raw("COALESCE(e.estado, 'sem_estagio') as estado_estagio"),
+                DB::raw('COUNT(DISTINCT c.id_candidatura) as total')
+            )
+            ->groupBy(
+                'c.id_departamento_selecionado',
+                'estado_estagio'
+            )
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Estrutura auxiliar
+        |--------------------------------------------------------------------------
+        |
+        | [chave_departamento][estado] => total de estagiários
+        |
+        */
+        $contagem = [];
+
+        $estados = [
+            'sem_estagio',
+            'ativo',
+            'suspenso',
+            'concluido',
+            'cancelado',
+        ];
+
+        foreach ($linhas as $linha) {
+            $chave = $linha->id_departamento_selecionado
+                ?? 'sem_departamento';
+
+            $estado = $linha->estado_estagio;
+
+            if (!in_array($estado, $estados, true)) {
+                $estados[] = $estado;
+            }
+
+            $contagem[$chave][$estado] = (int) $linha->total;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Soma por estado (para a legenda da escada)
+        |--------------------------------------------------------------------------
+        */
+        $totaisEstado = array_fill_keys($estados, 0);
+
+        foreach ($contagem as $porEstado) {
+            foreach ($porEstado as $estado => $total) {
+                $totaisEstado[$estado] += $total;
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Departamentos/direções registados pelo administrador
+        |--------------------------------------------------------------------------
+        |
+        | Inclui os que ainda não têm estagiários, para continuarem a
+        | fazer parte da escada (no fundo, com zero).
+        |
+        */
+        $departamentos = Departamento::query()
+            ->orderBy('nome')
+            ->get(['id_departamento', 'nome'])
+            ->map(function (Departamento $departamento) use (
+                $contagem,
+                $estados
+            ) {
+                $porEstado = $contagem[
+                    $departamento->id_departamento
+                ] ?? [];
+
+                return $this->comPorEstadoDepartamento(
+                    [
+                        'id_departamento' => $departamento->id_departamento,
+                        'nome' => $departamento->nome,
+                    ],
+                    $porEstado,
+                    $estados
+                );
+            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Estagiários sem departamento associado
+        |--------------------------------------------------------------------------
+        */
+        if (!empty($contagem['sem_departamento'])) {
+            $departamentos->push(
+                $this->comPorEstadoDepartamento(
+                    [
+                        'id_departamento' => null,
+                        'nome' => 'Sem departamento atribuído',
+                    ],
+                    $contagem['sem_departamento'],
+                    $estados
+                )
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Escada: do maior para o menor
+        |--------------------------------------------------------------------------
+        */
+        $departamentos = $departamentos
+            ->sortBy([
+                ['total_estagiarios', 'desc'],
+                ['nome', 'asc'],
+            ])
+            ->values();
+
+        return response()->json([
+            'total_estagiarios' => $departamentos->sum('total_estagiarios'),
+            'estados' => $estados,
+            'totais_estado' => $totaisEstado,
+            'departamentos' => $departamentos,
+        ]);
+    }
+
+    /**
+     * Junta a contagem por estado e o total a um departamento.
+     */
+    private function comPorEstadoDepartamento(
+        array $departamento,
+        array $porEstado,
+        array $estados
+    ): array {
+        $completo = [];
+
+        foreach ($estados as $estado) {
+            $completo[$estado] = (int) ($porEstado[$estado] ?? 0);
+        }
+
+        return array_merge($departamento, [
+            'total_estagiarios' => array_sum($completo),
+            'por_estado' => $completo,
+        ]);
+    }
+
     public function atualizarEstadoEstagio(Request $request, int $idCandidatura)
     {
         $dados = $request->validate([
@@ -351,6 +523,7 @@ class AdminController extends Controller
             'data_inicio' => 'required|date',
             'duracao_meses' => 'nullable|integer|min:1',
             'motivo_suspensao' => 'nullable|string|required_if:estado,suspenso|max:5000',
+            'dia_limite_relatorio' => 'nullable|integer|min:1|max:28',
         ]);
 
         return DB::transaction(function () use ($dados, $idCandidatura) {
@@ -421,6 +594,10 @@ class AdminController extends Controller
                 'data_inicio' => $inicio,
                 'duracao_meses' => $duracaoMeses,
                 'data_fim_prevista' => $fimPrevisto,
+                'dia_limite_relatorio' => (int) (
+                    $dados['dia_limite_relatorio']
+                    ?? ($estagio->dia_limite_relatorio ?? 5)
+                ),
                 'estado' => $dados['estado'],
                 'motivo_suspensao' => $dados['estado'] === 'suspenso'
                     ? trim($dados['motivo_suspensao'] ?? '')
