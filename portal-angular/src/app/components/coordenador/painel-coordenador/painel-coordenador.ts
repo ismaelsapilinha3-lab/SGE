@@ -64,9 +64,6 @@ interface SecaoDefinicao {
   /** Glifo mostrado no botão do menu. */
   icone: string;
 
-  /** Texto curto que explica a funcionalidade do botão. */
-  descricao: string;
-
 }
 
 const SECOES: SecaoDefinicao[] = [
@@ -74,22 +71,19 @@ const SECOES: SecaoDefinicao[] = [
   {
     id: 'candidaturas',
     rotulo: 'Candidaturas',
-    icone: '✉',
-    descricao: 'Analisar e decidir as candidaturas atribuídas.'
+    icone: '✉'
   },
 
   {
     id: 'estagios',
     rotulo: 'Estágios',
-    icone: '★',
-    descricao: 'Acompanhar os estágios e atribuir supervisores.'
+    icone: '★'
   },
 
   {
     id: 'supervisores',
     rotulo: 'Supervisores',
-    icone: '＋',
-    descricao: 'Criar e gerir contas de supervisor da direção.'
+    icone: '＋'
   }
 
 ];
@@ -146,8 +140,6 @@ export class PainelCoordenadorComponent implements OnInit {
   // ============================================================
   // MENU DE SECÇÕES
   // ============================================================
-
-  readonly secoes = SECOES;
 
   secao = signal<SecaoCoordenador>('candidaturas');
 

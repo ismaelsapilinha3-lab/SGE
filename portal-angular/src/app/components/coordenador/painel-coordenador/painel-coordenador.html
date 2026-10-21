@@ -64,47 +64,6 @@
 
 
     <!-- =====================================================
-         MENU DE SECÇÕES
-         ===================================================== -->
-    <nav
-      class="coord-menu"
-      aria-label="Secções do painel"
-    >
-
-      <div class="coord-menu-grelha" role="tablist">
-
-        @for (definicao of secoes; track definicao.id) {
-
-          <button
-            type="button"
-            role="tab"
-            class="coord-menu-btn"
-            [class.ativa]="secao() === definicao.id"
-            [attr.aria-selected]="secao() === definicao.id"
-            [attr.title]="definicao.descricao"
-            (click)="alterarSecao(definicao.id)"
-          >
-            <span class="coord-menu-icone" aria-hidden="true">
-              {{ definicao.icone }}
-            </span>
-
-            <span class="coord-menu-rotulo">
-              {{ definicao.rotulo }}
-            </span>
-
-            <span class="coord-menu-descricao">
-              {{ definicao.descricao }}
-            </span>
-          </button>
-
-        }
-
-      </div>
-
-    </nav>
-
-
-    <!-- =====================================================
          SECÇÃO: CANDIDATURAS
          ===================================================== -->
     @if (secao() === 'candidaturas') {

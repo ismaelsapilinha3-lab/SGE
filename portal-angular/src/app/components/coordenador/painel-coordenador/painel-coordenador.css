@@ -81,97 +81,8 @@
 
 
 /* =========================================================
-   MENU DE SECÇÕES (atalho rápido)
+   SECÇÕES
    ========================================================= */
-
-.coord-menu {
-  margin: 0;
-}
-
-.coord-menu-grelha {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
-}
-
-.coord-menu-btn {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto;
-  align-items: center;
-  column-gap: 12px;
-  row-gap: 3px;
-  min-height: 78px;
-  padding: 14px 16px;
-  color: var(--suave);
-  background: #ffffff;
-  border: 1px solid var(--borda);
-  border-radius: 12px;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s,
-    transform 0.2s;
-}
-
-.coord-menu-btn:hover {
-  background: var(--azul-claro);
-  border-color: var(--azul-linha);
-  box-shadow: 0 6px 16px rgba(10, 37, 64, 0.08);
-  transform: translateY(-1px);
-}
-
-.coord-menu-btn:focus-visible {
-  outline: 3px solid rgba(255, 107, 0, 0.5);
-  outline-offset: 2px;
-}
-
-.coord-menu-icone {
-  grid-row: 1 / span 2;
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  color: var(--azul);
-  background: var(--azul-claro);
-  border-radius: 11px;
-  font-size: 19px;
-  line-height: 1;
-}
-
-.coord-menu-rotulo {
-  color: var(--azul);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.coord-menu-descricao {
-  color: var(--cinza);
-  font-size: 11.5px;
-  line-height: 1.35;
-}
-
-.coord-menu-btn.ativa {
-  color: #ffffff;
-  background: var(--azul);
-  border-color: var(--azul);
-  box-shadow: 0 8px 20px rgba(10, 37, 64, 0.25);
-}
-
-.coord-menu-btn.ativa .coord-menu-icone {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.coord-menu-btn.ativa .coord-menu-rotulo {
-  color: #ffffff;
-}
-
-.coord-menu-btn.ativa .coord-menu-descricao {
-  color: #c7d7ec;
-}
-
 
 /* =========================================================
    CARTÕES DE SECÇÃO
@@ -1127,10 +1038,6 @@ select:focus-visible {
 
   .coord-actions .coord-btn {
     width: 100%;
-  }
-
-  .coord-menu-grelha {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .coord-tabela {
