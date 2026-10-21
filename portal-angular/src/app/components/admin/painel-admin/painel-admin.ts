@@ -335,33 +335,6 @@ export class PainelAdmin implements OnInit, OnDestroy {
     this.calcularPercentagem(this.dashboard().recusadas)
   );
 
-  /** Total de candidaturas já decididas (aprovadas + recusadas). */
-  private readonly candidaturasDecididas = computed(
-    () => (this.dashboard().aprovadas || 0) + (this.dashboard().recusadas || 0)
-  );
-
-  /** Taxa de aprovação sobre as candidaturas decididas. */
-  readonly taxaAprovacao = computed(() => {
-    const decididas = this.candidaturasDecididas();
-
-    if (decididas === 0) {
-      return 0;
-    }
-
-    return Math.round(((this.dashboard().aprovadas || 0) / decididas) * 100);
-  });
-
-  /** Taxa de recusa sobre as candidaturas decididas. */
-  readonly taxaRejeicao = computed(() => {
-    const decididas = this.candidaturasDecididas();
-
-    if (decididas === 0) {
-      return 0;
-    }
-
-    return Math.round(((this.dashboard().recusadas || 0) / decididas) * 100);
-  });
-
   /**
    * Converte um valor absoluto numa percentagem do total de
    * candidaturas, arredondada e protegida contra divisão por zero.
@@ -419,7 +392,7 @@ export class PainelAdmin implements OnInit, OnDestroy {
         this.carregandoDashboard.set(false);
 
         this.erroDashboard.set(
-          'Não foi possível carregar os indicadores.'
+          'Não foi possível carregar os dados do dashboard.'
         );
       }
     });
