@@ -190,10 +190,6 @@ button {
   line-height: 1.8;
 }
 
-.est-hero .est-btn-primary {
-  margin-top: 24px;
-}
-
 .est-main {
   position: relative;
   z-index: 2;
@@ -406,7 +402,6 @@ button {
   transform: translateY(-1px);
 }
 
-.est-btn-primary,
 .est-btn-light {
   display: inline-flex;
   align-items: center;
@@ -421,19 +416,6 @@ button {
   text-align: center;
   text-decoration: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
-
-.est-btn-primary {
-  color: var(--branco);
-  background: #174a7e;
-  border-color: #174a7e;
-  box-shadow: 0 5px 14px rgba(10, 37, 64, 0.18);
-}
-
-.est-btn-primary:hover {
-  background: #0a2540;
-  box-shadow: 0 8px 18px rgba(10, 37, 64, 0.24);
-  transform: translateY(-1px);
 }
 
 .est-btn-light {
@@ -817,7 +799,6 @@ button {
     padding: 6px 18px;
   }
 
-  .est-btn-primary,
   .est-btn-light {
     width: 100%;
   }
@@ -989,8 +970,8 @@ button {
 }
 
 #pagina-estagiario .abas li:nth-child(4) .ic {
-  color: #6d28d9;
-  background: #ece1fd;
+  color: #7c3aed;
+  background: #ede9fe;
 }
 
 #pagina-estagiario .sair .ic {
@@ -1154,12 +1135,6 @@ button {
   color: #e2eaf3;
   font-size: 15px;
   line-height: 1.8;
-}
-
-#pagina-estagiario .est-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
 }
 
 #pagina-estagiario .est-main {
@@ -1779,15 +1754,6 @@ button {
     font-size: clamp(24px, 7vw, 32px);
   }
 
-  #pagina-estagiario .est-hero-actions {
-    flex-direction: column;
-  }
-
-  #pagina-estagiario .est-hero-actions .est-btn-primary,
-  #pagina-estagiario .est-hero-actions .est-btn-light {
-    width: 100%;
-  }
-
   #pagina-estagiario .est-main {
     margin-top: -24px;
     padding: 0 14px 40px;
@@ -1993,28 +1959,6 @@ button {
   box-shadow: none;
 }
 
-#pagina-estagiario .est-hero-actions .est-btn-primary {
-  color: #fff;
-  background: #174a7e;
-  border-color: #174a7e;
-}
-
-#pagina-estagiario .est-hero-actions .est-btn-primary:hover {
-  background: #0a2540;
-  border-color: #0a2540;
-}
-
-#pagina-estagiario .est-hero-actions .est-btn-light {
-  color: #174a7e;
-  background: #fff;
-  border-color: #fff;
-}
-
-#pagina-estagiario .est-hero-actions .est-btn-light:hover {
-  background: #edf4fc;
-  border-color: #edf4fc;
-}
-
 #pagina-estagiario .cab-label,
 #pagina-estagiario .est-status,
 #pagina-estagiario .est-card,
@@ -2126,6 +2070,18 @@ button {
 
 #pagina-estagiario .est-aviso--sucesso .aviso-icon {
   color: #176344;
+}
+
+/* Ícones de contactos com cor própria (rodapé escuro) */
+
+#pagina-estagiario .contacto-icon--telefone {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.16);
+}
+
+#pagina-estagiario .contacto-icon--email {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.16);
 }
 
 #pagina-estagiario .est-doc-actions {
