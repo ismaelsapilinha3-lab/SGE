@@ -9,10 +9,12 @@ use App\Models\Notificacao;
 use App\Models\Perfil;
 use App\Models\PlanoEstagio;
 use App\Models\User;
+use App\Services\Sms\SmsService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 
 class CoordenadorController extends Controller
@@ -201,9 +203,16 @@ class CoordenadorController extends Controller
         int $id
     ) {
 
-        return DB::transaction(function () use (
+        /*
+         * A candidatura aprovada é guardada para que o SMS seja enviado
+         * apenas depois de a transação ser confirmada.
+         */
+        $candidaturaAprovada = null;
+
+        $resposta = DB::transaction(function () use (
             $request,
-            $id
+            $id,
+            &$candidaturaAprovada
         ) {
 
             $candidatura = $this
@@ -250,17 +259,60 @@ class CoordenadorController extends Controller
                 'A tua candidatura foi aprovada.'
             );
 
+            $candidaturaAprovada = $candidatura
+                ->fresh()
+                ->load([
+                    'departamento',
+                    'documentos',
+                    'utilizador',
+                ]);
+
             return response()->json([
                 'message' => 'Candidatura aprovada com sucesso.',
 
-                'candidatura' => $candidatura
-                    ->fresh()
-                    ->load([
-                        'departamento',
-                        'documentos',
-                    ]),
+                'candidatura' => $candidaturaAprovada,
             ]);
         });
+
+        /*
+         * O candidato é avisado por SMS da aceitação. O envio só acontece
+         * depois de a transação ter sido confirmada, para que não seja
+         * enviada uma mensagem de parabéns a uma candidatura que não
+         * chegou a ser aceite.
+         */
+        $this->notificarAprovacaoPorSms($candidaturaAprovada);
+
+        return $resposta;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Aviso de aceitação por SMS
+    |--------------------------------------------------------------------------
+    |
+    | Uma falha no envio do SMS não pode impedir a aprovação da
+    | candidatura: o erro é registado no log e o pedido continua a ser
+    | considerado bem-sucedido.
+    |
+    */
+
+    private function notificarAprovacaoPorSms(?Candidatura $candidatura): void
+    {
+        if ($candidatura === null) {
+            return;
+        }
+
+        try {
+            app(SmsService::class)->notificarCandidaturaAprovada($candidatura);
+        } catch (\Throwable $excecao) {
+            Log::channel('sms')->error(
+                'Falha ao enviar o SMS de aceitação da candidatura',
+                [
+                    'id_candidatura' => $candidatura->id_candidatura,
+                    'erro' => $excecao->getMessage(),
+                ]
+            );
+        }
     }
 
     /*
