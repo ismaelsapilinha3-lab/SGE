@@ -74,6 +74,12 @@ return [
     'campo_remetente' => env('SMS_CAMPO_REMETENTE', 'from'),
 
     /*
+    | Formato do número enviado ao gateway:
+    | internacional (+244923000111) | sem_mais (244923000111) | nacional (923000111)
+    */
+    'formato_numero' => env('SMS_FORMATO_NUMERO', 'internacional'),
+
+    /*
     | Campos fixos adicionais, em JSON (ex.: {"sender":"MULTITEL"}).
     */
     'campos_extra' => env('SMS_CAMPOS_EXTRA'),

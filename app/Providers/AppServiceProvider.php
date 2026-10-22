@@ -40,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
                     campoDestino: (string) config('sms.campo_destino', 'to'),
                     campoMensagem: (string) config('sms.campo_mensagem', 'text'),
                     campoRemetente: (string) config('sms.campo_remetente', 'from'),
+                    formatoNumero: (string) config('sms.formato_numero', 'internacional'),
                     camposExtra: $this->camposExtraDoGateway(),
                     campoReferencia: (string) config('sms.campo_referencia', 'id'),
                     timeout: (int) config('sms.timeout', 10),

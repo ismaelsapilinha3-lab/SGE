@@ -287,6 +287,25 @@ describe('provedores de SMS', function () {
         });
     });
 
+    it('adapta o número ao formato exigido pelo gateway', function (string $formato, string $esperado) {
+        config([
+            'sms.provider' => 'http',
+            'sms.endpoint' => 'https://sms.test/envio',
+            'sms.auth' => 'none',
+            'sms.formato_numero' => $formato,
+        ]);
+
+        Http::fake(['*' => Http::response([], 200)]);
+
+        app(SmsService::class)->enviar('927722699', 'Olá');
+
+        Http::assertSent(fn ($pedido) => $pedido['to'] === $esperado);
+    })->with([
+        'internacional' => ['internacional', '+244927722699'],
+        'sem mais' => ['sem_mais', '244927722699'],
+        'nacional' => ['nacional', '927722699'],
+    ]);
+
     it('suporta gateways que recebem o pedido por GET', function () {
         config([
             'sms.provider' => 'http',

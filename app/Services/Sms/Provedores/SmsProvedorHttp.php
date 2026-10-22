@@ -34,6 +34,7 @@ class SmsProvedorHttp implements SmsProvedor
         private readonly string $campoDestino = 'to',
         private readonly string $campoMensagem = 'text',
         private readonly string $campoRemetente = 'from',
+        private readonly string $formatoNumero = 'internacional',
         private readonly array $camposExtra = [],
         private readonly string $campoReferencia = 'id',
         private readonly int $timeout = 10,
@@ -114,9 +115,23 @@ class SmsProvedorHttp implements SmsProvedor
     {
         return array_filter([
             $this->campoRemetente => $this->remetente,
-            $this->campoDestino => $telefone,
+            $this->campoDestino => $this->formatarNumero($telefone),
             $this->campoMensagem => $mensagem,
         ], fn ($valor) => filled($valor));
+    }
+
+    /**
+     * Adapta o número ao formato exigido pelo gateway.
+     */
+    private function formatarNumero(string $telefone): string
+    {
+        $digitos = ltrim($telefone, '+');
+
+        return match ($this->formatoNumero) {
+            'sem_mais' => $digitos,
+            'nacional' => substr($digitos, -9),
+            default => $telefone,
+        };
     }
 
     /**
