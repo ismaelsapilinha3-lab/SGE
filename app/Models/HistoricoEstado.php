@@ -17,6 +17,7 @@ class HistoricoEstado extends Model
         'id_estagio',
         'id_documento',
         'id_plano_estagio',
+        'id_documento_estagio',
         'estado_anterior',
         'estado_novo',
         'motivo',
@@ -33,6 +34,42 @@ class HistoricoEstado extends Model
             Candidatura::class,
             'id_candidatura',
             'id_candidatura'
+        );
+    }
+
+    public function estagio()
+    {
+        return $this->belongsTo(
+            Estagio::class,
+            'id_estagio',
+            'id_estagio'
+        );
+    }
+
+    public function documento()
+    {
+        return $this->belongsTo(
+            Documento::class,
+            'id_documento',
+            'id_documento'
+        );
+    }
+
+    public function planoEstagio()
+    {
+        return $this->belongsTo(
+            PlanoEstagio::class,
+            'id_plano_estagio',
+            'id_plano_estagio'
+        );
+    }
+
+    public function documentoEstagio()
+    {
+        return $this->belongsTo(
+            DocumentoEstagio::class,
+            'id_documento_estagio',
+            'id_documento_estagio'
         );
     }
 }

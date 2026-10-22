@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Candidatura;
 use App\Models\Departamento;
 use App\Models\Documento;
+use App\Models\Notificacao;
 use App\Models\User;
+use App\Services\LimiteCandidaturasTrimestrais;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\Password;
 
 class CandidaturaController extends Controller
 {
@@ -21,12 +24,31 @@ class CandidaturaController extends Controller
         'cv',
     ];
 
+    public function __construct(
+        private readonly LimiteCandidaturasTrimestrais $limiteCandidaturas
+    ) {}
+
     /**
      * Criar uma conta de estagiário, uma candidatura
      * e guardar os documentos enviados.
      */
     public function store(Request $request)
     {
+        /*
+         * Limite de candidaturas por trimestre.
+         */
+        if ($this->limiteCandidaturas->limiteAtingido()) {
+            return response()->json([
+                'message' => $this->limiteCandidaturas
+                    ->mensagemLimiteAtingido(),
+
+                'vagas_restantes' => $this->limiteCandidaturas
+                    ->vagasRestantes(),
+
+                'limite_atingido' => true,
+            ], 422);
+        }
+
         $validated = $request->validate([
             'nome' => [
                 'required',
@@ -44,7 +66,7 @@ class CandidaturaController extends Controller
             'password' => [
                 'required',
                 'string',
-                'min:8',
+                Password::default(),
                 'confirmed',
             ],
 
@@ -123,101 +145,69 @@ class CandidaturaController extends Controller
                 'mimes:pdf,jpg,jpeg,png',
             ],
         ], [
-            'nome.required' =>
-                'Introduz o teu nome completo.',
+            'nome.required' => 'Introduz o teu nome completo.',
 
-            'email.required' =>
-                'Introduz o teu endereço de e-mail.',
+            'email.required' => 'Introduz o teu endereço de e-mail.',
 
-            'email.email' =>
-                'Introduz um endereço de e-mail válido.',
+            'email.email' => 'Introduz um endereço de e-mail válido.',
 
-            'email.unique' =>
-                'Este e-mail já está registado.',
+            'email.unique' => 'Este e-mail já está registado.',
 
-            'password.required' =>
-                'Introduz uma palavra-passe.',
+            'password.required' => 'Introduz uma palavra-passe.',
 
-            'password.min' =>
-                'A palavra-passe deve ter pelo menos 8 caracteres.',
+            'password.min' => 'A palavra-passe deve ter pelo menos 8 caracteres.',
 
-            'password.confirmed' =>
-                'As palavras-passe não coincidem.',
+            'password.confirmed' => 'As palavras-passe não coincidem.',
 
-            'curso.required' =>
-                'Introduz o teu curso.',
+            'curso.required' => 'Introduz o teu curso.',
 
-            'universidade.required' =>
-                'Introduz o nome da tua universidade.',
+            'universidade.required' => 'Introduz o nome da tua universidade.',
 
-            'nascimento.required' =>
-                'Introduz a tua data de nascimento.',
+            'nascimento.required' => 'Introduz a tua data de nascimento.',
 
-            'nascimento.before' =>
-                'A data de nascimento deve ser anterior a hoje.',
+            'nascimento.before' => 'A data de nascimento deve ser anterior a hoje.',
 
-            'sexo.required' =>
-                'Seleciona o sexo.',
+            'sexo.required' => 'Seleciona o sexo.',
 
-            'sexo.in' =>
-                'O valor selecionado para o sexo não é válido.',
+            'sexo.in' => 'O valor selecionado para o sexo não é válido.',
 
-            'bi.required' =>
-                'Introduz o número do BI.',
+            'bi.required' => 'Introduz o número do BI.',
 
-            'contacto.required' =>
-                'Introduz o teu contacto.',
+            'contacto.required' => 'Introduz o teu contacto.',
 
-            'id_departamento_selecionado.required' =>
-                'Seleciona o departamento pretendido.',
+            'id_departamento_selecionado.required' => 'Seleciona o departamento pretendido.',
 
-            'id_departamento_selecionado.exists' =>
-                'O departamento selecionado não existe.',
+            'id_departamento_selecionado.exists' => 'O departamento selecionado não existe.',
 
-            'documentos.declaracao_escolar.required' =>
-                'Envia a declaração ou o certificado académico.',
+            'documentos.declaracao_escolar.required' => 'Envia a declaração ou o certificado académico.',
 
-            'documentos.declaracao_escolar.max' =>
-                'O documento académico não pode ultrapassar 5 MB.',
+            'documentos.declaracao_escolar.max' => 'O documento académico não pode ultrapassar 5 MB.',
 
-            'documentos.declaracao_escolar.mimes' =>
-                'O documento académico deve estar em PDF, JPG ou PNG.',
+            'documentos.declaracao_escolar.mimes' => 'O documento académico deve estar em PDF, JPG ou PNG.',
 
-            'documentos.foto.required' =>
-                'Envia a foto tipo passe.',
+            'documentos.foto.required' => 'Envia a foto tipo passe.',
 
-            'documentos.foto.max' =>
-                'A foto não pode ultrapassar 5 MB.',
+            'documentos.foto.max' => 'A foto não pode ultrapassar 5 MB.',
 
-            'documentos.foto.mimes' =>
-                'A foto deve estar em JPG ou PNG.',
+            'documentos.foto.mimes' => 'A foto deve estar em JPG ou PNG.',
 
-            'documentos.bi.required' =>
-                'Envia a cópia do BI ou passaporte.',
+            'documentos.bi.required' => 'Envia a cópia do BI ou passaporte.',
 
-            'documentos.bi.max' =>
-                'A cópia do BI não pode ultrapassar 5 MB.',
+            'documentos.bi.max' => 'A cópia do BI não pode ultrapassar 5 MB.',
 
-            'documentos.bi.mimes' =>
-                'A cópia do BI deve estar em PDF, JPG ou PNG.',
+            'documentos.bi.mimes' => 'A cópia do BI deve estar em PDF, JPG ou PNG.',
 
-            'documentos.carta_solicitacao.required' =>
-                'Envia a carta de solicitação.',
+            'documentos.carta_solicitacao.required' => 'Envia a carta de solicitação.',
 
-            'documentos.carta_solicitacao.max' =>
-                'A carta não pode ultrapassar 5 MB.',
+            'documentos.carta_solicitacao.max' => 'A carta não pode ultrapassar 5 MB.',
 
-            'documentos.carta_solicitacao.mimes' =>
-                'A carta de solicitação deve estar em PDF.',
+            'documentos.carta_solicitacao.mimes' => 'A carta de solicitação deve estar em PDF.',
 
-            'documentos.cv.required' =>
-                'Envia o teu Curriculum Vitae.',
+            'documentos.cv.required' => 'Envia o teu Curriculum Vitae.',
 
-            'documentos.cv.max' =>
-                'O Curriculum Vitae não pode ultrapassar 5 MB.',
+            'documentos.cv.max' => 'O Curriculum Vitae não pode ultrapassar 5 MB.',
 
-            'documentos.cv.mimes' =>
-                'O Curriculum Vitae deve estar em PDF, JPG ou PNG.',
+            'documentos.cv.mimes' => 'O Curriculum Vitae deve estar em PDF, JPG ou PNG.',
         ]);
 
         /*
@@ -232,8 +222,7 @@ class CandidaturaController extends Controller
 
         if ($jaTemAtiva) {
             return response()->json([
-                'message' =>
-                    'Já existe uma candidatura ativa para este BI.',
+                'message' => 'Já existe uma candidatura ativa para este BI.',
             ], 422);
         }
 
@@ -263,14 +252,14 @@ class CandidaturaController extends Controller
                 $candidatura = Candidatura::create([
                     'nome' => $validated['nome'],
                     'email' => $validated['email'],
+                    'id_utilizador' => $utilizador->id_utilizador,
                     'curso' => $validated['curso'],
                     'universidade' => $validated['universidade'],
                     'nascimento' => $validated['nascimento'],
                     'sexo' => $validated['sexo'],
                     'bi' => $validated['bi'],
                     'contacto' => $validated['contacto'],
-                    'id_departamento_selecionado' =>
-                        $validated['id_departamento_selecionado'],
+                    'id_departamento_selecionado' => $validated['id_departamento_selecionado'],
                     'estado' => 'em_analise',
                 ]);
 
@@ -284,21 +273,19 @@ class CandidaturaController extends Controller
 
                     $caminho = $ficheiro->store($pasta);
 
-                    if (!$caminho) {
+                    if (! $caminho) {
                         throw new \RuntimeException(
                             "Não foi possível guardar o documento: {$tipo}."
                         );
                     }
 
                     Documento::create([
-                        'id_candidatura' =>
-                            $candidatura->id_candidatura,
+                        'id_candidatura' => $candidatura->id_candidatura,
 
                         'tipo_documento' => $tipo,
                         'versao' => 1,
 
-                        'nome_arquivo' =>
-                            $ficheiro->getClientOriginalName(),
+                        'nome_arquivo' => $ficheiro->getClientOriginalName(),
 
                         'caminho_arquivo' => $caminho,
                         'data_upload' => now(),
@@ -319,14 +306,27 @@ class CandidaturaController extends Controller
                 ->createToken('angular-sge')
                 ->plainTextToken;
 
+            /*
+             * Avisar os administradores de que há uma candidatura nova
+             * a aguardar análise.
+             */
+            Notificacao::paraUtilizadores(
+                User::where('tipo_utilizador', 'administrador')
+                    ->where('ativo', true)
+                    ->get(),
+
+                'Nova candidatura recebida',
+
+                "Foi submetida uma nova candidatura de {$resultado['candidatura']->nome}."
+            );
+
         } catch (UniqueConstraintViolationException $e) {
             if ($pasta) {
                 Storage::deleteDirectory($pasta);
             }
 
             return response()->json([
-                'message' =>
-                    'Já existe um utilizador com este e-mail ou outro dado único.',
+                'message' => 'Já existe um utilizador com este e-mail ou outro dado único.',
             ], 422);
 
         } catch (\Throwable $e) {
@@ -337,8 +337,7 @@ class CandidaturaController extends Controller
             report($e);
 
             return response()->json([
-                'message' =>
-                    'Não foi possível guardar a candidatura. Verifica os dados e tenta novamente.',
+                'message' => 'Não foi possível guardar a candidatura. Verifica os dados e tenta novamente.',
             ], 500);
         }
 
@@ -346,28 +345,49 @@ class CandidaturaController extends Controller
          * Resposta de sucesso.
          */
         return response()->json([
-            'message' =>
-                'Candidatura enviada com sucesso! A tua conta foi criada.',
+            'message' => 'Candidatura enviada com sucesso! A tua conta foi criada.',
 
-            'id_candidatura' =>
-                $resultado['candidatura']->id_candidatura,
+            'id_candidatura' => $resultado['candidatura']->id_candidatura,
 
             'token' => $token,
 
             'user' => [
-                'id_utilizador' =>
-                    $resultado['utilizador']->id_utilizador,
+                'id_utilizador' => $resultado['utilizador']->id_utilizador,
 
-                'nome' =>
-                    $resultado['utilizador']->nome,
+                'nome' => $resultado['utilizador']->nome,
 
-                'email' =>
-                    $resultado['utilizador']->email,
+                'email' => $resultado['utilizador']->email,
 
-                'tipo_utilizador' =>
-                    $resultado['utilizador']->tipo_utilizador,
+                'tipo_utilizador' => $resultado['utilizador']->tipo_utilizador,
             ],
         ], 201);
+    }
+
+    /**
+     * Informar o portal sobre a disponibilidade de candidaturas
+     * no trimestre corrente.
+     */
+    public function limite()
+    {
+        $trimestre = $this->limiteCandidaturas->trimestreDe();
+
+        return response()->json([
+            'limite' => LimiteCandidaturasTrimestrais::MAXIMO_POR_TRIMESTRE,
+
+            'submetidas' => $this->limiteCandidaturas->totalNoTrimestre(),
+
+            'vagas_restantes' => $this->limiteCandidaturas->vagasRestantes(),
+
+            'limite_atingido' => $this->limiteCandidaturas->limiteAtingido(),
+
+            'trimestre' => $trimestre['numero'],
+
+            'ano' => $trimestre['ano'],
+
+            'inicio' => $trimestre['inicio']->toDateString(),
+
+            'fim' => $trimestre['fim']->toDateString(),
+        ]);
     }
 
     /**
@@ -377,7 +397,7 @@ class CandidaturaController extends Controller
     {
         $utilizador = $request->user();
 
-        if (!$utilizador) {
+        if (! $utilizador) {
             return response()->json([
                 'message' => 'Utilizador nao autenticado.',
             ], 401);
@@ -394,7 +414,7 @@ class CandidaturaController extends Controller
             ->where('estado', 'ativo')
             ->first();
 
-        if (!$estagio) {
+        if (! $estagio) {
             return response()->json([
                 'message' => 'Nao existe um estagio activo para esta conta.',
             ], 403);
@@ -408,27 +428,34 @@ class CandidaturaController extends Controller
             'estado_estagio' => $estagio->estado,
         ]);
     }
+
     public function minhaCandidatura(Request $request)
     {
         $utilizador = $request->user();
 
-        if (!$utilizador) {
+        if (! $utilizador) {
             return response()->json([
                 'message' => 'Utilizador não autenticado.',
             ], 401);
         }
 
-        $candidatura = Candidatura::where(
-            'email',
-            $utilizador->email
-        )
+        /*
+         * A ligação faz-se por id_utilizador. O e-mail só entra para
+         * candidaturas antigas ainda sem a chave preenchida.
+         */
+        $candidatura = Candidatura::where(function ($q) use ($utilizador) {
+            $q->where('id_utilizador', $utilizador->id_utilizador)
+                ->orWhere(function ($qq) use ($utilizador) {
+                    $qq->whereNull('id_utilizador')
+                        ->where('email', $utilizador->email);
+                });
+        })
             ->latest('created_at')
             ->first();
 
-        if (!$candidatura) {
+        if (! $candidatura) {
             return response()->json([
-                'message' =>
-                    'Não foi encontrada uma candidatura para este utilizador.',
+                'message' => 'Não foi encontrada uma candidatura para este utilizador.',
             ], 404);
         }
 
@@ -456,8 +483,7 @@ class CandidaturaController extends Controller
         };
 
         return response()->json([
-            'message' =>
-                'Dados da candidatura carregados com sucesso.',
+            'message' => 'Dados da candidatura carregados com sucesso.',
 
             'id' => $candidatura->id_candidatura,
             'nome' => $candidatura->nome,
@@ -469,8 +495,7 @@ class CandidaturaController extends Controller
             'curso' => $candidatura->curso,
             'universidade' => $candidatura->universidade,
 
-            'departamento' =>
-                $departamento?->nome ?? 'Não definido',
+            'departamento' => $departamento?->nome ?? 'Não definido',
 
             'estado' => $estado,
             'id_estagio' => $estagio?->id_estagio,

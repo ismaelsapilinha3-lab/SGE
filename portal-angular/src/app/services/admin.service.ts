@@ -1,5 +1,5 @@
-
 import { Injectable, inject } from '@angular/core';
+
 import {
   HttpClient,
   HttpParams
@@ -93,77 +93,113 @@ export interface Documento {
    CANDIDATURA
    ========================================================= */
 
+export type EstadoCandidatura =
+  | 'em_analise'
+  | 'aprovada'
+  | 'recusada'
+  | 'encerrada';
+
+
 export interface Candidatura {
   id_candidatura: number;
+
   nome: string;
   email: string;
   curso: string;
   universidade: string;
+
   nascimento: string;
   sexo: string;
   bi: string;
   contacto: string;
+
   id_departamento_selecionado: number;
 
-  estado:
-    | 'em_analise'
-    | 'aprovada'
-    | 'recusada'
-    | 'encerrada';
+  estado: EstadoCandidatura;
 
   motivo_recusa?: string | null;
   data_decisao?: string | null;
+
   id_coordenador?: number | null;
   encaminhada_em?: string | null;
-  bi_ativo?: string | null;
+
+  bi_ativo?: boolean | null;
+
   created_at: string;
   updated_at: string;
+
   departamento?: Departamento;
   documentos?: Documento[];
 }
 
 
 /* =========================================================
-   RESPOSTA PAGINADA
+   ENCAMINHAMENTO
+   ========================================================= */
+
+export interface DadosEncaminhamento {
+  id_departamento: number;
+}
+
+
+export interface RespostaEncaminhamento {
+  message: string;
+  candidatura: Candidatura;
+  coordenador?: {
+    id_utilizador: number;
+    nome: string;
+    email: string;
+    id_departamento: number;
+  };
+}
+
+
+/* =========================================================
+   RESPOSTAS PAGINADAS
    ========================================================= */
 
 export interface CandidaturasResponse {
   current_page: number;
   data: Candidatura[];
+
   first_page_url: string;
   from: number | null;
+
   last_page: number;
   last_page_url: string;
+
   next_page_url: string | null;
+  prev_page_url: string | null;
+
   path: string;
   per_page: number;
-  prev_page_url: string | null;
+  to?: number | null;
   total: number;
 }
 
 
 /* =========================================================
-   SERVIÇO ADMINISTRATIVO
+   ESTAGIÁRIOS
    ========================================================= */
-
-/* =======================================================
-   ESTAGIARIOS
-   ======================================================= */
 
 export interface Estagiario {
   id_estagio: number | null;
   id_candidatura: number;
   id_estagiario: number | null;
+
   nome: string;
   email: string;
+
   telefone?: string | null;
   curso?: string | null;
   universidade?: string | null;
   departamento?: string | null;
+
   data_inicio?: string | null;
   duracao_meses?: number | null;
   data_fim_prevista?: string | null;
   data_fim_real?: string | null;
+
   estado_estagio?: string | null;
   motivo_suspensao?: string | null;
   dia_limite_relatorio?: number | null;
@@ -217,12 +253,94 @@ export interface RelatoriosAdminResponse {
   per_page: number;
   total: number;
 }
+
 export interface EstagiariosResponse {
   data: Estagiario[];
   total: number;
   current_page: number;
   last_page: number;
 }
+
+
+/* =========================================================
+   ESTÁGIOS (GESTÃO ADMINISTRATIVA)
+   ========================================================= */
+
+export interface SupervisorEstagio {
+  id_estagio_supervisor?: number;
+  id_supervisor: number;
+  atribuido_em?: string | null;
+  supervisor?: {
+    id_utilizador: number;
+    nome: string;
+    email: string;
+  } | null;
+}
+
+
+export interface PlanoEstagioAdmin {
+  id_plano_estagio: number;
+  objetivos: string;
+  atividades_previstas: string;
+  cronograma: string;
+  data_inicio: string;
+  data_fim: string;
+  estado: string;
+  motivo_recusa: string | null;
+  data_decisao: string | null;
+}
+
+
+export interface EstagioAdmin {
+  id_estagio: number;
+  id_candidatura: number;
+  id_estagiario: number | null;
+
+  data_inicio: string | null;
+  data_fim_prevista: string | null;
+  data_fim_real: string | null;
+
+  estado: 'ativo' | 'suspenso' | 'concluido' | 'cancelado';
+  motivo_suspensao: string | null;
+
+  estagiario?: {
+    id_utilizador: number;
+    nome: string;
+    email: string;
+  } | null;
+
+  candidatura?: {
+    id_candidatura: number;
+    nome: string;
+    email: string;
+    curso?: string | null;
+    universidade?: string | null;
+    telefone?: string | null;
+    departamento?: {
+      id_departamento: number;
+      nome: string;
+    } | null;
+  } | null;
+
+  supervisores_ativos?: SupervisorEstagio[];
+
+  plano_aprovado?: PlanoEstagioAdmin | null;
+}
+
+
+export interface EstagiosAdminResponse {
+  data: EstagioAdmin[];
+  total: number;
+  current_page: number;
+  last_page: number;
+  per_page: number;
+}
+
+
+/* =========================================================
+   SERVIÇO ADMINISTRATIVO
+   ========================================================= */
+
 @Injectable({
   providedIn: 'root'
 })
@@ -262,7 +380,7 @@ export class AdminService {
 
   listarDepartamentos(): Observable<Departamento[]> {
     return this.http.get<Departamento[]>(
-      `${environment.apiUrl}/departamentos`
+      `${this.apiUrl}/departamentos`
     );
   }
 
@@ -274,6 +392,7 @@ export class AdminService {
   criarDepartamento(
     dados: DepartamentoDados
   ): Observable<RespostaDepartamento> {
+
     return this.http.post<RespostaDepartamento>(
       `${this.apiUrl}/departamentos`,
       {
@@ -292,6 +411,7 @@ export class AdminService {
     id: number,
     dados: DepartamentoDados
   ): Observable<RespostaDepartamento> {
+
     return this.http.patch<RespostaDepartamento>(
       `${this.apiUrl}/departamentos/${id}`,
       dados
@@ -308,7 +428,7 @@ export class AdminService {
     estado?: string,
     idDepartamento?: number,
     pagina: number = 1,
-    porPagina: number = 15
+    porPagina: number = 50
   ): Observable<CandidaturasResponse> {
 
     let params = new HttpParams()
@@ -338,9 +458,7 @@ export class AdminService {
 
     return this.http.get<CandidaturasResponse>(
       `${this.apiUrl}/candidaturas`,
-      {
-        params
-      }
+      { params }
     );
   }
 
@@ -352,6 +470,7 @@ export class AdminService {
   obterCandidatura(
     id: number
   ): Observable<Candidatura> {
+
     return this.http.get<Candidatura>(
       `${this.apiUrl}/candidaturas/${id}`
     );
@@ -359,38 +478,23 @@ export class AdminService {
 
 
   /* =======================================================
-     APROVAR CANDIDATURA
+     ENCAMINHAR CANDIDATURA
      ======================================================= */
 
-  aprovarCandidatura(
-    id: number
-  ): Observable<any> {
-    return this.http.patch(
-      `${this.apiUrl}/candidaturas/${id}/aprovar`,
-      {}
-    );
-  }
-
-
-  /* =======================================================
-     RECUSAR CANDIDATURA
-     ======================================================= */
-
-  recusarCandidatura(
+  encaminharCandidatura(
     id: number,
-    motivo: string
-  ): Observable<any> {
-    return this.http.patch(
-      `${this.apiUrl}/candidaturas/${id}/recusar`,
-      {
-        motivo
-      }
+    dados: DadosEncaminhamento
+  ): Observable<RespostaEncaminhamento> {
+
+    return this.http.patch<RespostaEncaminhamento>(
+      `${this.apiUrl}/candidaturas/${id}/encaminhar`,
+      dados
     );
   }
 
 
   /* =======================================================
-     VISUALIZAR DOCUMENTO
+     LISTAR ESTAGIÁRIOS
      ======================================================= */
 
   /* =======================================================
@@ -524,8 +628,45 @@ export class AdminService {
     pesquisa: string = '',
     estado: string = '',
     pagina: number = 1,
-    porPagina: number = 15
+    porPagina: number = 50
   ): Observable<EstagiariosResponse> {
+
+    let params = new HttpParams()
+      .set('page', pagina)
+      .set('por_pagina', porPagina);
+
+    if (pesquisa.trim()) {
+      params = params.set(
+        'pesquisa',
+        pesquisa.trim()
+      );
+    }
+
+    if (estado) {
+      params = params.set(
+        'estado',
+        estado
+      );
+    }
+
+    return this.http.get<EstagiariosResponse>(
+      `${this.apiUrl}/estagiarios`,
+      { params }
+    );
+  }
+
+
+  /* =======================================================
+     LISTAR ESTÁGIOS (CANÓNICO)
+     ======================================================= */
+
+  listarEstagios(
+    pesquisa: string = '',
+    estado: string = '',
+    pagina: number = 1,
+    porPagina: number = 50
+  ): Observable<EstagiosAdminResponse> {
+
     let params = new HttpParams()
       .set('page', pagina)
       .set('por_pagina', porPagina);
@@ -538,11 +679,15 @@ export class AdminService {
       params = params.set('estado', estado);
     }
 
-    return this.http.get<EstagiariosResponse>(
-      `${this.apiUrl}/estagiarios`,
+    return this.http.get<EstagiosAdminResponse>(
+      `${this.apiUrl}/estagios`,
       { params }
     );
   }
+
+  /* =======================================================
+     ATUALIZAR ESTADO DO ESTÁGIO
+     ======================================================= */
 
   atualizarEstadoEstagio(
     idCandidatura: number,
@@ -561,9 +706,26 @@ export class AdminService {
     );
   }
 
+
+  /* =======================================================
+     CONSULTAR UM ESTÁGIO
+     ======================================================= */
+
+  obterEstagio(id: number): Observable<EstagioAdmin> {
+    return this.http.get<EstagioAdmin>(
+      `${this.apiUrl}/estagios/${id}`
+    );
+  }
+
+
+  /* =======================================================
+     VISUALIZAR DOCUMENTO
+     ======================================================= */
+
   visualizarDocumento(
     idDocumento: number
   ): Observable<Blob> {
+
     return this.http.get(
       `${environment.apiUrl}/documentos/${idDocumento}`,
       {

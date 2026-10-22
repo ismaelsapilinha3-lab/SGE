@@ -9,64 +9,64 @@ use Illuminate\Validation\Rule;
 
 class DepartamentoController extends Controller
 {
+    /**
+     * Lista os departamentos activos (consulta pública).
+     */
     public function index()
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Estágios ativos por departamento
-        |--------------------------------------------------------------------------
-        */
-        $ativos = DB::table('candidaturas as c')
+        return Departamento::where('ativo', true)
+            ->select('id_departamento', 'nome', 'descricao')
+            ->get();
+    }
+
+    /**
+     * Lista todos os departamentos para a gestão administrativa,
+     * incluindo os inactivos e o número de estágios activos.
+     */
+    public function indexAdmin()
+    {
+        $estagiosActivos = DB::table('estagios as e')
             ->join(
-                'estagios as e',
-                'e.id_candidatura',
+                'candidaturas as c',
+                'c.id_candidatura',
                 '=',
-                'c.id_candidatura'
+                'e.id_candidatura'
             )
             ->where('e.estado', 'ativo')
-            ->select(
-                'c.id_departamento_selecionado',
-                DB::raw('COUNT(DISTINCT c.id_candidatura) as total')
-            )
             ->groupBy('c.id_departamento_selecionado')
-            ->pluck('total', 'id_departamento_selecionado');
+            ->select(
+                'c.id_departamento_selecionado as id_departamento',
+                DB::raw('COUNT(*) as total')
+            )
+            ->pluck('total', 'id_departamento');
 
-        return Departamento::where('ativo', true)
+        return Departamento::query()
+            ->select('id_departamento', 'nome', 'descricao', 'ativo')
             ->orderBy('nome')
-            ->get([
-                'id_departamento',
-                'nome',
-                'descricao',
-                'ativo',
-            ])
-            ->map(function (Departamento $departamento) use ($ativos) {
-                return [
-                    'id_departamento' => $departamento->id_departamento,
-                    'nome' => $departamento->nome,
-                    'descricao' => $departamento->descricao,
-                    'ativo' => $departamento->ativo,
-                    'estagiarios_ativos' => (int) $ativos->get(
-                        $departamento->id_departamento,
-                        0
-                    ),
-                ];
+            ->get()
+            ->map(function (Departamento $departamento) use ($estagiosActivos) {
+                return $departamento->setAttribute(
+                    'estagiarios_ativos',
+                    (int) ($estagiosActivos[$departamento->id_departamento] ?? 0)
+                );
             });
     }
 
+    /**
+     * Cria um departamento.
+     */
     public function store(Request $request)
     {
         $dados = $request->validate([
-            'nome' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('departamentos', 'nome'),
-            ],
-            'descricao' => ['nullable', 'string'],
-            'ativo' => ['sometimes', 'boolean'],
+            'nome' => ['required', 'string', 'max:255', 'unique:departamentos,nome'],
+            'descricao' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $departamento = Departamento::create($dados);
+        $departamento = Departamento::create([
+            'nome' => $dados['nome'],
+            'descricao' => $dados['descricao'] ?? null,
+            'ativo' => true,
+        ]);
 
         return response()->json([
             'mensagem' => 'Departamento criado com sucesso.',
@@ -74,6 +74,9 @@ class DepartamentoController extends Controller
         ], 201);
     }
 
+    /**
+     * Actualiza um departamento (nome, descrição e estado).
+     */
     public function update(Request $request, int $id)
     {
         $departamento = Departamento::findOrFail($id);
@@ -85,20 +88,18 @@ class DepartamentoController extends Controller
                 'string',
                 'max:255',
                 Rule::unique('departamentos', 'nome')
-                    ->ignore(
-                        $departamento->id_departamento,
-                        'id_departamento'
-                    ),
+                    ->ignore($departamento->id_departamento, 'id_departamento'),
             ],
-            'descricao' => ['sometimes', 'nullable', 'string'],
+            'descricao' => ['sometimes', 'nullable', 'string', 'max:2000'],
             'ativo' => ['sometimes', 'boolean'],
         ]);
 
-        $departamento->update($dados);
+        $departamento->fill($dados);
+        $departamento->save();
 
         return response()->json([
-            'mensagem' => 'Departamento atualizado com sucesso.',
-            'departamento' => $departamento->fresh(),
+            'mensagem' => 'Departamento actualizado com sucesso.',
+            'departamento' => $departamento,
         ]);
     }
 }

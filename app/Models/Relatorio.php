@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Relatorio extends Model
 {
+    use HasFactory;
+
     protected $table = 'relatorios';
 
     protected $primaryKey = 'id_relatorio';
@@ -61,6 +64,11 @@ class Relatorio extends Model
         );
     }
 
+    public function estaSubmetido(): bool
+    {
+        return $this->submetido_em !== null;
+    }
+
     /**
      * O relatório já foi avaliado pelo administrador?
      */
@@ -87,7 +95,7 @@ class Relatorio extends Model
      */
     public function emAtraso(?string $hoje = null): bool
     {
-        if ($this->entregue() || !$this->prazo_envio) {
+        if ($this->entregue() || ! $this->prazo_envio) {
             return false;
         }
 

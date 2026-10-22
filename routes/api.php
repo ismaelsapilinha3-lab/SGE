@@ -1,13 +1,20 @@
 <?php
+
+use App\Http\Controllers\Admin\EstagioAdminController;
+use App\Http\Controllers\Admin\UtilizadorAdminController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminRelatorioController;
-use App\Http\Controllers\Admin\UtilizadorAdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CandidaturaController;
 use App\Http\Controllers\CoordenadorController;
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\DocumentoController;
+use App\Http\Controllers\DocumentoEstagioController;
+use App\Http\Controllers\EstagiarioController;
+use App\Http\Controllers\NotificacaoController;
+use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\RelatorioController;
+use App\Http\Controllers\SupervisorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,9 +26,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [
     AuthController::class,
-    'login'
-]);
-
+    'login',
+])->middleware('throttle:6,1');
 
 /*
 |--------------------------------------------------------------------------
@@ -31,14 +37,18 @@ Route::post('/login', [
 
 Route::get('/departamentos', [
     DepartamentoController::class,
-    'index'
+    'index',
+]);
+
+Route::get('/candidaturas/limite', [
+    CandidaturaController::class,
+    'limite',
 ]);
 
 Route::post('/candidaturas', [
     CandidaturaController::class,
-    'store'
+    'store',
 ])->middleware('throttle:5,1');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -58,63 +68,240 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    /*
+    |--------------------------------------------------------------------------
+    | Perfil do utilizador autenticado
+    |--------------------------------------------------------------------------
+    |
+    | Cada utilizador consulta e atualiza a sua própria foto de perfil.
+    |
+    */
+
+    Route::get('/perfil', [
+        PerfilController::class,
+        'mostrar',
+    ]);
+
+    Route::post('/perfil/foto', [
+        PerfilController::class,
+        'atualizarFoto',
+    ]);
+
+    Route::delete('/perfil/foto', [
+        PerfilController::class,
+        'removerFoto',
+    ]);
 
     /*
     |--------------------------------------------------------------------------
-    | Candidatura do estagiário
+    | Notificações do utilizador autenticado
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/estagiario/candidatura', [
-        CandidaturaController::class,
-        'minhaCandidatura'
+    Route::get('/notificacoes', [
+        NotificacaoController::class,
+        'index',
     ]);
 
     Route::get('/estagiario/estagio-ativo', [
         CandidaturaController::class,
-        'estagioAtivo'
-    ]);    
+        'estagioAtivo',
+    ]);
 
     // Área reservada do estagiário com estágio ativo.
     Route::get('/estagiario/painel', [
         RelatorioController::class,
-        'painel'
+        'painel',
     ]);
 
     // Plano de estágio carregado pelo administrador.
     Route::get('/estagiario/planos/{id}/ficheiro', [
         RelatorioController::class,
-        'verPlano'
+        'verPlano',
     ]);
 
     // Relatórios do estágio do utilizador autenticado.
     Route::get('/estagiario/relatorios', [
         RelatorioController::class,
-        'meusRelatorios'
+        'meusRelatorios',
     ]);
 
     Route::post('/estagiario/relatorios', [
         RelatorioController::class,
-        'guardarRelatorio'
+        'guardarRelatorio',
     ]);
 
     // Segunda forma de envio: ficheiro em PDF ou Word.
     Route::post('/estagiario/relatorios/ficheiro', [
         RelatorioController::class,
-        'carregarRelatorio'
+        'carregarRelatorio',
     ]);
 
     Route::get('/estagiario/relatorios/{id}/ficheiro', [
         RelatorioController::class,
-        'verFicheiro'
+        'verFicheiro',
     ]);
 
     // Relatórios fora do prazo de entrega.
     Route::get('/estagiario/relatorios-atraso', [
         RelatorioController::class,
-        'atrasos'
+        'atrasos',
     ]);
 
+    Route::patch('/notificacoes/ler-todas', [
+        NotificacaoController::class,
+        'marcarTodasComoLidas',
+    ]);
+
+    Route::patch('/notificacoes/{notificacao}/ler', [
+        NotificacaoController::class,
+        'marcarComoLida',
+    ]);
+
+    Route::delete('/notificacoes/{notificacao}', [
+        NotificacaoController::class,
+        'destroy',
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rotas exclusivas do estagiário
+    |--------------------------------------------------------------------------
+    |
+    | Estas rotas exigem perfil de estagiário, para além da autenticação.
+    |
+    */
+
+    Route::middleware('estagiario')
+        ->prefix('estagiario')
+        ->group(function () {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Candidatura do estagiário
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/candidatura', [
+                CandidaturaController::class,
+                'minhaCandidatura',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Estágio do estagiário
+            |--------------------------------------------------------------------------
+            |
+            | O estágio é resolvido a partir do utilizador autenticado, pelo que
+            | não é preciso indicar o identificador do estágio.
+            |
+            */
+
+            Route::get('/estagio', [
+                EstagiarioController::class,
+                'estagio',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Contrato de estágio
+            |--------------------------------------------------------------------------
+            */
+
+            Route::post('/estagio/contrato', [
+                EstagiarioController::class,
+                'submeterContrato',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Relatórios de estágio do estagiário
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagio/relatorios', [
+                EstagiarioController::class,
+                'relatorios',
+            ]);
+
+            Route::post('/estagio/relatorios', [
+                EstagiarioController::class,
+                'criarRelatorio',
+            ]);
+
+            Route::put('/estagio/relatorios/{relatorio}', [
+                EstagiarioController::class,
+                'atualizarRelatorio',
+            ]);
+
+            Route::post('/estagio/relatorios/{relatorio}/submeter', [
+                EstagiarioController::class,
+                'submeterRelatorio',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Assiduidade do estagiário
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagio/assiduidades', [
+                EstagiarioController::class,
+                'assiduidades',
+            ]);
+
+            Route::post('/estagio/assiduidades/{assiduidade}/justificar', [
+                EstagiarioController::class,
+                'justificarFalta',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Atividades do estagiário
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagio/atividades', [
+                EstagiarioController::class,
+                'atividades',
+            ]);
+
+            Route::post('/estagio/atividades', [
+                EstagiarioController::class,
+                'criarAtividade',
+            ]);
+
+            Route::put('/estagio/atividades/{atividade}', [
+                EstagiarioController::class,
+                'atualizarAtividade',
+            ]);
+
+            Route::delete('/estagio/atividades/{atividade}', [
+                EstagiarioController::class,
+                'removerAtividade',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Avaliações e feedback do estagiário
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagio/avaliacoes', [
+                EstagiarioController::class,
+                'avaliacoes',
+            ]);
+
+            Route::get('/estagio/feedback', [
+                EstagiarioController::class,
+                'feedback',
+            ]);
+
+            Route::post('/estagio/feedback', [
+                EstagiarioController::class,
+                'guardarFeedback',
+            ]);
+        });
 
     /*
     |--------------------------------------------------------------------------
@@ -124,9 +311,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [
         AuthController::class,
-        'logout'
+        'logout',
     ]);
-
 
     /*
     |--------------------------------------------------------------------------
@@ -136,14 +322,24 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/documentos/{documento}', [
         DocumentoController::class,
-        'download'
+        'download',
     ]);
 
     Route::post('/documentos/{documento}/substituir', [
         DocumentoController::class,
-        'substituir'
+        'substituir',
     ]);
 
+    /*
+    |--------------------------------------------------------------------------
+    | Documentos de estágio (contrato)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/documentos-estagio/{documento}', [
+        DocumentoEstagioController::class,
+        'download',
+    ]);
 
     /*
     |--------------------------------------------------------------------------
@@ -158,116 +354,202 @@ Route::middleware('auth:sanctum')->group(function () {
             // Gestão de relatórios dos estagiários.
             Route::get('/relatorios', [
                 AdminRelatorioController::class,
-                'index'
+                'index',
             ]);
 
             Route::patch('/relatorios/{id}/avaliacao', [
                 AdminRelatorioController::class,
-                'avaliar'
+                'avaliar',
             ]);
 
             Route::get('/relatorios/atraso', [
                 AdminRelatorioController::class,
-                'atrasos'
+                'atrasos',
             ]);
 
             Route::get('/relatorios/{id}/ficheiro', [
                 RelatorioController::class,
-                'verFicheiro'
+                'verFicheiro',
             ]);
 
             Route::post('/planos-estagio', [
                 RelatorioController::class,
-                'carregarPlano'
+                'carregarPlano',
             ]);
 
             Route::get('/estagios/{id}/plano', [
                 RelatorioController::class,
-                'planoDoEstagio'
+                'planoDoEstagio',
             ]);
 
-            // Painel do administrador.
+            /*
+            |--------------------------------------------------------------------------
+            | Dashboard administrativo
+            |--------------------------------------------------------------------------
+            */
+
             Route::get('/dashboard', [
                 AdminController::class,
-                'dashboard'
+                'dashboard',
             ]);
 
-            // Gestão de candidaturas.
+            /*
+            |--------------------------------------------------------------------------
+            | Consulta de candidaturas
+            |--------------------------------------------------------------------------
+            */
+
             Route::get('/candidaturas', [
                 AdminController::class,
-                'candidaturas'
+                'candidaturas',
             ]);
 
             Route::get('/candidaturas/{id}', [
                 AdminController::class,
-                'show'
+                'show',
             ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Encaminhamento de candidaturas
+            |--------------------------------------------------------------------------
+            |
+            | O administrador encaminha a candidatura ao coordenador
+            | associado à direção selecionada.
+            |
+            | O encaminhamento não altera o estado da candidatura.
+            |
+            */
+
+            Route::patch('/candidaturas/{id}/encaminhar', [
+                AdminController::class,
+                'encaminhar',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Decisões da candidatura
+            |--------------------------------------------------------------------------
+            |
+            | Estas rotas são mantidas temporariamente para compatibilidade.
+            | O AdminController deve impedir que o administrador aprove
+            | ou recuse candidaturas.
+            |
+            | A decisão final pertence ao coordenador responsável.
+            |
+            */
 
             Route::patch('/candidaturas/{id}/aprovar', [
                 AdminController::class,
-                'aprovar'
+                'aprovar',
             ]);
 
             Route::patch('/candidaturas/{id}/recusar', [
                 AdminController::class,
-                'recusar'
+                'recusar',
             ]);
 
-            // Gestão de estagiários e estágios.
+            /*
+            |--------------------------------------------------------------------------
+            | Gestão de estagiários e estágios
+            |--------------------------------------------------------------------------
+            */
+
             Route::get('/estagiarios', [
                 AdminController::class,
-                'estagiarios'
+                'estagiarios',
+            ]);
+
+            Route::get('/estagios', [
+                EstagioAdminController::class,
+                'index',
+            ]);
+
+            Route::get('/estagios/{id}', [
+                EstagioAdminController::class,
+                'show',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Iniciar / alterar o estado de um estágio
+            |--------------------------------------------------------------------------
+            |
+            | A rota indexada por candidatura é a que o painel usa. A versão
+            | sob /estagios é o caminho canónico; ambas partilham a mesma ação.
+            |
+            */
+
+            Route::patch('/estagios/{idCandidatura}/estado', [
+                EstagioAdminController::class,
+                'atualizarEstado',
             ]);
 
             Route::patch('/estagiarios/{idCandidatura}/estado', [
-                AdminController::class,
-                'atualizarEstadoEstagio'
+                EstagioAdminController::class,
+                'atualizarEstado',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Gestão de direções
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/departamentos', [
+                DepartamentoController::class,
+                'indexAdmin',
             ]);
 
             // Estagiários por direção/departamento (dashboard em escada).
             Route::get('/estagiarios-por-departamento', [
                 AdminController::class,
-                'estagiariosPorDepartamento'
+                'estagiariosPorDepartamento',
             ]);
 
             // Gestão de departamentos.
             Route::post('/departamentos', [
                 DepartamentoController::class,
-                'store'
+                'store',
             ]);
 
             Route::patch('/departamentos/{id}', [
                 DepartamentoController::class,
-                'update'
+                'update',
             ]);
 
-            // Gestão de utilizadores.
+            /*
+            |--------------------------------------------------------------------------
+            | Gestão de utilizadores
+            |--------------------------------------------------------------------------
+            */
+
             Route::get('/utilizadores', [
                 UtilizadorAdminController::class,
-                'index'
+                'index',
             ]);
 
             Route::post('/utilizadores', [
                 UtilizadorAdminController::class,
-                'store'
+                'store',
             ]);
 
             Route::get('/utilizadores/{id}', [
                 UtilizadorAdminController::class,
-                'show'
+                'show',
             ]);
 
             Route::put('/utilizadores/{id}', [
                 UtilizadorAdminController::class,
-                'update'
+                'update',
             ]);
 
             Route::patch('/utilizadores/{id}/estado', [
                 UtilizadorAdminController::class,
-                'alterarEstado'
+                'alterarEstado',
             ]);
-        });
 
+        });
 
     /*
     |--------------------------------------------------------------------------
@@ -279,33 +561,295 @@ Route::middleware('auth:sanctum')->group(function () {
         ->prefix('coordenador')
         ->group(function () {
 
-            // Dashboard do coordenador.
+            /*
+            |--------------------------------------------------------------------------
+            | Dashboard do coordenador
+            |--------------------------------------------------------------------------
+            */
+
             Route::get('/dashboard', [
                 CoordenadorController::class,
-                'dashboard'
+                'dashboard',
             ]);
 
-            // Candidaturas atribuídas.
+            /*
+            |--------------------------------------------------------------------------
+            | Candidaturas atribuídas ao coordenador
+            |--------------------------------------------------------------------------
+            */
+
             Route::get('/candidaturas', [
                 CoordenadorController::class,
-                'candidaturas'
+                'candidaturas',
             ]);
 
             Route::get('/candidaturas/{id}', [
                 CoordenadorController::class,
-                'show'
+                'show',
             ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Decisão final do coordenador
+            |--------------------------------------------------------------------------
+            */
 
             Route::patch('/candidaturas/{id}/aprovar', [
                 CoordenadorController::class,
-                'aprovar'
+                'aprovar',
             ]);
 
             Route::patch('/candidaturas/{id}/recusar', [
                 CoordenadorController::class,
-                'recusar'
+                'recusar',
             ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Gestão de supervisores
+            |--------------------------------------------------------------------------
+            */
+
+            Route::post('/supervisores', [
+                CoordenadorController::class,
+                'criarSupervisor',
+            ]);
+
+            Route::get('/supervisores', [
+                CoordenadorController::class,
+                'listarSupervisores',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Estágios e atribuição de supervisores
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagios', [
+                CoordenadorController::class,
+                'estagios',
+            ]);
+
+            Route::get('/estagios/{id}/supervisores', [
+                CoordenadorController::class,
+                'supervisores',
+            ]);
+
+            Route::post('/estagios/{id}/supervisores', [
+                CoordenadorController::class,
+                'atribuirSupervisor',
+            ]);
+
+            Route::delete(
+                '/estagios/{id}/supervisores/{idSupervisor}',
+                [
+                    CoordenadorController::class,
+                    'removerSupervisor',
+                ]
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Plano de estágio
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagios/{id}/plano', [
+                CoordenadorController::class,
+                'mostrarPlano',
+            ]);
+
+            Route::patch('/estagios/{id}/plano/aprovar', [
+                CoordenadorController::class,
+                'aprovarPlano',
+            ]);
+
+            Route::patch('/estagios/{id}/plano/recusar', [
+                CoordenadorController::class,
+                'recusarPlano',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Documentos e relatórios do estágio
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagios/{id}/documentos', [
+                CoordenadorController::class,
+                'documentos',
+            ]);
+
+            Route::get('/estagios/{id}/relatorios', [
+                CoordenadorController::class,
+                'relatorios',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Assiduidade e atividades do estágio
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagios/{id}/assiduidades', [
+                CoordenadorController::class,
+                'assiduidades',
+            ]);
+
+            Route::get('/estagios/{id}/atividades', [
+                CoordenadorController::class,
+                'atividades',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Avaliações e feedback do estágio
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagios/{id}/avaliacoes', [
+                CoordenadorController::class,
+                'avaliacoes',
+            ]);
+
+            Route::get('/estagios/{id}/feedback', [
+                CoordenadorController::class,
+                'feedback',
+            ]);
+
+        });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rotas exclusivas do supervisor
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('supervisor')
+        ->prefix('supervisor')
+        ->group(function () {
+
+            Route::get('/dashboard', [
+                SupervisorController::class,
+                'dashboard',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Estágios atribuídos e plano de estágio
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagios', [
+                SupervisorController::class,
+                'estagios',
+            ]);
+
+            Route::get('/estagios/{id}/plano', [
+                SupervisorController::class,
+                'mostrarPlano',
+            ]);
+
+            Route::put('/estagios/{id}/plano', [
+                SupervisorController::class,
+                'submeterPlano',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Documentos e relatórios do estágio
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagios/{id}/documentos', [
+                SupervisorController::class,
+                'documentos',
+            ]);
+
+            Route::patch('/estagios/{id}/documentos/{documento}/validar', [
+                SupervisorController::class,
+                'validarDocumento',
+            ]);
+
+            Route::patch('/estagios/{id}/documentos/{documento}/rejeitar', [
+                SupervisorController::class,
+                'rejeitarDocumento',
+            ]);
+
+            Route::get('/estagios/{id}/relatorios', [
+                SupervisorController::class,
+                'relatorios',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Assiduidade e atividades do estágio
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagios/{id}/assiduidades', [
+                SupervisorController::class,
+                'assiduidades',
+            ]);
+
+            Route::post('/estagios/{id}/assiduidades', [
+                SupervisorController::class,
+                'registarAssiduidade',
+            ]);
+
+            Route::delete('/estagios/{id}/assiduidades/{assiduidade}', [
+                SupervisorController::class,
+                'removerAssiduidade',
+            ]);
+
+            Route::patch(
+                '/estagios/{id}/assiduidades/{assiduidade}/justificacao/aprovar',
+                [
+                    SupervisorController::class,
+                    'aprovarJustificacao',
+                ]
+            );
+
+            Route::patch(
+                '/estagios/{id}/assiduidades/{assiduidade}/justificacao/recusar',
+                [
+                    SupervisorController::class,
+                    'recusarJustificacao',
+                ]
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Avaliações e feedback do estágio
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagios/{id}/avaliacoes', [
+                SupervisorController::class,
+                'avaliacoes',
+            ]);
+
+            Route::post('/estagios/{id}/avaliacoes', [
+                SupervisorController::class,
+                'registarAvaliacao',
+            ]);
+
+            Route::delete('/estagios/{id}/avaliacoes/{avaliacao}', [
+                SupervisorController::class,
+                'removerAvaliacao',
+            ]);
+
+            Route::get('/estagios/{id}/feedback', [
+                SupervisorController::class,
+                'feedback',
+            ]);
+
+            Route::get('/estagios/{id}/atividades', [
+                SupervisorController::class,
+                'atividades',
+            ]);
+
         });
 
 });
-

@@ -2,6 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Estagio;
+use App\Models\HistoricoEstado;
+use App\Models\Notificacao;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -15,24 +18,17 @@ class AtualizarEstagiosConcluidos extends Command
     {
         $hoje = now()->toDateString();
 
-        $estagios = DB::table('estagios')
+        $ids = Estagio::query()
             ->where('estado', 'ativo')
             ->whereDate('data_fim_prevista', '<=', $hoje)
-            ->get(['id_estagio', 'data_fim_prevista']);
+            ->pluck('id_estagio');
 
         $quantidade = 0;
 
-        foreach ($estagios as $estagio) {
-            $atualizados = DB::table('estagios')
-                ->where('id_estagio', $estagio->id_estagio)
-                ->where('estado', 'ativo')
-                ->update([
-                    'estado' => 'concluido',
-                    'data_fim_real' => $estagio->data_fim_prevista,
-                    'updated_at' => now(),
-                ]);
-
-            $quantidade += $atualizados;
+        foreach ($ids as $id) {
+            if ($this->concluirEstagio((int) $id)) {
+                $quantidade++;
+            }
         }
 
         $this->info(
@@ -40,5 +36,55 @@ class AtualizarEstagiosConcluidos extends Command
         );
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Conclui um estágio, registando a transição no histórico de estados.
+     *
+     * Devolve `false` quando o estágio já não estava `ativo` (por exemplo,
+     * já concluído ou cancelado entretanto).
+     */
+    private function concluirEstagio(int $idEstagio): bool
+    {
+        return DB::transaction(function () use ($idEstagio) {
+            $estagio = Estagio::query()
+                ->where('id_estagio', $idEstagio)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $estagio || ! $estagio->estaAtivo()) {
+                return false;
+            }
+
+            $estadoAnterior = $estagio->estado;
+
+            $estagio->update([
+                'estado' => 'concluido',
+                'data_fim_real' => $estagio->data_fim_real
+                    ?? $estagio->data_fim_prevista,
+            ]);
+
+            HistoricoEstado::create([
+                'id_estagio' => $estagio->id_estagio,
+                'estado_anterior' => $estadoAnterior,
+                'estado_novo' => 'concluido',
+                'motivo' => 'Concluído automaticamente ao atingir a data prevista de fim.',
+                'id_utilizador' => null,
+            ]);
+
+            Notificacao::paraUtilizador(
+                $estagio->id_estagiario,
+                'Estágio concluído',
+                "O teu estágio #{$estagio->id_estagio} foi concluído por ter chegado ao fim previsto."
+            );
+
+            Notificacao::paraUtilizadores(
+                $estagio->supervisoresUtilizadores(),
+                'Estágio concluído',
+                "O estágio #{$estagio->id_estagio} foi concluído por ter chegado ao fim previsto."
+            );
+
+            return true;
+        });
     }
 }

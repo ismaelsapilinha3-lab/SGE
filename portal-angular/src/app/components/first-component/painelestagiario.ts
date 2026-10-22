@@ -5,6 +5,7 @@ import {
 
 import {
   Component,
+  OnDestroy,
   PLATFORM_ID,
   computed,
   inject,
@@ -20,10 +21,23 @@ import {
 } from '../../core/auth.service';
 
 import {
+  PerfilService
+} from '../../services/perfil.service';
+
+import {
   CandidaturaEstagiario,
   CandidaturaEstagiarioService,
   DocumentoEstagiario
 } from '../../core/candidatura-estagiario.service';
+
+import {
+  DomSanitizer,
+  SafeResourceUrl
+} from '@angular/platform-browser';
+
+import {
+  SinoNotificacoesComponent
+} from '../shared/sino-notificacoes/sino-notificacoes';
 
 
 // ============================================================
@@ -154,7 +168,8 @@ const ESTADOS: Record<Estado, ConfigEstado> = {
   standalone: true,
 
   imports: [
-    CommonModule
+    CommonModule,
+    SinoNotificacoesComponent
   ],
 
   templateUrl: './painelestagiario.html',
@@ -162,7 +177,8 @@ const ESTADOS: Record<Estado, ConfigEstado> = {
   styleUrl: './painelestagiario.css'
 
 })
-export class PainelestagiarioComponent {
+export class PainelestagiarioComponent
+  implements OnDestroy {
 
 
   // ==========================================================
@@ -173,10 +189,73 @@ export class PainelestagiarioComponent {
 
   private readonly router = inject(Router);
 
+  private readonly sanitizer = inject(DomSanitizer);
+
   readonly authService = inject(AuthService);
 
   private readonly candidaturaService =
     inject(CandidaturaEstagiarioService);
+
+  private readonly perfilService = inject(PerfilService);
+
+
+  // ==========================================================
+  // FOTO DE PERFIL
+  // ==========================================================
+
+  /** URL da foto de perfil do utilizador autenticado, se existir. */
+  readonly fotoPerfil = this.authService.fotoUrl;
+
+  /**
+   * Envia a foto escolhida para o servidor e atualiza a sessão.
+   */
+  alterarFotoPerfil(ficheiro: File): void {
+
+    this.perfilService
+      .atualizarFoto(ficheiro)
+      .subscribe({
+
+        next: (resposta) => {
+
+          this.authService.definirFoto(
+            resposta.foto_url
+          );
+
+        },
+
+        error: (erro: unknown) => {
+
+          console.error(
+            'Erro ao atualizar a foto de perfil:',
+            erro
+          );
+
+        }
+
+      });
+
+  }
+
+  /**
+   * Lê o ficheiro escolhido no campo de foto e delega o envio.
+   */
+  escolherFotoPerfil(evento: Event): void {
+
+    const campo = evento.target as HTMLInputElement;
+
+    const ficheiro = campo.files?.[0];
+
+    campo.value = '';
+
+    if (!ficheiro) {
+
+      return;
+
+    }
+
+    this.alterarFotoPerfil(ficheiro);
+
+  }
 
 
   // ==========================================================
@@ -200,6 +279,27 @@ export class PainelestagiarioComponent {
 
   readonly erroDocumento =
     signal<string | null>(null);
+
+
+  // ==========================================================
+  // PRÉ-VISUALIZAÇÃO DE DOCUMENTO
+  // ==========================================================
+
+  readonly documentoPreviewAberto = signal(false);
+
+  readonly documentoPreviewUrl =
+    signal<string | null>(null);
+
+  readonly documentoPreviewPdfUrl =
+    signal<SafeResourceUrl | null>(null);
+
+  readonly documentoPreviewTipo = signal('');
+
+  readonly documentoPreviewNome = signal('');
+
+  readonly abrindoDocumento = signal(false);
+
+  private documentoPreviewBlobUrl: string | null = null;
 
 
   // ==========================================================
@@ -682,26 +782,18 @@ export class PainelestagiarioComponent {
     }
 
 
-    /*
-     * Abre a janela imediatamente para evitar
-     * bloqueio do popup pelo navegador.
-     */
-
-    const janela = window.open(
-      '',
-      '_blank'
-    );
-
-
-    if (!janela) {
-
-      this.erro.set(
-        'O navegador bloqueou a abertura do documento.'
-      );
+    if (this.abrindoDocumento()) {
 
       return;
 
     }
+
+
+    this.abrindoDocumento.set(true);
+
+    this.erroDocumento.set(null);
+
+    this.limparPreviewDocumento();
 
 
     this.candidaturaService
@@ -712,29 +804,76 @@ export class PainelestagiarioComponent {
 
         next: (blob) => {
 
-          const url =
-            URL.createObjectURL(blob);
+          try {
 
-          janela.location.href = url;
+            const tipo =
+              this.inferirMimeType(
+                documento,
+                blob
+              );
+
+            const url =
+              URL.createObjectURL(blob);
+
+            this.documentoPreviewBlobUrl = url;
+
+            this.documentoPreviewTipo.set(tipo);
+
+            this.documentoPreviewNome.set(
+              documento.nome_arquivo ||
+              this.tituloDocumento(documento)
+            );
 
 
-          window.setTimeout(() => {
+            if (tipo === 'application/pdf') {
 
-            URL.revokeObjectURL(url);
+              this.documentoPreviewPdfUrl.set(
+                this.sanitizer
+                  .bypassSecurityTrustResourceUrl(
+                    url
+                  )
+              );
 
-          }, 60000);
+              this.documentoPreviewUrl.set(null);
+
+            } else {
+
+              this.documentoPreviewUrl.set(url);
+
+              this.documentoPreviewPdfUrl.set(
+                null
+              );
+
+            }
+
+            this.documentoPreviewAberto.set(true);
+
+          } catch (erro: unknown) {
+
+            console.error(
+              'Erro ao preparar documento:',
+              erro
+            );
+
+            this.erroDocumento.set(
+              'Não foi possível preparar o documento para visualização.'
+            );
+
+          }
+
+          this.abrindoDocumento.set(false);
 
         },
 
 
         error: (erro: unknown) => {
 
-          janela.close();
-
           console.error(
             'Erro ao abrir documento:',
             erro
           );
+
+          this.abrindoDocumento.set(false);
 
           this.erroDocumento.set(
             'Não foi possível abrir este documento.'
@@ -743,6 +882,121 @@ export class PainelestagiarioComponent {
         }
 
       });
+
+  }
+
+
+  // ==========================================================
+  // IDENTIFICAR MIME TYPE
+  // ==========================================================
+
+  private inferirMimeType(
+    documento: DocumentoEstagiario,
+    blob: Blob
+  ): string {
+
+    if (
+      blob.type &&
+      blob.type !== 'application/octet-stream'
+    ) {
+
+      return blob.type;
+
+    }
+
+
+    const nome =
+      (documento.nome_arquivo || '')
+        .toLowerCase();
+
+
+    if (nome.endsWith('.pdf')) {
+
+      return 'application/pdf';
+
+    }
+
+    if (nome.endsWith('.png')) {
+
+      return 'image/png';
+
+    }
+
+    if (
+      nome.endsWith('.jpg') ||
+      nome.endsWith('.jpeg')
+    ) {
+
+      return 'image/jpeg';
+
+    }
+
+    if (nome.endsWith('.gif')) {
+
+      return 'image/gif';
+
+    }
+
+    if (nome.endsWith('.webp')) {
+
+      return 'image/webp';
+
+    }
+
+    return blob.type || 'application/octet-stream';
+
+  }
+
+
+  // ==========================================================
+  // FECHAR PRÉ-VISUALIZAÇÃO
+  // ==========================================================
+
+  fecharPreviewDocumento(): void {
+
+    this.documentoPreviewAberto.set(false);
+
+    this.limparPreviewDocumento();
+
+    this.documentoPreviewTipo.set('');
+
+    this.documentoPreviewNome.set('');
+
+    this.abrindoDocumento.set(false);
+
+  }
+
+
+  // ==========================================================
+  // LIMPAR PRÉ-VISUALIZAÇÃO
+  // ==========================================================
+
+  private limparPreviewDocumento(): void {
+
+    if (this.documentoPreviewBlobUrl) {
+
+      URL.revokeObjectURL(
+        this.documentoPreviewBlobUrl
+      );
+
+      this.documentoPreviewBlobUrl = null;
+
+    }
+
+    this.documentoPreviewUrl.set(null);
+
+    this.documentoPreviewPdfUrl.set(null);
+
+  }
+
+
+  // ==========================================================
+  // ENCERRAMENTO DO COMPONENTE
+  // ==========================================================
+
+  ngOnDestroy(): void {
+
+    this.limparPreviewDocumento();
 
   }
 

@@ -1,0 +1,330 @@
+/* =========================================================
+   SGE MULTITEL — PAINEL DO SUPERVISOR
+   Integrado na estrutura partilhada (app-layout-painel) e
+   alinhado com os tokens visuais do painel administrativo.
+   ========================================================= */
+
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.sup-page {
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.sup-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 32px;
+}
+
+
+/* =========================================================
+   CABEÇALHO DA PÁGINA
+   ========================================================= */
+
+.sup-cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px 28px;
+  color: #ffffff;
+  background: linear-gradient(105deg, #0a2540 0%, #1a3d6b 100%);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(10, 37, 64, 0.14);
+}
+
+.sup-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: #c7d7ec;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+.sup-cabecalho h1 {
+  margin: 0 0 6px;
+  font-size: clamp(23px, 2.6vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.sup-cabecalho p {
+  max-width: 620px;
+  margin: 0;
+  color: #d5e1f0;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   ESTATÍSTICAS
+   ========================================================= */
+
+.sup-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.sup-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 22px;
+  background: #ffffff;
+  border: 1px solid #e3e8ee;
+  border-top: 3px solid #0a2540;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(10, 37, 64, 0.06);
+}
+
+.sup-stat-label {
+  color: #4f566b;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.sup-stat-value {
+  color: #0a2540;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   CARTÕES DE SECÇÃO
+   ========================================================= */
+
+.sup-card {
+  padding: clamp(20px, 3vw, 28px);
+  background: #ffffff;
+  border: 1px solid #e3e8ee;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(10, 37, 64, 0.06);
+}
+
+.sup-card-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.sup-icon {
+  display: grid;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  color: #ffffff;
+  background: #0a2540;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.sup-card-heading h2 {
+  margin: 0 0 4px;
+  color: #0a2540;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.sup-card-heading .sup-kicker {
+  color: #ff6b00;
+}
+
+.sup-card-heading p {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.sup-empty {
+  margin: 0;
+  padding: 28px;
+  color: #667085;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  text-align: center;
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   TABELA
+   ========================================================= */
+
+.sup-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e3e8ee;
+  border-radius: 12px;
+}
+
+.sup-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.sup-table th {
+  padding: 13px 18px;
+  color: #0a2540;
+  background: #eef3f9;
+  border-bottom: 1px solid #d8e1ec;
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sup-table td {
+  padding: 14px 18px;
+  color: #1a1f36;
+  border-bottom: 1px solid #edf0f4;
+  vertical-align: middle;
+}
+
+.sup-table tbody tr {
+  transition: background 0.15s;
+}
+
+.sup-table tbody tr:hover {
+  background: #f7fafe;
+}
+
+.sup-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.sup-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 11px;
+  color: #1456a0;
+  background: #e6f1ff;
+  border: 1px solid #d0e4fb;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   ALERTAS
+   ========================================================= */
+
+.sup-alert {
+  margin-bottom: 4px;
+  padding: 15px 18px;
+  border: 1px solid;
+  border-radius: 10px;
+}
+
+.sup-alert strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.sup-alert p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.sup-alert-error {
+  color: #922b2b;
+  background: #fff1f1;
+  border-color: #f1caca;
+}
+
+
+/* =========================================================
+   BOTÕES
+   ========================================================= */
+
+.sup-btn {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+}
+
+.sup-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sup-btn-outline {
+  color: #0a2540;
+  background: #ffffff;
+  border-color: #d8e1ec;
+}
+
+.sup-btn-outline:hover:not(:disabled) {
+  background: #eef3f9;
+  border-color: #0a2540;
+}
+
+
+/* =========================================================
+   ACESSIBILIDADE
+   ========================================================= */
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #ff6b00;
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   RESPONSIVO
+   ========================================================= */
+
+@media (max-width: 760px) {
+
+  .sup-cabecalho {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 22px 20px;
+  }
+
+  .sup-cabecalho .sup-btn {
+    width: 100%;
+  }
+
+  .sup-card-heading {
+    gap: 12px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

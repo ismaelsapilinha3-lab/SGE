@@ -1,0 +1,650 @@
+:host {
+  display: block;
+}
+
+.ec {
+  color: #183153;
+}
+
+.ec-vazio {
+  margin: 0;
+  padding: 26px;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px dashed #d4dfeb;
+  border-radius: 10px;
+  text-align: center;
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   FILTROS DO TOPO
+   ========================================================= */
+
+.ec-filtros-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  background: #f4f7fb;
+  border: 1px solid #e1e9f2;
+  border-radius: 12px;
+}
+
+.ec-filtros-topo .ec-btn {
+  margin-left: auto;
+}
+
+
+/* =========================================================
+   CABEÇALHO DO ESTÁGIO
+   ========================================================= */
+
+.ec-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 22px;
+  margin-bottom: 14px;
+  background: #f4f7fb;
+  border: 1px solid #e1e9f2;
+  border-radius: 14px;
+}
+
+.ec-cabecalho-info {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ec-datas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin: 14px 0 0;
+  color: #4b5a6e;
+  font-size: 13px;
+}
+
+.ec-datas strong {
+  color: #16375f;
+}
+
+.ec-chip {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  color: #05649f;
+  background: #eef7ff;
+  border: 1px solid #d8ecff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ec-chip[data-estado='concluido'] {
+  color: #137a47;
+  background: #ecfdf3;
+  border-color: #c8ebd9;
+}
+
+.ec-chip[data-estado='suspenso'] {
+  color: #9a5b00;
+  background: #fff6e6;
+  border-color: #f2ddb4;
+}
+
+.ec-chip[data-estado='cancelado'] {
+  color: #922b2b;
+  background: #fff1f1;
+  border-color: #f1caca;
+}
+
+
+/* =========================================================
+   PAGINAÇÃO
+   ========================================================= */
+
+.ec-paginacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: #4b5a6e;
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   ABAS
+   ========================================================= */
+
+.ec-abas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #e3e8ee;
+}
+
+.ec-aba {
+  padding: 9px 16px;
+  color: #4b5a6e;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background 0.2s, color 0.2s;
+}
+
+.ec-aba:hover {
+  background: #f0f6fc;
+}
+
+.ec-aba.ativa {
+  color: #ffffff;
+  background: #0879bd;
+}
+
+
+/* =========================================================
+   ALERTAS E NOTAS
+   ========================================================= */
+
+.ec-alerta {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ec-alerta strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.ec-alerta p {
+  margin: 0 0 12px;
+}
+
+.ec-alerta--erro {
+  color: #922b2b;
+  background: #fff1f1;
+  border-color: #f1caca;
+}
+
+.ec-alerta--sucesso {
+  color: #137a47;
+  background: #ecfdf3;
+  border-color: #c8ebd9;
+}
+
+.ec-nota {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  color: #47566b;
+  background: #f8fafc;
+  border-left: 3px solid #0879bd;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.ec-motivo {
+  margin: 0;
+  color: #922b2b;
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   BOTÕES
+   ========================================================= */
+
+.ec-btn {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 16px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.ec-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.ec-btn--primary {
+  color: #ffffff;
+  background: #0879bd;
+}
+
+.ec-btn--primary:hover:not(:disabled) {
+  background: #05649f;
+}
+
+.ec-btn--light {
+  color: #244361;
+  background: #ffffff;
+  border-color: #cfdae7;
+}
+
+.ec-btn--light:hover:not(:disabled) {
+  background: #f0f6fc;
+}
+
+.ec-btn--ghost {
+  color: #05649f;
+  background: transparent;
+  border-color: #cfe3f5;
+}
+
+.ec-btn--ghost:hover:not(:disabled) {
+  background: #eef7ff;
+}
+
+.ec-btn--danger {
+  color: #b4232a;
+  background: transparent;
+  border-color: #f1caca;
+}
+
+.ec-btn--danger:hover:not(:disabled) {
+  background: #fff1f1;
+}
+
+
+/* =========================================================
+   LISTAS
+   ========================================================= */
+
+.ec-lista {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ec-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid #e1e9f2;
+  border-radius: 10px;
+}
+
+.ec-item--bloco {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.ec-item-corpo {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ec-item-corpo strong {
+  color: #16375f;
+  font-size: 14px;
+}
+
+.ec-item-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.ec-item-meta {
+  display: block;
+  margin-top: 4px;
+  color: #8aa0b8;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.ec-texto {
+  margin: 8px 0 0;
+  color: #47566b;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.ec-item-acoes {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+
+/* =========================================================
+   ETIQUETAS DE ESTADO
+   ========================================================= */
+
+.ec-etiqueta {
+  padding: 4px 11px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ec-etiqueta[data-estado='pendente'],
+.ec-etiqueta[data-estado='submetido'] {
+  color: #9a5b00;
+  background: #fff6e6;
+  border-color: #f2ddb4;
+}
+
+.ec-etiqueta[data-estado='validado'],
+.ec-etiqueta[data-estado='aprovado'] {
+  color: #137a47;
+  background: #ecfdf3;
+  border-color: #c8ebd9;
+}
+
+.ec-etiqueta[data-estado='rejeitado'],
+.ec-etiqueta[data-estado='recusado'] {
+  color: #922b2b;
+  background: #fff1f1;
+  border-color: #f1caca;
+}
+
+.ec-etiqueta[data-estado='substituido'] {
+  color: #4b5a6e;
+  background: #f1f5f9;
+  border-color: #dbe3ec;
+}
+
+
+/* =========================================================
+   PLANO
+   ========================================================= */
+
+.ec-plano-estado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+
+/* =========================================================
+   FORMULÁRIOS
+   ========================================================= */
+
+.ec-form {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  margin-top: 16px;
+  background: #f8fafc;
+  border: 1px solid #e1e9f2;
+  border-radius: 12px;
+}
+
+.ec-form--recusa {
+  background: #fff8f8;
+  border-color: #f1caca;
+}
+
+.ec-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ec-campo--seletor {
+  max-width: 420px;
+}
+
+.ec-campo span {
+  color: #3a4a5e;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.ec-campo input,
+.ec-campo select,
+.ec-campo textarea {
+  padding: 10px 12px;
+  color: #16375f;
+  background: #ffffff;
+  border: 1px solid #cfdae7;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.ec-campo textarea {
+  resize: vertical;
+}
+
+.ec-form-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.ec-form-acoes--decisao {
+  margin-top: 16px;
+}
+
+
+/* =========================================================
+   RESUMOS
+   ========================================================= */
+
+.ec-resumos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.ec-resumo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: #f4f7fb;
+  border: 1px solid #e1e9f2;
+  border-radius: 10px;
+}
+
+.ec-resumo span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.ec-resumo strong {
+  color: #16375f;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.ec-resumo--destaque {
+  background: #fff6e6;
+  border-color: #f2ddb4;
+}
+
+.ec-resumo--destaque strong {
+  color: #9a5b00;
+}
+
+.ec-resumo-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px 20px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  color: #05649f;
+  background: #eef7ff;
+  border: 1px solid #d8ecff;
+  border-radius: 10px;
+}
+
+.ec-resumo-total span {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.ec-resumo-total strong {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.ec-resumo-total small {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   TABELA DE ASSIDUIDADE
+   ========================================================= */
+
+.ec-tabela-wrap {
+  overflow-x: auto;
+  border: 1px solid #e1e9f2;
+  border-radius: 10px;
+}
+
+.ec-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ec-tabela th {
+  padding: 11px 14px;
+  color: #263e5c;
+  background: #f4f7fb;
+  border-bottom: 2px solid #e1e9f2;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ec-tabela td {
+  padding: 12px 14px;
+  color: #17324f;
+  border-bottom: 1px solid #eef3f8;
+  vertical-align: top;
+}
+
+.ec-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #8792a2;
+}
+
+.ec-dot--ok {
+  background: #137a47;
+}
+
+.ec-dot--aviso {
+  background: #e8a000;
+}
+
+.ec-dot--falta {
+  background: #d64545;
+}
+
+.ec-dot--justificada {
+  background: #0879bd;
+}
+
+
+/* =========================================================
+   AVALIAÇÕES
+   ========================================================= */
+
+.ec-nota-final {
+  padding: 4px 12px;
+  color: #05649f;
+  background: #eef7ff;
+  border: 1px solid #d8ecff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ec-subnotas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 6px;
+  color: #4b5a6e;
+  font-size: 12px;
+}
+
+.ec-subnotas strong {
+  color: #16375f;
+}
+
+
+/* =========================================================
+   RESPONSIVO
+   ========================================================= */
+
+@media (max-width: 620px) {
+
+  .ec-cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ec-campo--seletor {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .ec-filtros-topo .ec-btn {
+    margin-left: 0;
+    width: 100%;
+  }
+
+}

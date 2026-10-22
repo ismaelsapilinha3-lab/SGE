@@ -2,18 +2,19 @@
   display: block;
   min-height: 100%;
   color: #1b2939;
-  background: #f4f7fb;
+  background: #ffffff;
 
   --azul: #0a2540;
   --azul-medio: #174a7e;
   --azul-claro: #edf4fc;
-  --laranja: #174a7e;
-  --fundo: #f4f7fb;
+  --azul-destaque: #286393;
+  --fundo: #ffffff;
   --borda: #e1e8f0;
   --texto: #1b2939;
   --texto-suave: #64748b;
   --branco: #ffffff;
   --sombra: 0 8px 24px rgba(10, 37, 64, 0.07);
+  --raio: 14px;
 }
 
 * {
@@ -150,7 +151,7 @@ button {
   padding: 64px 24px 82px;
   color: var(--branco);
   background:
-    radial-gradient(circle at 90% 10%, rgba(255, 107, 0, 0.18), transparent 28%),
+    radial-gradient(circle at 90% 10%, rgba(40, 99, 147, 0.35), transparent 30%),
     linear-gradient(125deg, #091f36 0%, #174a7e 65%, #286393 100%);
 }
 
@@ -315,7 +316,6 @@ button {
   overflow-wrap: anywhere;
 }
 
-.est-card-icon,
 .est-doc-icon,
 .est-bloqueio svg {
   display: none !important;
@@ -341,6 +341,10 @@ button {
   margin-bottom: 6px;
   color: var(--azul);
   font-size: 13px;
+}
+
+.est-data > div > span:first-child {
+  color: var(--azul);
 }
 
 .est-data span,
@@ -423,12 +427,12 @@ button {
   color: var(--branco);
   background: #174a7e;
   border-color: #174a7e;
-  box-shadow: 0 5px 14px rgba(255, 107, 0, 0.18);
+  box-shadow: 0 5px 14px rgba(10, 37, 64, 0.18);
 }
 
 .est-btn-primary:hover {
-  background: #e85f00;
-  box-shadow: 0 8px 18px rgba(255, 107, 0, 0.24);
+  background: #0a2540;
+  box-shadow: 0 8px 18px rgba(10, 37, 64, 0.24);
   transform: translateY(-1px);
 }
 
@@ -500,7 +504,7 @@ button {
 }
 
 .est-footer a:hover {
-  color: #ffb37d;
+  color: #7fb2e0;
 }
 
 .est-bloqueio {
@@ -540,12 +544,163 @@ button {
   text-decoration: none;
 }
 
+/* ---------- Pré-visualização de documento ---------- */
+
+.est-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(7, 20, 38, 0.62);
+  overflow-y: auto;
+}
+
+.est-preview-caixa {
+  width: min(1050px, 100%);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.25);
+}
+
+.est-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  min-height: 72px;
+  padding: 16px 22px;
+  background: var(--azul);
+  color: #fff;
+}
+
+.est-preview-header > div {
+  min-width: 0;
+}
+
+.est-preview-header span {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.est-preview-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.est-preview-fechar {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.est-preview-fechar:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.est-preview-corpo {
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+  background: #f1f5f9;
+  overflow: auto;
+}
+
+.est-preview-imagem {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  margin: 0 auto;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: var(--sombra);
+}
+
+.est-preview-pdf {
+  display: block;
+  width: 100%;
+  height: 70vh;
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.est-preview-indisponivel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--texto-suave);
+}
+
+.est-preview-indisponivel > div {
+  font-size: 40px;
+}
+
+.est-preview-indisponivel h3 {
+  margin: 0;
+  font-size: 17px;
+  color: var(--texto);
+}
+
+.est-preview-indisponivel p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.est-preview-download {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  margin-top: 8px;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: var(--azul);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.est-preview-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--borda);
+  background: #fff;
+}
+
 :host button:focus-visible,
 :host a:focus-visible,
 :host input:focus-visible,
 :host select:focus-visible,
 :host textarea:focus-visible {
-  outline: 3px solid rgba(255, 107, 0, 0.75);
+  outline: 3px solid rgba(23, 74, 126, 0.6);
   outline-offset: 3px;
 }
 
@@ -685,23 +840,8 @@ button {
 #pagina-estagiario {
   min-height: 100vh;
   color: #1b2939;
-  background: #f4f7fb;
+  background: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
-}
-
-#pagina-estagiario .skip-link {
-  position: absolute;
-  top: -100px;
-  left: 16px;
-  z-index: 1000;
-  padding: 12px 18px;
-  color: #fff;
-  background: #0a2540;
-  border-radius: 8px;
-}
-
-#pagina-estagiario .skip-link:focus {
-  top: 12px;
 }
 
 #pagina-estagiario .topo {
@@ -730,10 +870,12 @@ button {
 }
 
 #pagina-estagiario .cabecalho-principal {
-  position: relative;
-  z-index: 5;
+  position: sticky;
+  top: 0;
+  z-index: 40;
   background: #fff;
   border-bottom: 1px solid #e1e8f0;
+  box-shadow: 0 2px 12px rgba(10, 37, 64, 0.06);
 }
 
 #pagina-estagiario .barra {
@@ -794,7 +936,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px;
+  padding: 9px 12px;
   color: #475569;
   border-radius: 9px;
   font-size: 13px;
@@ -817,6 +959,71 @@ button {
   stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* ---------- Ícones coloridos ---------- */
+
+#pagina-estagiario .nav-link .ic {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 7px;
+  border-radius: 9px;
+  transition: background .2s, color .2s;
+}
+
+#pagina-estagiario .abas li:nth-child(1) .ic {
+  color: #174a7e;
+  background: #e3eefb;
+}
+
+#pagina-estagiario .abas li:nth-child(2) .ic {
+  color: #0f766e;
+  background: #d8f3ef;
+}
+
+#pagina-estagiario .abas li:nth-child(3) .ic {
+  color: #b45309;
+  background: #fdf0d8;
+}
+
+#pagina-estagiario .abas li:nth-child(4) .ic {
+  color: #6d28d9;
+  background: #ece1fd;
+}
+
+#pagina-estagiario .sair .ic {
+  color: #b42318;
+}
+
+#pagina-estagiario .est-card-icon {
+  color: #174a7e;
+  background: #e3eefb;
+}
+
+#pagina-estagiario .est-section-head .ic,
+#pagina-estagiario .note-icon .ic {
+  color: #174a7e;
+}
+
+#pagina-estagiario .bloqueio-icon {
+  color: #0f766e;
+  background: #d8f3ef;
+}
+
+#pagina-estagiario .est-doc-ver .ic {
+  color: #174a7e;
+}
+
+#pagina-estagiario .est-doc-prev {
+  color: #b45309;
+  background: linear-gradient(145deg, #fdf0d8, #fff8ec);
+}
+
+#pagina-estagiario .contacto-icon {
+  color: #7fb2e0;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 #pagina-estagiario .user {
@@ -851,6 +1058,50 @@ button {
   background: #174a7e;
   border-radius: 50%;
   font-weight: 800;
+  overflow: hidden;
+}
+
+#pagina-estagiario .av img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Avatar clicável para alterar a foto de perfil. */
+#pagina-estagiario .av-editar {
+  position: relative;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+#pagina-estagiario .av-editar:hover { border-color: #2d6db0; }
+
+#pagina-estagiario .av-camera {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  background: rgba(10, 37, 64, 0.55);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+#pagina-estagiario .av-editar:hover .av-camera,
+#pagina-estagiario .av-editar:focus-within .av-camera { opacity: 1; }
+
+#pagina-estagiario .av-campo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 #pagina-estagiario .sair {
@@ -872,7 +1123,7 @@ button {
   padding: 58px 24px 78px;
   color: #fff;
   background:
-    radial-gradient(circle at 90% 10%, rgba(255,107,0,.2), transparent 28%),
+    radial-gradient(circle at 90% 10%, rgba(40,99,147,.35), transparent 30%),
     linear-gradient(125deg, #091f36, #174a7e 70%, #286393);
 }
 
@@ -884,7 +1135,7 @@ button {
 #pagina-estagiario .cab-label {
   display: inline-block;
   margin-bottom: 16px;
-  color: #ffb37d;
+  color: #d7e5f5;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.8px;
@@ -1045,6 +1296,11 @@ button {
   margin-top: 36px;
 }
 
+#pagina-estagiario .est-section,
+#pagina-estagiario .est-status {
+  scroll-margin-top: 110px;
+}
+
 #pagina-estagiario .est-section-head {
   margin-bottom: 20px;
   padding-bottom: 14px;
@@ -1132,13 +1388,16 @@ button {
   border-radius: 9px;
 }
 
-#pagina-estagiario .est-data-row dt {
+#pagina-estagiario .est-data-row span {
+  display: block;
   margin-bottom: 6px;
   color: #64748b;
   font-size: 12px;
+  letter-spacing: 0.2px;
 }
 
-#pagina-estagiario .est-data-row dd {
+#pagina-estagiario .est-data-row strong {
+  display: block;
   margin: 0;
   color: #1b2939;
   font-size: 14px;
@@ -1165,7 +1424,12 @@ button {
 }
 
 #pagina-estagiario .bloqueio-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
+  color: #174a7e;
 }
 
 #pagina-estagiario .est-docs {
@@ -1347,7 +1611,7 @@ button {
 
 #pagina-estagiario .rodape-in {
   display: grid;
-  grid-template-columns: 1.3fr 1fr .7fr;
+  grid-template-columns: 1.3fr 1fr;
   gap: 36px;
   padding-bottom: 32px;
 }
@@ -1397,25 +1661,6 @@ button {
   font-size: 12px;
 }
 
-#pagina-estagiario .rodape-links ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-#pagina-estagiario .rodape-links li {
-  margin-bottom: 12px;
-}
-
-#pagina-estagiario .rodape-links a {
-  color: #cbd5e1;
-  text-decoration: none;
-}
-
-#pagina-estagiario .rodape-links a:hover {
-  color: #ffb37d;
-}
-
 #pagina-estagiario .rodape-fim {
   margin: 0 -24px;
   padding: 18px 24px;
@@ -1431,16 +1676,36 @@ button {
   outline-offset: 3px;
 }
 
+/* =====================================================
+   RESPONSIVIDADE
+   ===================================================== */
+
 @media (max-width: 1000px) {
   #pagina-estagiario .barra-conteudo {
     flex-wrap: wrap;
     justify-content: center;
-    padding: 16px 0;
+    gap: 12px;
+    padding: 14px 0;
+    min-height: 0;
+  }
+
+  #pagina-estagiario .marca {
+    order: 1;
+  }
+
+  #pagina-estagiario .user {
+    order: 2;
+    margin-left: auto;
   }
 
   #pagina-estagiario .abas {
+    order: 3;
+    width: 100%;
     flex-wrap: wrap;
     justify-content: center;
+    gap: 4px;
+    padding-top: 4px;
+    border-top: 1px solid #eef2f7;
   }
 
   #pagina-estagiario .est-info {
@@ -1448,29 +1713,83 @@ button {
   }
 }
 
-@media (max-width: 700px) {
-  #pagina-estagiario .barra {
-    padding: 0 16px;
+@media (max-width: 760px) {
+  #pagina-estagiario .topo {
+    padding: 8px 16px;
   }
 
-  #pagina-estagiario .marca {
-    margin-right: auto;
-  }
-
-  #pagina-estagiario .user {
-    flex-wrap: wrap;
+  #pagina-estagiario .topo-conteudo {
     justify-content: center;
+    text-align: center;
+  }
+
+  #pagina-estagiario .topo-direita {
+    display: none;
+  }
+
+  #pagina-estagiario .barra {
+    padding: 0 14px;
+  }
+
+  #pagina-estagiario .marca-texto small {
+    display: none;
+  }
+
+  #pagina-estagiario .barra-conteudo {
+    justify-content: space-between;
   }
 
   #pagina-estagiario .user-info {
-    text-align: left;
+    display: none;
   }
 
+  #pagina-estagiario .nav-link {
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 4px;
+    font-size: 11px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  #pagina-estagiario .abas {
+    gap: 2px;
+  }
+
+  #pagina-estagiario .abas li {
+    flex: 1;
+    min-width: 0;
+  }
+
+  #pagina-estagiario .sair span {
+    display: none;
+  }
+
+  #pagina-estagiario .est-status {
+    padding: 20px 16px;
+  }
+}
+
+@media (max-width: 700px) {
   #pagina-estagiario .cab {
-    padding: 38px 20px 58px;
+    padding: 34px 18px 52px;
+  }
+
+  #pagina-estagiario .cab h1 {
+    font-size: clamp(24px, 7vw, 32px);
+  }
+
+  #pagina-estagiario .est-hero-actions {
+    flex-direction: column;
+  }
+
+  #pagina-estagiario .est-hero-actions .est-btn-primary,
+  #pagina-estagiario .est-hero-actions .est-btn-light {
+    width: 100%;
   }
 
   #pagina-estagiario .est-main {
+    margin-top: -24px;
     padding: 0 14px 40px;
   }
 
@@ -1481,20 +1800,56 @@ button {
     grid-template-columns: 1fr;
   }
 
+  #pagina-estagiario .est-section {
+    margin-top: 28px;
+  }
+
+  #pagina-estagiario .est-section-head {
+    margin-bottom: 14px;
+  }
+
+  #pagina-estagiario .est-section-head h2 {
+    font-size: 19px;
+  }
+
   #pagina-estagiario .est-doc {
     flex-direction: column;
+    gap: 12px;
   }
 
   #pagina-estagiario .est-doc-prev {
-    min-height: 64px;
+    min-height: 56px;
+  }
+
+  #pagina-estagiario .est-doc-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #pagina-estagiario .est-doc-ver,
+  #pagina-estagiario .est-doc-substituir,
+  #pagina-estagiario .est-doc-substituicao {
+    width: 100%;
+  }
+
+  #pagina-estagiario .status-titulo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
   #pagina-estagiario .est-progress {
-    gap: 4px;
+    gap: 2px;
   }
 
   #pagina-estagiario .est-step {
     font-size: 10px;
+  }
+
+  #pagina-estagiario .est-step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
   }
 
   #pagina-estagiario .est-status,
@@ -1507,10 +1862,59 @@ button {
 
   #pagina-estagiario .hist-item {
     flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  #pagina-estagiario .hist-item time {
+    width: 100%;
+    padding-left: 44px;
+  }
+
+  #pagina-estagiario .est-info {
+    gap: 14px;
+  }
+
+  #pagina-estagiario .est-preview-overlay {
+    padding: 10px;
+  }
+
+  #pagina-estagiario .est-preview-corpo {
+    padding: 10px;
+  }
+
+  #pagina-estagiario .est-preview-pdf {
+    height: 62vh;
   }
 
   #pagina-estagiario .rodape {
     padding: 32px 18px 0;
+  }
+
+  #pagina-estagiario .rodape-fim {
+    margin: 0 -18px;
+    padding: 16px 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  #pagina-estagiario .nav-link span {
+    display: none;
+  }
+
+  #pagina-estagiario .nav-link .ic {
+    width: 38px;
+    height: 38px;
+    padding: 9px;
+  }
+
+  #pagina-estagiario .av {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+
+  #pagina-estagiario .est-data-row {
+    padding: 11px;
   }
 }
 
@@ -1555,7 +1959,7 @@ button {
 
 #pagina-estagiario .est-bloqueio {
   color: #475569;
-  background: #f4f7fb;
+  background: #ffffff;
   border-color: #dbe3ec;
 }
 
@@ -1587,10 +1991,6 @@ button {
 #pagina-estagiario .est-step.active .est-step-circle,
 #pagina-estagiario .est-step.done .est-step-circle {
   box-shadow: none;
-}
-
-#pagina-estagiario .rodape-links a:hover {
-  color: #fff;
 }
 
 #pagina-estagiario .est-hero-actions .est-btn-primary {
@@ -1637,5 +2037,183 @@ button {
   background: #174a7e;
 }
 
+
+/* =====================================================
+   COMPONENTES SEM ESTILO (spinner, avisos, acções)
+   ===================================================== */
+
+#pagina-estagiario .loading-spinner {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 4px solid #dbe3ec;
+  border-top-color: #174a7e;
+  border-radius: 50%;
+  animation: est-spinner 0.85s linear infinite;
+}
+
+@keyframes est-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#pagina-estagiario .est-loading {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+#pagina-estagiario .est-loading div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+#pagina-estagiario .est-loading strong {
+  color: #0a2540;
+  font-size: 15px;
+}
+
+#pagina-estagiario .est-loading span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+#pagina-estagiario .est-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+#pagina-estagiario .est-aviso > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#pagina-estagiario .est-aviso strong {
+  font-size: 15px;
+}
+
+#pagina-estagiario .est-aviso span {
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+#pagina-estagiario .est-aviso--sucesso {
+  color: #176344;
+  background: #ecfdf5;
+  border-color: #b9efd4;
+}
+
+#pagina-estagiario .est-aviso--sucesso > div:last-child {
+  align-items: flex-start;
+}
+
+#pagina-estagiario .aviso-icon,
+#pagina-estagiario .bloqueio-icon,
+#pagina-estagiario .contacto-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  color: currentColor;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 10px;
+}
+
+#pagina-estagiario .est-aviso--sucesso .aviso-icon {
+  color: #176344;
+}
+
+#pagina-estagiario .est-doc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+#pagina-estagiario .est-doc-substituicao {
+  display: inline-flex;
+}
+
+#pagina-estagiario .est-doc-substituir {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 15px;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #dbe3ec;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+#pagina-estagiario .est-doc-substituir:hover {
+  color: #0a2540;
+  background: #e2e8f0;
+}
+
+#pagina-estagiario .est-doc-substituir.is-disabled,
+#pagina-estagiario .est-doc-substituir.is-disabled:hover {
+  color: #94a3b8;
+  background: #f8fafc;
+  cursor: not-allowed;
+}
+
+#pagina-estagiario .est-doc-ajuda {
+  display: block;
+  margin-top: 10px;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+#pagina-estagiario .est-vazio {
+  grid-column: 1 / -1;
+  padding: 40px 24px;
+  color: #64748b;
+  background: #f8fafd;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  text-align: center;
+}
+
+#pagina-estagiario .est-vazio strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #0a2540;
+  font-size: 15px;
+}
+
+#pagina-estagiario .est-vazio p {
+  margin: 0;
+  font-size: 13px;
+}
+
+#pagina-estagiario .topo-separador {
+  margin: 0 6px;
+  opacity: 0.6;
+}
+
+#pagina-estagiario .rodape-contactos h4 {
+  margin: 0 0 16px;
+  color: #fff;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+#pagina-estagiario .est-doc-status.rejeitado {
+  color: #9f2929;
+  background: #fff1f1;
+}
 
 

@@ -126,6 +126,24 @@
             Confirma todos os dados antes de submeter a candidatura.
           </div>
 
+          <div
+            class="limite-nota"
+            *ngIf="limite"
+            [class.esgotado]="limite.limite_atingido">
+
+            <ng-container *ngIf="limite.limite_atingido; else vagasDisponiveis">
+              O limite de {{ limite.limite }} candidaturas para o
+              {{ limite.trimestre }}.º trimestre de {{ limite.ano }}
+              já foi atingido. As candidaturas reabrem no próximo trimestre.
+            </ng-container>
+
+            <ng-template #vagasDisponiveis>
+              Candidaturas disponíveis neste trimestre:
+              {{ limite.vagas_restantes }} de {{ limite.limite }}.
+            </ng-template>
+
+          </div>
+
         </div>
 
 
@@ -392,7 +410,7 @@
           class="botao"
           type="submit"
           style="margin-top:5px"
-          [disabled]="enviando">
+          [disabled]="enviando || limite?.limite_atingido">
 
           {{ enviando ? 'A enviar...' : 'Criar conta e continuar' }}
 

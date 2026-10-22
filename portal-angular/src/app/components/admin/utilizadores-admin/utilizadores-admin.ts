@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import {
   UtilizadorAdminService,
@@ -24,6 +25,8 @@ import {
 export class UtilizadoresAdminComponent implements OnInit {
 
   private readonly service = inject(UtilizadorAdminService);
+
+  private readonly router = inject(Router);
 
   // Lista e paginação
   utilizadores = signal<UtilizadorAdmin[]>([]);
@@ -59,6 +62,11 @@ export class UtilizadoresAdminComponent implements OnInit {
   ngOnInit(): void {
     this.carregarDepartamentos();
     this.carregarUtilizadores();
+  }
+
+  /** Volta ao painel principal de administração. */
+  voltarAoPainel(): void {
+    this.router.navigate(['/admin']);
   }
 
   carregarDepartamentos(): void {
@@ -178,8 +186,14 @@ export class UtilizadoresAdminComponent implements OnInit {
 
     if (this.password || this.passwordConfirmation ||
         !this.utilizadorEditado()) {
-      if (this.password.length < 8) {
-        this.erro.set('A palavra-passe deve ter pelo menos 8 caracteres.');
+      if (
+        this.password.length < 8 ||
+        !/[A-Za-z]/.test(this.password) ||
+        !/[0-9]/.test(this.password)
+      ) {
+        this.erro.set(
+          'A palavra-passe deve ter pelo menos 8 caracteres e conter letras e números.'
+        );
         return;
       }
 

@@ -1,0 +1,860 @@
+<section class="ec">
+
+  <!-- =======================================================
+       CARREGAMENTO INICIAL
+       ======================================================= -->
+  @if (carregando() && estagios().length === 0) {
+
+    <p class="ec-vazio" role="status">
+      A carregar os estágios da direção...
+    </p>
+
+  }
+
+  <!-- =======================================================
+       ERRO INICIAL
+       ======================================================= -->
+  @else if (erro() && estagios().length === 0) {
+
+    <div class="ec-alerta ec-alerta--erro" role="alert">
+
+      <strong>Não foi possível carregar os estágios</strong>
+
+      <p>{{ erro() }}</p>
+
+      <button
+        type="button"
+        class="ec-btn ec-btn--light"
+        (click)="aplicarFiltros()"
+      >
+        Tentar novamente
+      </button>
+
+    </div>
+
+  }
+
+  @else {
+
+    <!-- =====================================================
+         FILTROS E SELETOR
+         ===================================================== -->
+    <div class="ec-filtros-topo">
+
+      <label class="ec-campo">
+        <span>Pesquisar</span>
+
+        <input
+          type="search"
+          name="pesquisaEstagios"
+          placeholder="Nome ou e-mail do estagiário"
+          [(ngModel)]="pesquisaEstagios"
+          (keyup.enter)="aplicarFiltros()"
+        >
+      </label>
+
+      <label class="ec-campo">
+        <span>Estado</span>
+
+        <select
+          name="estadoFiltroEstagios"
+          [(ngModel)]="estadoFiltroEstagios"
+          (change)="aplicarFiltros()"
+        >
+          <option value="">Todos os estados</option>
+          <option value="ativo">Ativo</option>
+          <option value="suspenso">Suspenso</option>
+          <option value="concluido">Concluído</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </label>
+
+      <button
+        type="button"
+        class="ec-btn ec-btn--primary"
+        (click)="aplicarFiltros()"
+      >
+        Pesquisar
+      </button>
+
+    </div>
+
+
+    @if (estagios().length === 0) {
+
+      <p class="ec-vazio" role="status">
+        Não existem estágios da tua direção para os filtros
+        selecionados.
+      </p>
+
+    }
+
+    @else if (estagioSelecionado(); as e) {
+
+      <header class="ec-cabecalho">
+
+        <div class="ec-cabecalho-info">
+
+          <label class="ec-campo ec-campo--seletor">
+            <span>Estágio</span>
+
+            <select
+              [value]="e.id_estagio"
+              (change)="aoMudarEstagio($event)"
+            >
+              @for (estagio of estagios(); track estagio.id_estagio) {
+
+                <option [value]="estagio.id_estagio">
+                  {{ nomeEstagio(estagio) }}
+                  — {{ formatarData(estagio.data_inicio) }}
+                  ({{ rotuloEstadoEstagio(estagio.estado) }})
+                </option>
+
+              }
+            </select>
+          </label>
+
+          <p class="ec-datas">
+
+            <span>
+              Início: <strong>{{ formatarData(e.data_inicio) }}</strong>
+            </span>
+
+            <span>
+              Fim previsto:
+              <strong>{{ formatarData(e.data_fim_prevista) }}</strong>
+            </span>
+
+            @if (e.data_fim_real) {
+
+              <span>
+                Fim: <strong>{{ formatarData(e.data_fim_real) }}</strong>
+              </span>
+
+            }
+
+            <span>
+              Supervisores:
+              <strong>{{ nomesSupervisores(e) }}</strong>
+            </span>
+
+          </p>
+
+        </div>
+
+        <span class="ec-chip" [attr.data-estado]="e.estado">
+          {{ rotuloEstadoEstagio(e.estado) }}
+        </span>
+
+      </header>
+
+
+      @if (totalEstagios() > 0) {
+
+        <div class="ec-paginacao">
+
+          <button
+            type="button"
+            class="ec-btn ec-btn--ghost"
+            (click)="paginaAnterior()"
+            [disabled]="pagina() <= 1"
+          >
+            Anterior
+          </button>
+
+          <span>
+            Página {{ pagina() }} de {{ ultimaPagina() }}
+            ({{ totalEstagios() }} estágios)
+          </span>
+
+          <button
+            type="button"
+            class="ec-btn ec-btn--ghost"
+            (click)="proximaPagina()"
+            [disabled]="pagina() >= ultimaPagina()"
+          >
+            Seguinte
+          </button>
+
+        </div>
+
+      }
+
+
+      <!-- ===================================================
+           ABAS
+           =================================================== -->
+      <nav
+        class="ec-abas"
+        role="tablist"
+        aria-label="Secções do estágio"
+      >
+
+        @for (definicao of abas; track definicao.id) {
+
+          <button
+            type="button"
+            role="tab"
+            class="ec-aba"
+            [class.ativa]="aba() === definicao.id"
+            [attr.aria-selected]="aba() === definicao.id"
+            (click)="definirAba(definicao.id)"
+          >
+            {{ definicao.rotulo }}
+          </button>
+
+        }
+
+      </nav>
+
+
+      <!-- ===================================================
+           MENSAGENS
+           =================================================== -->
+      @if (sucesso()) {
+
+        <div class="ec-alerta ec-alerta--sucesso" role="status">
+          {{ sucesso() }}
+        </div>
+
+      }
+
+      @if (erroAcao()) {
+
+        <div class="ec-alerta ec-alerta--erro" role="alert">
+          {{ erroAcao() }}
+        </div>
+
+      }
+
+
+      <!-- ===================================================
+           CONTEÚDO
+           =================================================== -->
+      <div class="ec-conteudo">
+
+        @switch (aba()) {
+
+          <!-- ===============================================
+               PLANO
+               =============================================== -->
+          @case ('plano') {
+
+            <div class="ec-seccao">
+
+              @if (carregandoPlano()) {
+
+                <p class="ec-vazio">A carregar o plano de estágio...</p>
+
+              } @else if (!plano()) {
+
+                <p class="ec-vazio">
+                  O supervisor ainda não submeteu o plano de estágio.
+                </p>
+
+              } @else if (plano(); as p) {
+
+                <div class="ec-plano-estado">
+
+                  <span
+                    class="ec-etiqueta"
+                    [attr.data-estado]="p.estado"
+                  >
+                    {{ rotuloEstadoPlano(p.estado) }}
+                  </span>
+
+                  @if (p.motivo_recusa) {
+
+                    <p class="ec-motivo">
+                      Motivo da recusa: {{ p.motivo_recusa }}
+                    </p>
+
+                  }
+
+                </div>
+
+                <ul class="ec-lista">
+
+                  <li class="ec-item ec-item--bloco">
+
+                    <div class="ec-item-corpo">
+
+                      <p class="ec-texto">
+                        <strong>Objetivos:</strong> {{ p.objetivos }}
+                      </p>
+
+                      <p class="ec-texto">
+                        <strong>Atividades previstas:</strong>
+                        {{ p.atividades_previstas }}
+                      </p>
+
+                      <p class="ec-texto">
+                        <strong>Cronograma:</strong> {{ p.cronograma }}
+                      </p>
+
+                      <span class="ec-item-meta">
+                        {{ formatarData(p.data_inicio) }}
+                        a {{ formatarData(p.data_fim) }}
+                      </span>
+
+                    </div>
+
+                  </li>
+
+                </ul>
+
+
+                @if (planoSubmetido()) {
+
+                  <div class="ec-form-acoes ec-form-acoes--decisao">
+
+                    @if (!recusaAberta()) {
+
+                      <button
+                        type="button"
+                        class="ec-btn ec-btn--danger"
+                        (click)="abrirRecusaPlano()"
+                        [disabled]="processando()"
+                      >
+                        Recusar plano
+                      </button>
+
+                      <button
+                        type="button"
+                        class="ec-btn ec-btn--primary"
+                        (click)="aprovarPlano()"
+                        [disabled]="processando()"
+                      >
+                        Aprovar plano
+                      </button>
+
+                    }
+
+                  </div>
+
+                  @if (recusaAberta()) {
+
+                    <div class="ec-form ec-form--recusa">
+
+                      <label class="ec-campo">
+                        <span>Motivo da recusa *</span>
+
+                        <textarea
+                          rows="3"
+                          maxlength="1000"
+                          [(ngModel)]="motivoRecusaPlano"
+                          [disabled]="processando()"
+                        ></textarea>
+                      </label>
+
+                      <div class="ec-form-acoes">
+
+                        <button
+                          type="button"
+                          class="ec-btn ec-btn--light"
+                          (click)="cancelarRecusaPlano()"
+                          [disabled]="processando()"
+                        >
+                          Cancelar
+                        </button>
+
+                        <button
+                          type="button"
+                          class="ec-btn ec-btn--danger"
+                          (click)="confirmarRecusaPlano()"
+                          [disabled]="processando()"
+                        >
+                          Confirmar recusa
+                        </button>
+
+                      </div>
+
+                    </div>
+
+                  }
+
+                }
+
+              }
+
+            </div>
+
+          }
+
+          <!-- ===============================================
+               CONTRATO
+               =============================================== -->
+          @case ('contrato') {
+
+            <div class="ec-seccao">
+
+              @if (carregandoDocumentos()) {
+
+                <p class="ec-vazio">A carregar documentos...</p>
+
+              } @else if (documentos().length === 0) {
+
+                <p class="ec-vazio">
+                  Ainda não foi carregado nenhum contrato.
+                </p>
+
+              } @else {
+
+                <ul class="ec-lista">
+
+                  @for (documento of documentos(); track documento.id_documento_estagio) {
+
+                    <li class="ec-item ec-item--bloco">
+
+                      <div class="ec-item-corpo">
+
+                        <div class="ec-item-titulo">
+
+                          <strong>Versão {{ documento.versao }}</strong>
+
+                          <span
+                            class="ec-etiqueta"
+                            [attr.data-estado]="documento.estado"
+                          >
+                            {{ rotuloEstadoDocumento(documento.estado) }}
+                          </span>
+
+                        </div>
+
+                        <span class="ec-item-meta">
+                          {{ documento.nome_arquivo }}
+                        </span>
+
+                        <span class="ec-item-meta">
+                          Enviado a {{ formatarData(documento.data_upload) }}
+                        </span>
+
+                      </div>
+
+                      <div class="ec-item-acoes">
+
+                        <button
+                          type="button"
+                          class="ec-btn ec-btn--ghost"
+                          (click)="descarregarDocumento(documento)"
+                        >
+                          Ver documento
+                        </button>
+
+                      </div>
+
+                    </li>
+
+                  }
+
+                </ul>
+
+              }
+
+            </div>
+
+          }
+
+          <!-- ===============================================
+               RELATÓRIOS
+               =============================================== -->
+          @case ('relatorios') {
+
+            <div class="ec-seccao">
+
+              @if (carregandoRelatorios()) {
+
+                <p class="ec-vazio">A carregar relatórios...</p>
+
+              } @else if (relatorios().length === 0) {
+
+                <p class="ec-vazio">
+                  Ainda não existem relatórios submetidos.
+                </p>
+
+              } @else {
+
+                <ul class="ec-lista">
+
+                  @for (relatorio of relatorios(); track relatorio.id_relatorio) {
+
+                    <li class="ec-item ec-item--bloco">
+
+                      <div class="ec-item-corpo">
+
+                        <div class="ec-item-titulo">
+
+                          <strong>
+                            Relatório {{ rotuloTipo(relatorio.tipo) }}
+                          </strong>
+
+                          <span class="ec-item-meta">
+                            Período:
+                            {{ formatarData(relatorio.periodo_referencia) }}
+                          </span>
+
+                        </div>
+
+                        <p class="ec-texto">{{ relatorio.atividades }}</p>
+
+                        <p class="ec-texto">
+                          <strong>Resultados:</strong>
+                          {{ relatorio.resultados }}
+                        </p>
+
+                        @if (relatorio.constrangimentos) {
+
+                          <p class="ec-texto">
+                            <strong>Constrangimentos:</strong>
+                            {{ relatorio.constrangimentos }}
+                          </p>
+
+                        }
+
+                        <span class="ec-item-meta">
+                          Submetido a
+                          {{ formatarData(relatorio.submetido_em) }}
+                        </span>
+
+                      </div>
+
+                    </li>
+
+                  }
+
+                </ul>
+
+              }
+
+            </div>
+
+          }
+
+          <!-- ===============================================
+               ASSIDUIDADE
+               =============================================== -->
+          @case ('assiduidade') {
+
+            <div class="ec-seccao">
+
+              <div class="ec-resumos">
+
+                <div class="ec-resumo">
+                  <span>Presente</span>
+                  <strong>{{ resumoAssiduidade().presente }}</strong>
+                </div>
+
+                <div class="ec-resumo">
+                  <span>Atraso</span>
+                  <strong>{{ resumoAssiduidade().atraso }}</strong>
+                </div>
+
+                <div class="ec-resumo">
+                  <span>Falta</span>
+                  <strong>{{ resumoAssiduidade().falta }}</strong>
+                </div>
+
+                <div class="ec-resumo">
+                  <span>Justificadas</span>
+                  <strong>{{ resumoAssiduidade().falta_justificada }}</strong>
+                </div>
+
+                <div class="ec-resumo ec-resumo--destaque">
+                  <span>Justificações pendentes</span>
+                  <strong>{{ resumoAssiduidade().justificacoes_pendentes }}</strong>
+                </div>
+
+              </div>
+
+
+              @if (carregandoAssiduidade()) {
+
+                <p class="ec-vazio">A carregar assiduidade...</p>
+
+              } @else if (assiduidades().length === 0) {
+
+                <p class="ec-vazio">
+                  Ainda não existem registos de assiduidade.
+                </p>
+
+              } @else {
+
+                <div class="ec-tabela-wrap">
+
+                  <table class="ec-tabela">
+
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>Estado</th>
+                        <th>Entrada</th>
+                        <th>Saída</th>
+                        <th>Justificação</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+
+                      @for (registo of assiduidades(); track registo.id_assiduidade) {
+
+                        <tr>
+
+                          <td>{{ formatarData(registo.data) }}</td>
+
+                          <td>
+                            <span class="ec-dot" [ngClass]="classeAssiduidade(registo.estado)"></span>
+                            {{ rotuloAssiduidade(registo.estado) }}
+                          </td>
+
+                          <td>{{ formatarHora(registo.hora_entrada) }}</td>
+
+                          <td>{{ formatarHora(registo.hora_saida) }}</td>
+
+                          <td>{{ rotuloJustificacao(registo.justificacao_estado) }}</td>
+
+                        </tr>
+
+                      }
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+              }
+
+            </div>
+
+          }
+
+          <!-- ===============================================
+               AVALIAÇÕES
+               =============================================== -->
+          @case ('avaliacoes') {
+
+            <div class="ec-seccao">
+
+              @if (mediaAvaliacoes() !== null) {
+
+                <div class="ec-resumo-total">
+
+                  <span>Média global</span>
+
+                  <strong>
+                    {{ mediaAvaliacoes() }}
+                    <small>/ 20</small>
+                  </strong>
+
+                  <span>{{ avaliacoes().length }} avaliação(ões)</span>
+
+                </div>
+
+              }
+
+              @if (carregandoAvaliacoes()) {
+
+                <p class="ec-vazio">A carregar avaliações...</p>
+
+              } @else if (avaliacoes().length === 0) {
+
+                <p class="ec-vazio">
+                  Ainda não existem avaliações registadas.
+                </p>
+
+              } @else {
+
+                <ul class="ec-lista">
+
+                  @for (avaliacao of avaliacoes(); track avaliacao.id_avaliacao) {
+
+                    <li class="ec-item ec-item--bloco">
+
+                      <div class="ec-item-corpo">
+
+                        <div class="ec-item-titulo">
+
+                          <strong>
+                            Avaliação {{ rotuloTipo(avaliacao.tipo) }}
+                          </strong>
+
+                          <span class="ec-nota-final">
+                            {{ formatarNota(avaliacao.nota) }} / 20
+                          </span>
+
+                        </div>
+
+                        <span class="ec-item-meta">
+                          Período:
+                          {{ formatarData(avaliacao.periodo_referencia) }}
+                        </span>
+
+                        <div class="ec-subnotas">
+
+                          <span>
+                            Atividades:
+                            <strong>{{ formatarNota(avaliacao.nota_atividades) }}</strong>
+                          </span>
+
+                          <span>
+                            Assiduidade:
+                            <strong>{{ formatarNota(avaliacao.nota_assiduidade) }}</strong>
+                          </span>
+
+                          <span>
+                            Pontualidade:
+                            <strong>{{ formatarNota(avaliacao.nota_pontualidade) }}</strong>
+                          </span>
+
+                        </div>
+
+                        @if (avaliacao.comentarios) {
+
+                          <p class="ec-texto">{{ avaliacao.comentarios }}</p>
+
+                        }
+
+                        @if (avaliacao.pontos_fortes) {
+
+                          <p class="ec-texto">
+                            <strong>Pontos fortes:</strong>
+                            {{ avaliacao.pontos_fortes }}
+                          </p>
+
+                        }
+
+                        @if (avaliacao.areas_melhoria) {
+
+                          <p class="ec-texto">
+                            <strong>Áreas de melhoria:</strong>
+                            {{ avaliacao.areas_melhoria }}
+                          </p>
+
+                        }
+
+                      </div>
+
+                    </li>
+
+                  }
+
+                </ul>
+
+              }
+
+            </div>
+
+          }
+
+          <!-- ===============================================
+               FEEDBACK
+               =============================================== -->
+          @case ('feedback') {
+
+            <div class="ec-seccao">
+
+              <p class="ec-nota">
+                Feedback partilhado pelo estagiário sobre o estágio.
+              </p>
+
+              @if (carregandoFeedback()) {
+
+                <p class="ec-vazio">A carregar feedback...</p>
+
+              } @else if (!feedback()) {
+
+                <p class="ec-vazio">
+                  O estagiário ainda não submeteu feedback.
+                </p>
+
+              } @else if (feedback(); as f) {
+
+                <div class="ec-resumo-total">
+
+                  <span>Nota geral</span>
+
+                  <strong>
+                    {{ f.nota_geral }}
+                    <small>/ 10</small>
+                  </strong>
+
+                </div>
+
+                @if (f.comentario) {
+
+                  <p class="ec-texto">{{ f.comentario }}</p>
+
+                }
+
+                @if (f.sugestoes) {
+
+                  <p class="ec-texto">
+                    <strong>Sugestões:</strong> {{ f.sugestoes }}
+                  </p>
+
+                }
+
+              }
+
+            </div>
+
+          }
+
+          <!-- ===============================================
+               ATIVIDADES
+               =============================================== -->
+          @case ('atividades') {
+
+            <div class="ec-seccao">
+
+              @if (carregandoAtividades()) {
+
+                <p class="ec-vazio">A carregar atividades...</p>
+
+              } @else if (atividades().length === 0) {
+
+                <p class="ec-vazio">
+                  Ainda não existem atividades registadas pelo estagiário.
+                </p>
+
+              } @else {
+
+                <ul class="ec-lista">
+
+                  @for (atividade of atividades(); track atividade.id_atividade) {
+
+                    <li class="ec-item ec-item--bloco">
+
+                      <div class="ec-item-corpo">
+
+                        <strong>{{ atividade.titulo }}</strong>
+
+                        <span class="ec-item-meta">
+                          {{ formatarData(atividade.data) }}
+                        </span>
+
+                        <p class="ec-texto">{{ atividade.descricao }}</p>
+
+                      </div>
+
+                    </li>
+
+                  }
+
+                </ul>
+
+              }
+
+            </div>
+
+          }
+
+        }
+
+      </div>
+
+    }
+
+  }
+
+</section>

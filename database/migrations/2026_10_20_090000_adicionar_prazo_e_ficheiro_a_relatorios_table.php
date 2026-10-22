@@ -14,7 +14,7 @@ return new class extends Migration
          * por isso cada coluna só é criada se ainda não existir.
          */
         Schema::table('relatorios', function (Blueprint $table) {
-            if (!Schema::hasColumn('relatorios', 'mes_referencia')) {
+            if (! Schema::hasColumn('relatorios', 'mes_referencia')) {
                 /*
                  * Mês a que o relatório diz respeito (primeiro dia do mês).
                  * Substitui o antigo período em texto.
@@ -22,7 +22,7 @@ return new class extends Migration
                 $table->date('mes_referencia')->nullable()->after('periodo_referencia');
             }
 
-            if (!Schema::hasColumn('relatorios', 'prazo_envio')) {
+            if (! Schema::hasColumn('relatorios', 'prazo_envio')) {
                 /*
                  * Prazo de entrega definido pelo administrador para o
                  * período a que o relatório diz respeito.
@@ -30,7 +30,7 @@ return new class extends Migration
                 $table->date('prazo_envio')->nullable()->after('mes_referencia');
             }
 
-            if (!Schema::hasColumn('relatorios', 'enviado_em')) {
+            if (! Schema::hasColumn('relatorios', 'enviado_em')) {
                 /*
                  * Momento em que o estagiário enviou o relatório.
                  * Permite mostrar a data e a hora do envio.
@@ -38,7 +38,7 @@ return new class extends Migration
                 $table->timestamp('enviado_em')->nullable()->after('submetido_em');
             }
 
-            if (!Schema::hasColumn('relatorios', 'entrega_confirmada_em')) {
+            if (! Schema::hasColumn('relatorios', 'entrega_confirmada_em')) {
                 /*
                  * Confirmação da entrega. Fica preenchida quando o
                  * estagiário carrega o documento em PDF ou Word.
@@ -46,7 +46,7 @@ return new class extends Migration
                 $table->timestamp('entrega_confirmada_em')->nullable()->after('enviado_em');
             }
 
-            if (!Schema::hasColumn('relatorios', 'alerta_atraso_enviado_em')) {
+            if (! Schema::hasColumn('relatorios', 'alerta_atraso_enviado_em')) {
                 /*
                  * Aviso de atraso já enviado ao administrador, para
                  * não repetir a notificação todos os dias.
@@ -69,11 +69,14 @@ return new class extends Migration
         /*
          * O aviso de atraso passa a ser um valor possível do estado
          * da avaliação, para o administrador o distinguir de um
-         * relatório apenas pendente.
+         * relatório apenas pendente. Em SQLite a coluna já foi criada
+         * como texto, por isso o MODIFY só é preciso no MySQL.
          */
-        DB::statement(
-            "ALTER TABLE relatorios MODIFY estado_avaliacao VARCHAR(20) NOT NULL DEFAULT 'pendente'"
-        );
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement(
+                "ALTER TABLE relatorios MODIFY estado_avaliacao VARCHAR(20) NOT NULL DEFAULT 'pendente'"
+            );
+        }
 
         /*
          * Um relatório passa a ser identificado pelo tipo e pelo mês
@@ -81,9 +84,8 @@ return new class extends Migration
          * A chave estrangeira tem de ser recriada para libertar o
          * índice único antigo.
          */
-        $indices = collect(DB::select('SHOW INDEX FROM relatorios'))
-            ->pluck('Key_name')
-            ->unique();
+        $indices = collect(Schema::getIndexes('relatorios'))
+            ->pluck('name');
 
         if ($indices->contains('relatorios_id_estagio_tipo_periodo_referencia_unique')) {
             Schema::table('relatorios', function (Blueprint $table) {
@@ -95,21 +97,17 @@ return new class extends Migration
             });
         }
 
-        if (!$indices->contains('relatorios_id_estagio_tipo_mes_referencia_unique')) {
+        if (! $indices->contains('relatorios_id_estagio_tipo_mes_referencia_unique')) {
             Schema::table('relatorios', function (Blueprint $table) {
                 $table->unique(['id_estagio', 'tipo', 'mes_referencia']);
             });
         }
 
-        $temChaveEstrangeira = collect(DB::select(
-            "SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE
-             WHERE TABLE_SCHEMA = DATABASE()
-               AND TABLE_NAME = 'relatorios'
-               AND COLUMN_NAME = 'id_estagio'
-               AND REFERENCED_TABLE_NAME = 'estagios'"
-        ))->isNotEmpty();
+        $temChaveEstrangeira = collect(Schema::getForeignKeys('relatorios'))
+            ->contains(fn (array $chave) => in_array('id_estagio', $chave['columns'])
+                && $chave['foreign_table'] === 'estagios');
 
-        if (!$temChaveEstrangeira) {
+        if (! $temChaveEstrangeira) {
             Schema::table('relatorios', function (Blueprint $table) {
                 $table->foreign('id_estagio')
                     ->references('id_estagio')
@@ -142,8 +140,10 @@ return new class extends Migration
             ]);
         });
 
-        DB::statement(
-            "ALTER TABLE relatorios MODIFY estado_avaliacao VARCHAR(20) NOT NULL DEFAULT 'pendente'"
-        );
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement(
+                "ALTER TABLE relatorios MODIFY estado_avaliacao VARCHAR(20) NOT NULL DEFAULT 'pendente'"
+            );
+        }
     }
 };

@@ -25,4 +25,39 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
         ];
     }
+
+    public function administrador(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'tipo_utilizador' => 'administrador',
+        ]);
+    }
+
+    public function coordenador(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'tipo_utilizador' => 'coordenador',
+        ]);
+    }
+
+    public function supervisor(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'tipo_utilizador' => 'supervisor',
+        ]);
+    }
+
+    public function estagiario(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'tipo_utilizador' => 'estagiario',
+        ]);
+    }
+
+    public function inativo(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'ativo' => false,
+        ]);
+    }
 }

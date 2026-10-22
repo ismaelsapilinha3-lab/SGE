@@ -19,14 +19,20 @@ class AuthController extends Controller
         $user = User::where('email', $credentials['email'])->first();
 
         if (
-            !$user ||
-            !$user->ativo ||
-            !Hash::check($credentials['password'], $user->password)
+            ! $user ||
+            ! $user->ativo ||
+            ! Hash::check($credentials['password'], $user->password)
         ) {
             throw ValidationException::withMessages([
                 'email' => ['E-mail ou palavra-passe incorretos.'],
             ]);
         }
+
+        /*
+        | Rotação de sessão: os tokens anteriores do utilizador deixam de
+        | servir (um token roubado expira no próximo login legítimo).
+        */
+        $user->tokens()->delete();
 
         $token = $user
             ->createToken('angular-sge')
@@ -40,6 +46,7 @@ class AuthController extends Controller
                 'nome' => $user->nome,
                 'email' => $user->email,
                 'tipo_utilizador' => $user->tipo_utilizador,
+                'foto_url' => $user->fotoUrl(),
             ],
         ]);
     }
@@ -53,10 +60,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Sessão encerrada com sucesso.'
+            'message' => 'Sessão encerrada com sucesso.',
         ]);
     }
 }
-
-
-

@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Candidatura;
 use App\Models\Departamento;
-use App\Models\HistoricoEstado;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
@@ -38,24 +39,44 @@ class AdminController extends Controller
     /**
      * Lista todas as candidaturas.
      *
-     * Permite:
-     * - pesquisa por nome, e-mail, curso ou universidade;
-     * - filtro por estado;
-     * - filtro por departamento;
-     * - paginação.
+     * Permite pesquisa, filtros e paginação.
      */
     public function candidaturas(Request $request)
     {
-        $query = Candidatura::with('departamento')
-            ->orderByDesc('created_at');
+        $dados = $request->validate([
+            'pesquisa' => ['nullable', 'string', 'max:150'],
+
+            'estado' => [
+                'nullable',
+                'in:em_analise,aprovada,recusada',
+            ],
+
+            'id_departamento' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
+
+            'por_pagina' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:50',
+            ],
+        ]);
+
+        $query = Candidatura::with([
+            'departamento',
+            'documentos',
+        ])->orderByDesc('created_at');
 
         /*
         |--------------------------------------------------------------------------
         | Pesquisa
         |--------------------------------------------------------------------------
         */
-        if ($request->filled('pesquisa')) {
-            $pesquisa = $request->input('pesquisa');
+        if (! empty($dados['pesquisa'])) {
+            $pesquisa = $dados['pesquisa'];
 
             $query->where(function ($q) use ($pesquisa) {
                 $q->where('nome', 'like', "%{$pesquisa}%")
@@ -74,22 +95,22 @@ class AdminController extends Controller
         | Filtro por estado
         |--------------------------------------------------------------------------
         */
-        if ($request->filled('estado')) {
+        if (! empty($dados['estado'])) {
             $query->where(
                 'estado',
-                $request->input('estado')
+                $dados['estado']
             );
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Filtro por departamento
+        | Filtro por direção
         |--------------------------------------------------------------------------
         */
-        if ($request->filled('id_departamento')) {
+        if (! empty($dados['id_departamento'])) {
             $query->where(
                 'id_departamento_selecionado',
-                $request->input('id_departamento')
+                $dados['id_departamento']
             );
         }
 
@@ -98,11 +119,11 @@ class AdminController extends Controller
         | Paginação
         |--------------------------------------------------------------------------
         */
-        $candidaturas = $query->paginate(
-            $request->integer('por_pagina', 15)
+        return response()->json(
+            $query->paginate(
+                $dados['por_pagina'] ?? 15
+            )
         );
-
-        return response()->json($candidaturas);
     }
 
     /**
@@ -113,11 +134,13 @@ class AdminController extends Controller
         $candidatura = Candidatura::with([
             'departamento',
             'documentos',
-        ])->find($id);
+        ])
+            ->where('id_candidatura', $id)
+            ->first();
 
-        if (!$candidatura) {
+        if (! $candidatura) {
             return response()->json([
-                'message' => 'Candidatura não encontrada.'
+                'message' => 'Candidatura não encontrada.',
             ], 404);
         }
 
@@ -125,180 +148,162 @@ class AdminController extends Controller
     }
 
     /**
-     * Aprova uma candidatura.
+     * Encaminha uma candidatura ao coordenador
+     * da direção selecionada pelo candidato.
+     *
+     * O estado da candidatura permanece em_analise.
      */
-    public function aprovar(int $id)
+    public function encaminhar(Request $request, int $id)
     {
-        return DB::transaction(function () use ($id) {
+        $dados = $request->validate([
+            'id_departamento' => [
+                'required',
+                'integer',
+                'min:1',
+            ],
+        ]);
 
-            $candidatura = Candidatura::find($id);
+        return DB::transaction(function () use (
 
-            if (!$candidatura) {
+            $id,
+            $dados
+        ) {
+            $candidatura = Candidatura::query()
+                ->where('id_candidatura', $id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $candidatura) {
                 return response()->json([
-                    'message' => 'Candidatura não encontrada.'
+                    'message' => 'Candidatura não encontrada.',
                 ], 404);
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Só pode aprovar candidaturas em análise
-            |--------------------------------------------------------------------------
-            */
             if ($candidatura->estado !== 'em_analise') {
                 return response()->json([
-                    'message' =>
-                        'A candidatura não pode ser aprovada porque já não está em análise.'
+                    'message' => 'Só é possível encaminhar candidaturas em análise.',
                 ], 422);
             }
 
-            $estadoAnterior = $candidatura->estado;
+            /*
+            |--------------------------------------------------------------------------
+            | Verificar se já foi encaminhada
+            |--------------------------------------------------------------------------
+            */
+            if (
+                $candidatura->id_coordenador !== null ||
+                $candidatura->encaminhada_em !== null
+            ) {
+                return response()->json([
+                    'message' => 'Esta candidatura já foi encaminhada.',
+                ], 422);
+            }
 
             /*
             |--------------------------------------------------------------------------
-            | Atualização
+            | Localizar coordenador ativo da direção escolhida
             |--------------------------------------------------------------------------
-            |
-            | NÃO alteramos "bi_ativo" aqui.
-            |
-            | A coluna bi_ativo é uma coluna gerada pelo MySQL,
-            | portanto o próprio banco calcula o seu valor
-            | com base no estado da candidatura.
-            |
+            */
+            $coordenador = User::query()
+                ->where('tipo_utilizador', 'coordenador')
+                ->where('ativo', true)
+                ->whereHas('perfil', function ($q) use ($dados) {
+                    $q->where(
+                        'id_departamento',
+                        $dados['id_departamento']
+                    );
+                })
+                ->with('perfil')
+                ->first();
+
+            if (! $coordenador) {
+                return response()->json([
+                    'message' => 'Não existe coordenador activo para a direção seleccionada.',
+                ], 422);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Registar o encaminhamento
+            |--------------------------------------------------------------------------
             */
             $candidatura->update([
-                'estado' => 'aprovada',
-                'motivo_recusa' => null,
-                'data_decisao' => now(),
+                'id_coordenador' => $coordenador->id_utilizador,
+                'id_departamento_selecionado' => (int) $dados['id_departamento'],
+                'encaminhada_em' => now(),
             ]);
 
-            /*
-            |--------------------------------------------------------------------------
-            | Registo do histórico
-            |--------------------------------------------------------------------------
-            */
-            HistoricoEstado::create([
-                'id_candidatura' => $candidatura->id_candidatura,
-                'estado_anterior' => $estadoAnterior,
-                'estado_novo' => 'aprovada',
-                'motivo' => null,
-                'id_utilizador' => request()->user()->id_utilizador,
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Resposta
-            |--------------------------------------------------------------------------
-            */
             return response()->json([
-                'message' => 'Candidatura aprovada com sucesso.',
+                'message' => 'Candidatura encaminhada ao coordenador com sucesso.',
 
-                'candidatura' => $candidatura->fresh([
+                'candidatura' => $candidatura->fresh()->load([
                     'departamento',
                     'documentos',
                 ]),
+
+                'coordenador' => [
+                    'id_utilizador' => $coordenador->id_utilizador,
+                    'nome' => $coordenador->nome,
+                    'email' => $coordenador->email,
+                    'id_departamento' => (int) $dados['id_departamento'],
+                ],
             ]);
         });
     }
 
     /**
-     * Recusa uma candidatura.
+     * A decisão final pertence ao coordenador.
+     *
+     * Mantido para evitar erros nas rotas antigas,
+     * mas não permite ao administrador aprovar.
+     */
+    public function aprovar(Request $request, int $id)
+    {
+        return response()->json([
+            'message' => 'O administrador não pode aprovar candidaturas. Encaminhe a candidatura ao coordenador responsável.',
+        ], 403);
+    }
+
+    /**
+     * A decisão final pertence ao coordenador.
+     *
+     * Mantido para evitar erros nas rotas antigas,
+     * mas não permite ao administrador recusar.
      */
     public function recusar(Request $request, int $id)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Validação do motivo
-        |--------------------------------------------------------------------------
-        */
-        $dados = $request->validate([
-            'motivo' => [
-                'required',
-                'string',
-                'min:5',
-                'max:1000'
-            ],
-        ]);
-
-        return DB::transaction(function () use ($id, $dados) {
-
-            $candidatura = Candidatura::find($id);
-
-            if (!$candidatura) {
-                return response()->json([
-                    'message' => 'Candidatura não encontrada.'
-                ], 404);
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Só pode recusar candidaturas em análise
-            |--------------------------------------------------------------------------
-            */
-            if ($candidatura->estado !== 'em_analise') {
-                return response()->json([
-                    'message' =>
-                        'A candidatura não pode ser recusada porque já não está em análise.'
-                ], 422);
-            }
-
-            $estadoAnterior = $candidatura->estado;
-
-            /*
-            |--------------------------------------------------------------------------
-            | Atualização
-            |--------------------------------------------------------------------------
-            |
-            | NÃO alteramos "bi_ativo".
-            |
-            | Como essa coluna é gerada pelo MySQL, ao mudar
-            | o estado para "recusada", o banco calcula
-            | automaticamente o valor correspondente.
-            |
-            */
-            $candidatura->update([
-                'estado' => 'recusada',
-                'motivo_recusa' => $dados['motivo'],
-                'data_decisao' => now(),
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Registo do histórico
-            |--------------------------------------------------------------------------
-            */
-            HistoricoEstado::create([
-                'id_candidatura' => $candidatura->id_candidatura,
-                'estado_anterior' => $estadoAnterior,
-                'estado_novo' => 'recusada',
-                'motivo' => $dados['motivo'],
-                'id_utilizador' => request()->user()->id_utilizador,
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Resposta
-            |--------------------------------------------------------------------------
-            */
-            return response()->json([
-                'message' => 'Candidatura recusada com sucesso.',
-
-                'candidatura' => $candidatura->fresh([
-                    'departamento',
-                    'documentos',
-                ]),
-            ]);
-        });
+        return response()->json([
+            'message' => 'O administrador não pode recusar candidaturas. Encaminhe a candidatura ao coordenador responsável.',
+        ], 403);
     }
 
+    /**
+     * Lista os estagiários e os estágios.
+     */
     public function estagiarios(Request $request)
     {
         $query = DB::table('candidaturas as c')
-            ->leftJoin('estagios as e', 'e.id_candidatura', '=', 'c.id_candidatura')
-            ->leftJoin('utilizadores as u', 'u.email', '=', 'c.email')
-            ->leftJoin('departamentos as d', 'd.id_departamento', '=', 'c.id_departamento_selecionado')
+            ->leftJoin(
+                'estagios as e',
+                'e.id_candidatura',
+                '=',
+                'c.id_candidatura'
+            )
+            ->leftJoin(
+                'utilizadores as u',
+                'u.id_utilizador',
+                '=',
+                'c.id_utilizador'
+            )
+            ->leftJoin(
+                'departamentos as d',
+                'd.id_departamento',
+                '=',
+                'c.id_departamento_selecionado'
+            )
             ->where(function ($q) {
                 $q->where('c.estado', 'aprovada')
-                  ->orWhereNotNull('e.id_estagio');
+                    ->orWhereNotNull('e.id_estagio');
             })
             ->select(
                 'e.id_estagio',
@@ -308,33 +313,47 @@ class AdminController extends Controller
                 'e.data_fim_prevista',
                 'e.data_fim_real',
                 'e.dia_limite_relatorio',
-              'e.motivo_suspensao',
-                DB::raw('COALESCE(e.estado, c.estado) as estado_estagio'),
+                'e.motivo_suspensao',
+                DB::raw(
+                    'COALESCE(e.estado, c.estado) as estado_estagio'
+                ),
                 'u.id_utilizador as id_estagiario',
                 DB::raw('COALESCE(u.nome, c.nome) as nome'),
                 DB::raw('COALESCE(u.email, c.email) as email'),
-                DB::raw('COALESCE(u.telefone, c.contacto) as telefone'),
+                DB::raw(
+                    'COALESCE(u.telefone, c.contacto) as telefone'
+                ),
                 'c.curso',
                 'c.universidade',
                 'd.nome as departamento'
             );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Pesquisa
+        |--------------------------------------------------------------------------
+        */
         if ($request->filled('pesquisa')) {
             $pesquisa = $request->input('pesquisa');
 
             $query->where(function ($q) use ($pesquisa) {
                 $q->where('c.nome', 'like', "%{$pesquisa}%")
-                  ->orWhere('c.email', 'like', "%{$pesquisa}%")
-                  ->orWhere('c.curso', 'like', "%{$pesquisa}%");
+                    ->orWhere('c.email', 'like', "%{$pesquisa}%")
+                    ->orWhere('c.curso', 'like', "%{$pesquisa}%");
             });
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Filtro por estado do estágio
+        |--------------------------------------------------------------------------
+        */
         if ($request->filled('estado')) {
             $estado = $request->input('estado');
 
             if ($estado === 'aprovada') {
                 $query->where('c.estado', 'aprovada')
-                      ->whereNull('e.id_estagio');
+                    ->whereNull('e.id_estagio');
             } else {
                 $query->where('e.estado', $estado);
             }
@@ -342,7 +361,12 @@ class AdminController extends Controller
 
         return response()->json(
             $query->orderByDesc('c.data_decisao')
-                  ->paginate($request->integer('por_pagina', 15))
+                ->paginate(
+                    min(
+                        max($request->integer('por_pagina', 15), 1),
+                        50
+                    )
+                )
         );
     }
 
@@ -408,7 +432,7 @@ class AdminController extends Controller
 
             $estado = $linha->estado_estagio;
 
-            if (!in_array($estado, $estados, true)) {
+            if (! in_array($estado, $estados, true)) {
                 $estados[] = $estado;
             }
 
@@ -463,7 +487,7 @@ class AdminController extends Controller
         | Estagiários sem departamento associado
         |--------------------------------------------------------------------------
         */
-        if (!empty($contagem['sem_departamento'])) {
+        if (! empty($contagem['sem_departamento'])) {
             $departamentos->push(
                 $this->comPorEstadoDepartamento(
                     [
@@ -532,9 +556,9 @@ class AdminController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            if (!$candidatura) {
+            if (! $candidatura) {
                 return response()->json([
-                    'message' => 'Candidatura não encontrada.'
+                    'message' => 'Candidatura não encontrada.',
                 ], 404);
             }
 
@@ -543,9 +567,9 @@ class AdminController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            if (!$estagio && $candidatura->estado !== 'aprovada') {
+            if (! $estagio && $candidatura->estado !== 'aprovada') {
                 return response()->json([
-                    'message' => 'Só é possível iniciar um estágio para uma candidatura aprovada.'
+                    'message' => 'Só é possível iniciar um estágio para uma candidatura aprovada.',
                 ], 422);
             }
 
@@ -554,9 +578,9 @@ class AdminController extends Controller
                 ->where('email', $candidatura->email)
                 ->first();
 
-            if (!$utilizador) {
+            if (! $utilizador) {
                 return response()->json([
-                    'message' => 'Esta candidatura ainda não tem uma conta de estagiário. Cria a conta antes de iniciar o estágio.'
+                    'message' => 'Esta candidatura ainda não tem uma conta de estagiário. Cria a conta antes de iniciar o estágio.',
                 ], 422);
             }
 
@@ -568,21 +592,21 @@ class AdminController extends Controller
                 ?? ($estagio->duracao_meses ?? 6)
             );
 
-            if (!$inicio) {
+            if (! $inicio) {
                 return response()->json([
-                    'message' => 'Indica a data de início do estágio.'
+                    'message' => 'Indica a data de início do estágio.',
                 ], 422);
             }
 
             if ($duracaoMeses < 1) {
                 return response()->json([
-                    'message' => 'A duração deve ser de pelo menos um mês.'
+                    'message' => 'A duração deve ser de pelo menos um mês.',
                 ], 422);
             }
 
             // O servidor calcula a data final; não confia na data
             // prevista enviada pelo navegador.
-            $fimPrevisto = \Illuminate\Support\Carbon::parse($inicio)
+            $fimPrevisto = Carbon::parse($inicio)
                 ->addMonthsNoOverflow($duracaoMeses)
                 ->toDateString();
 

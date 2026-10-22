@@ -142,6 +142,28 @@
   line-height: 1.5;
 }
 
+/* Aviso do limite de candidaturas por trimestre */
+.limite-nota {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 20px;
+  padding: 11px 13px;
+  border-left: 3px solid #137A47;
+  border-radius: 8px;
+  background: #ECFDF3;
+  color: #10603A;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.limite-nota.esgotado {
+  border-left-color: #B42318;
+  background: #FEF3F2;
+  color: #912018;
+}
+
 /* Campos */
 .campo {
   min-width: 0;

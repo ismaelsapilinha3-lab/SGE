@@ -1,164 +1,18 @@
 <div class="painel-shell">
+  <app-layout-painel
+    marcaSigla="SGE"
+    marcaDescricao="Gestão de Estágios"
+    nomePerfil="Administrador"
+    descricaoPerfil="Gestão do sistema"
+    [fotoUrl]="fotoPerfil()"
+    (fotoSelecionada)="alterarFotoPerfil($event)"
+    [secaoAtiva]="secaoAtiva()"
+    [grupos]="gruposNavegacao"
+    (secaoSelecionada)="irParaSecao($event)"
+    (terminarSessao)="sair()"
+  >
 
-  <!-- =====================================================
-       CABEÇALHO FIXO: MARCA + NAVEGAÇÃO + PERFIL
-       ===================================================== -->
-  <header class="topo">
-
-    <div class="marca-multitel">
-      <img src="assets/img/multitel.png" alt="Multitel" class="logo-multitel" />
-
-      <div class="marca-texto">
-        <strong>SGE</strong>
-        <span>Gestão de Estágios</span>
-      </div>
-    </div>
-
-    <div class="topo-direita">
-
-      <span class="estado-sistema">
-        <span class="estado-online"></span>
-        Sistema operacional
-      </span>
-
-      <div class="perfil-topo">
-        <div class="avatar-admin">A</div>
-
-        <div class="perfil-topo-info">
-          <strong>Administrador</strong>
-          <span>Gestão do sistema</span>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        class="botao-sair"
-        (click)="sair()"
-      >
-        <span aria-hidden="true">⎋</span>
-        Sair
-      </button>
-
-    </div>
-
-    <!-- =====================================================
-         NAVEGAÇÃO ADMINISTRATIVA
-         ===================================================== -->
-    <nav class="menu-lateral" aria-label="Navegação administrativa">
-
-      <button
-        type="button"
-        class="menu-item"
-        [class.ativo]="secaoAtiva() === 'dashboard'"
-        [attr.aria-current]="secaoAtiva() === 'dashboard' ? 'page' : null"
-        (click)="irParaSecao('dashboard')"
-      >
-        <span class="menu-icone">▦</span>
-        Dashboard
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        [class.ativo]="secaoAtiva() === 'candidaturas'"
-        [attr.aria-current]="secaoAtiva() === 'candidaturas' ? 'page' : null"
-        (click)="irParaSecao('candidaturas')"
-      >
-        <span class="menu-icone">▤</span>
-        Candidaturas
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        [class.ativo]="secaoAtiva() === 'departamentos'"
-        [attr.aria-current]="secaoAtiva() === 'departamentos' ? 'page' : null"
-        (click)="irParaSecao('departamentos')"
-      >
-        <span class="menu-icone">⌂</span>
-        Departamentos
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        [class.ativo]="secaoAtiva() === 'estagiarios'"
-        [attr.aria-current]="secaoAtiva() === 'estagiarios' ? 'page' : null"
-        (click)="irParaSecao('estagiarios')"
-      >
-        <span class="menu-icone">♙</span>
-        Estagiários
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        disabled
-        title="Em breve"
-      >
-        <span class="menu-icone">▣</span>
-        Estágios
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        [class.ativo]="secaoAtiva() === 'relatorios'"
-        [attr.aria-current]="secaoAtiva() === 'relatorios' ? 'page' : null"
-        (click)="irParaSecao('relatorios')"
-      >
-        <span class="menu-icone">▥</span>
-        Relatórios
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        disabled
-        title="Em breve"
-      >
-        <span class="menu-icone">★</span>
-        Avaliações
-      </button>
-
-      <button
-        type="button"
-        class="menu-item"
-        disabled
-        title="Em breve"
-      >
-        <span class="menu-icone">◷</span>
-        Assiduidade
-      </button>
-
-    </nav>
-
-    <div class="menu-separador"></div>
-
-    <div class="menu-titulo">SISTEMA</div>
-
-    <nav class="menu-lateral" aria-label="Gestão do sistema">
-
-      <button
-        type="button"
-        class="menu-item"
-        [class.ativo]="secaoAtiva() === 'utilizadores'"
-        [attr.aria-current]="secaoAtiva() === 'utilizadores' ? 'page' : null"
-        (click)="irParaSecao('utilizadores')"
-      >
-        <span class="menu-icone">♙</span>
-        Utilizadores
-      </button>
-
-    </nav>
-
-  </header>
-
-
-  <!-- =====================================================
-       CONTEÚDO PRINCIPAL
-       ===================================================== -->
-  <main class="conteudo-painel">
+  <main class="conteudo-painel" role="main">
 
     <!-- =====================================================
          DASHBOARD
@@ -199,71 +53,132 @@
         </div>
       }
 
-      <section class="indicadores" aria-label="Resumo das candidaturas">
+      <!-- =====================================================
+           GRÁFICOS DE ACOMPANHAMENTO
+           ===================================================== -->
+      <section
+        class="graficos-acompanhamento"
+        aria-label="Gráficos de acompanhamento das candidaturas"
+      >
 
-        <article class="indicador indicador-total">
-          <div class="indicador-icone" aria-hidden="true">#</div>
+        <div class="grafico-card">
 
-          <div class="indicador-conteudo">
-            <span class="indicador-label">Total de candidaturas</span>
+          <header class="grafico-cabecalho">
+            <div>
+              <h2>Distribuição por estado</h2>
+              <p>Visualização global do estado das candidaturas</p>
+            </div>
+          </header>
 
-            <strong class="indicador-valor">
-              @if (carregandoDashboard()) {
-                …
-              } @else {
-                {{ dashboard().total_candidaturas }}
-              }
-            </strong>
+          <div class="grafico-corpo">
+
+            <div
+              class="grafico-donut-wrapper"
+              role="img"
+              aria-label="Gráfico circular com a distribuição das candidaturas por estado"
+            >
+              <svg viewBox="0 0 42 42" class="grafico-donut">
+                <circle
+                  cx="21"
+                  cy="21"
+                  r="15.91549430918954"
+                  fill="transparent"
+                  stroke="#E3E8EE"
+                  stroke-width="3"
+                ></circle>
+
+                @if (dashboard().em_analise > 0) {
+                  <circle
+                    cx="21"
+                    cy="21"
+                    r="15.91549430918954"
+                    fill="transparent"
+                    stroke="#FF6B00"
+                    stroke-width="3"
+                    [attr.stroke-dasharray]="percentEmAnalise() + ' ' + (100 - percentEmAnalise())"
+                    stroke-dashoffset="25"
+                    class="grafico-arco"
+                  ></circle>
+                }
+
+                @if (dashboard().aprovadas > 0) {
+                  <circle
+                    cx="21"
+                    cy="21"
+                    r="15.91549430918954"
+                    fill="transparent"
+                    stroke="#137A47"
+                    stroke-width="3"
+                    [attr.stroke-dasharray]="percentAprovadas() + ' ' + (100 - percentAprovadas())"
+                    [attr.stroke-dashoffset]="25 - percentEmAnalise()"
+                    class="grafico-arco"
+                  ></circle>
+                }
+
+                @if (dashboard().recusadas > 0) {
+                  <circle
+                    cx="21"
+                    cy="21"
+                    r="15.91549430918954"
+                    fill="transparent"
+                    stroke="#C4323F"
+                    stroke-width="3"
+                    [attr.stroke-dasharray]="percentRecusadas() + ' ' + (100 - percentRecusadas())"
+                    [attr.stroke-dashoffset]="25 - percentEmAnalise() - percentAprovadas()"
+                    class="grafico-arco"
+                  ></circle>
+                }
+              </svg>
+
+              <div class="grafico-centro">
+                <strong>{{ dashboard().total_candidaturas }}</strong>
+                <span>Total</span>
+              </div>
+            </div>
+
+            <div class="grafico-legenda">
+
+              <div class="legenda-item">
+                <span class="legenda-cor legenda-cor--analise"></span>
+
+                <div class="legenda-texto">
+                  <span>Em análise</span>
+                  <strong>
+                    {{ dashboard().em_analise }}
+                    <small>({{ percentEmAnalise() }}%)</small>
+                  </strong>
+                </div>
+              </div>
+
+              <div class="legenda-item">
+                <span class="legenda-cor legenda-cor--aprovadas"></span>
+
+                <div class="legenda-texto">
+                  <span>Aprovadas</span>
+                  <strong>
+                    {{ dashboard().aprovadas }}
+                    <small>({{ percentAprovadas() }}%)</small>
+                  </strong>
+                </div>
+              </div>
+
+              <div class="legenda-item">
+                <span class="legenda-cor legenda-cor--recusadas"></span>
+
+                <div class="legenda-texto">
+                  <span>Recusadas</span>
+                  <strong>
+                    {{ dashboard().recusadas }}
+                    <small>({{ percentRecusadas() }}%)</small>
+                  </strong>
+                </div>
+              </div>
+
+            </div>
+
           </div>
-        </article>
 
-        <article class="indicador indicador-analise">
-          <div class="indicador-icone" aria-hidden="true">◷</div>
-
-          <div class="indicador-conteudo">
-            <span class="indicador-label">Em análise</span>
-
-            <strong class="indicador-valor">
-              @if (carregandoDashboard()) {
-                …
-              } @else {
-                {{ dashboard().em_analise }}
-              }
-            </strong>
-          </div>
-        </article>
-
-        <article class="indicador indicador-aprovadas">
-          <div class="indicador-icone" aria-hidden="true">✓</div>
-
-          <div class="indicador-conteudo">
-            <span class="indicador-label">Aprovadas</span>
-
-            <strong class="indicador-valor">
-              @if (carregandoDashboard()) {
-                …
-              } @else {
-                {{ dashboard().aprovadas }}
-              }
-            </strong>
-          </div>
-        </article>
-
-        <article class="indicador indicador-recusadas">
-          <div class="indicador-icone" aria-hidden="true">×</div>
-
-          <div class="indicador-conteudo">
-            <span class="indicador-label">Recusadas</span>
-
-            <strong class="indicador-valor">
-              @if (carregandoDashboard()) {
-                …
-              } @else {
-                {{ dashboard().recusadas }}
-              }
-            </strong>
-          </div>
-        </article>
+        </div>
 
       </section>
 
@@ -1024,17 +939,41 @@
               ) {
 
                 <tr>
-                  <td>{{ estagiario.nome }}</td>
-                  <td>{{ estagiario.email }}</td>
-                  <td>{{ estagiario.telefone || '' }}</td>
-                  <td>{{ estagiario.curso || '' }}</td>
-                  <td>{{ estagiario.universidade || '' }}</td>
-                  <td>{{ estagiario.departamento || '' }}</td>
-                  <td>{{ estagiario.data_inicio || '' }}</td>
-                  <td>{{ estagiario.data_fim_prevista || '' }}</td>
-                  <td>{{ estagiario.estado_estagio || '' }}</td>
-
                   <td>
+                    <div class="estagiario-identidade">
+                      <span class="estagiario-avatar" aria-hidden="true">
+                        {{ iniciais(estagiario.nome) }}
+                      </span>
+                      <span class="estagiario-nome">
+                        {{ estagiario.nome }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>{{ estagiario.email }}</td>
+                  <td>{{ estagiario.telefone || '—' }}</td>
+                  <td>{{ estagiario.curso || '—' }}</td>
+                  <td>{{ estagiario.universidade || '—' }}</td>
+                  <td>
+                    <span class="etiqueta-departamento">
+                      {{ estagiario.departamento || 'Não atribuído' }}
+                    </span>
+                  </td>
+                  <td>{{ estagiario.data_inicio || '—' }}</td>
+                  <td>{{ estagiario.data_fim_prevista || '—' }}</td>
+                  <td>
+                    <span
+                      class="estado-badge"
+                      [class.estado-ativo]="estagiario.estado_estagio === 'ativo'"
+                      [class.estado-aprovada]="estagiario.estado_estagio === 'aprovada'"
+                      [class.estado-suspenso]="estagiario.estado_estagio === 'suspenso'"
+                      [class.estado-concluido]="estagiario.estado_estagio === 'concluido'"
+                      [class.estado-recusada]="estagiario.estado_estagio === 'cancelado'"
+                    >
+                      {{ estagiario.estado_estagio || 'Sem estágio' }}
+                    </span>
+                  </td>
+
+                  <td class="info-estagio">
 
                     @if (estagiario.estado_estagio === 'ativo') {
 
@@ -1070,6 +1009,7 @@
                   <td>
                     <button
                       type="button"
+                      class="btn-gerir-estagio"
                       (click)="abrirGestaoEstagio(estagiario)"
                     >
                       Gerir estágio
@@ -1473,7 +1413,35 @@
       </div>
     }
 
-<!-- =====================================================
+
+    <!-- =====================================================
+         ESTÁGIOS
+         ===================================================== -->
+    <section
+      id="estagios"
+      class="secao-painel"
+      [style.display]="secaoAtiva() === 'estagios' ? 'block' : 'none'"
+    >
+
+      <header class="secao-cabecalho">
+
+        <div>
+          <span class="subtitulo">Ciclo de vida</span>
+          <h2>Estágios</h2>
+          <p>
+            Acompanhe os estágios em curso, altere datas e o estado
+            de cada estágio.
+          </p>
+        </div>
+
+      </header>
+
+      <app-estagio-admin></app-estagio-admin>
+
+    </section>
+
+
+    <!-- =====================================================
          MODAL DE DETALHES DA CANDIDATURA
          ===================================================== -->
     @if (candidaturaSelecionada() || carregandoDetalhes()) {
@@ -1705,58 +1673,71 @@
 
               </section>
 
-              @if (sucessoDecisao()) {
+
+              @if (sucessoEncaminhamento()) {
                 <div class="mensagem-sucesso" role="status">
-                  {{ sucessoDecisao() }}
+                  {{ sucessoEncaminhamento() }}
                 </div>
               }
 
-              @if (erroDecisao()) {
+              @if (erroEncaminhamento()) {
                 <div class="mensagem-erro" role="alert">
-                  {{ erroDecisao() }}
+                  {{ erroEncaminhamento() }}
                 </div>
               }
 
-              @if (candidaturaSelecionada()!.estado === 'em_analise') {
 
-                @if (mostrarRecusa()) {
+              @if (
+                candidaturaSelecionada()!.estado === 'em_analise' &&
+                !candidaturaSelecionada()!.encaminhada_em
+              ) {
 
-                  <section class="area-recusa">
+                @if (mostrarEncaminhamento()) {
 
-                    <h3>Recusar candidatura</h3>
-                    <p>Informe o motivo da recusa.</p>
+                  <section class="area-encaminhamento">
 
-                    <textarea
-                      rows="4"
-                      maxlength="1000"
-                      aria-label="Motivo da recusa"
-                      [value]="motivoRecusa()"
-                      (input)="alterarMotivoRecusa($event)"
-                      placeholder="Digite o motivo da recusa..."
-                    ></textarea>
+                    <h3>Encaminhar à direção</h3>
 
-                    <div class="contador-caracteres">
-                      {{ motivoRecusa().length }}/1000
-                    </div>
+                    <p>
+                      Selecciona a direção para a qual queres
+                      encaminhar esta candidatura. O coordenador
+                      dessa direção receberá para decisão.
+                    </p>
 
-                    <div class="acoes-recusa">
+                    <select
+                      aria-label="Direção de destino"
+                      [value]="departamentoEncaminhamento() ?? ''"
+                      (change)="alterarDepartamentoEncaminhamento($event)"
+                      [disabled]="processandoEncaminhamento()"
+                    >
+                      <option value="">— Seleccionar direção —</option>
+
+                      @for (dep of departamentos(); track dep.id_departamento) {
+                        <option [value]="dep.id_departamento">
+                          {{ dep.nome }}
+                        </option>
+                      }
+
+                    </select>
+
+                    <div class="acoes-encaminhamento">
 
                       <button
                         type="button"
-                        class="botao-fechar-recusa"
-                        (click)="cancelarRecusa()"
-                        [disabled]="processandoDecisao()"
+                        class="botao-cancelar-encaminhamento"
+                        (click)="cancelarEncaminhamento()"
+                        [disabled]="processandoEncaminhamento()"
                       >
                         Cancelar
                       </button>
 
                       <button
                         type="button"
-                        class="botao-confirmar-recusa"
-                        (click)="recusarSelecionada()"
-                        [disabled]="processandoDecisao()"
+                        class="botao-confirmar-encaminhamento"
+                        (click)="confirmarEncaminhamento()"
+                        [disabled]="processandoEncaminhamento()"
                       >
-                        {{ processandoDecisao() ? 'A processar...' : 'Confirmar recusa' }}
+                        {{ processandoEncaminhamento() ? 'A encaminhar...' : 'Encaminhar candidatura' }}
                       </button>
 
                     </div>
@@ -1765,24 +1746,15 @@
 
                 } @else {
 
-                  <div class="acoes-candidatura">
+                  <div class="acoes-encaminhar">
 
                     <button
                       type="button"
-                      class="botao-recusar"
-                      (click)="abrirRecusa()"
-                      [disabled]="processandoDecisao()"
+                      class="botao-encaminhar"
+                      (click)="abrirEncaminhamento()"
+                      [disabled]="processandoEncaminhamento()"
                     >
-                      Recusar
-                    </button>
-
-                    <button
-                      type="button"
-                      class="botao-aprovar"
-                      (click)="aprovarSelecionada()"
-                      [disabled]="processandoDecisao()"
-                    >
-                      {{ processandoDecisao() ? 'A processar...' : 'Aprovar candidatura' }}
+                      Encaminhar à direção
                     </button>
 
                   </div>
@@ -1896,6 +1868,7 @@
 
   </main>
 
+  </app-layout-painel>
 
   <!-- =====================================================
        RODAPÉ

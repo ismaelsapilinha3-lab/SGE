@@ -8,9 +8,11 @@ import { environment } from '../../environments/environment';
 export const ROTA_ACESSO = '/acesso';
 
 export interface Utilizador {
+  id_utilizador: number;
   nome: string;
   email: string;
   tipo_utilizador: string;
+  foto_url?: string | null;
 }
 
 export interface RespostaAuth {
@@ -28,6 +30,9 @@ export class AuthService {
   private sessao = signal<RespostaAuth | null>(this.lerSessao());
 
   readonly utilizador = computed(() => this.sessao()?.user ?? null);
+
+  /** URL da foto de perfil do utilizador autenticado, se existir. */
+  readonly fotoUrl = computed(() => this.sessao()?.user?.foto_url ?? null);
 
   token(): string | null {
     return this.sessao()?.token ?? null;
@@ -67,6 +72,29 @@ export class AuthService {
       tap(() => this.terminarLocal()),
       map(() => undefined)
     );
+  }
+
+  /**
+   * Atualiza a foto de perfil na sessão em memória e no armazenamento,
+   * mantendo o resto dos dados intactos.
+   */
+  definirFoto(fotoUrl: string | null): void {
+    const atual = this.sessao();
+
+    if (!atual) {
+      return;
+    }
+
+    const sessao: RespostaAuth = {
+      token: atual.token,
+      user: { ...atual.user, foto_url: fotoUrl }
+    };
+
+    if (this.noBrowser()) {
+      sessionStorage.setItem(CHAVE, JSON.stringify(sessao));
+    }
+
+    this.sessao.set(sessao);
   }
 
   /** Limpa a sessão sem chamar a API (ex.: token expirado, resposta 401). */

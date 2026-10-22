@@ -1,0 +1,870 @@
+:host {
+  display: block;
+}
+
+.es {
+  color: #183153;
+}
+
+.es-vazio {
+  margin: 0;
+  padding: 26px;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px dashed #d4dfeb;
+  border-radius: 10px;
+  text-align: center;
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   CABEÇALHO
+   ========================================================= */
+
+.es-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 22px;
+  margin-bottom: 18px;
+  background: #f4f7fb;
+  border: 1px solid #e1e9f2;
+  border-radius: 14px;
+}
+
+.es-cabecalho-info {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.es-datas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin: 14px 0 0;
+  color: #4b5a6e;
+  font-size: 13px;
+}
+
+.es-datas strong {
+  color: #16375f;
+}
+
+.es-chip {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  color: #05649f;
+  background: #eef7ff;
+  border: 1px solid #d8ecff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.es-chip[data-estado='concluido'] {
+  color: #137a47;
+  background: #ecfdf3;
+  border-color: #c8ebd9;
+}
+
+.es-chip[data-estado='suspenso'] {
+  color: #9a5b00;
+  background: #fff6e6;
+  border-color: #f2ddb4;
+}
+
+.es-chip[data-estado='cancelado'] {
+  color: #922b2b;
+  background: #fff1f1;
+  border-color: #f1caca;
+}
+
+
+/* =========================================================
+   MENU DE GESTÃO DO ESTÁGIO
+   ========================================================= */
+
+.es-menu {
+  margin-bottom: 20px;
+}
+
+.es-menu-titulo {
+  display: block;
+  margin-bottom: 10px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.es-menu-grelha {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.es-menu-btn {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 3px;
+  min-height: 74px;
+  padding: 13px 15px;
+  color: #33465f;
+  background: #ffffff;
+  border: 1px solid #e1e9f2;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s,
+    transform 0.2s;
+}
+
+.es-menu-btn:hover {
+  background: #f4f9ff;
+  border-color: #bfd6ec;
+  box-shadow: 0 6px 16px rgba(8, 60, 110, 0.08);
+  transform: translateY(-1px);
+}
+
+.es-menu-btn:focus-visible {
+  outline: 3px solid rgba(8, 121, 189, 0.5);
+  outline-offset: 2px;
+}
+
+.es-menu-icone {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: #0879bd;
+  background: #e7f2fb;
+  border-radius: 10px;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.es-menu-rotulo {
+  color: #16324f;
+  font-size: 13.5px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.es-menu-descricao {
+  color: #64748b;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.es-menu-btn.ativa {
+  color: #ffffff;
+  background: #0879bd;
+  border-color: #0879bd;
+  box-shadow: 0 8px 20px rgba(8, 121, 189, 0.25);
+}
+
+.es-menu-btn.ativa .es-menu-icone {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.es-menu-btn.ativa .es-menu-rotulo {
+  color: #ffffff;
+}
+
+.es-menu-btn.ativa .es-menu-descricao {
+  color: #d6e9f7;
+}
+
+
+/* =========================================================
+   ALERTAS
+   ========================================================= */
+
+.es-alerta {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.es-alerta strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.es-alerta p {
+  margin: 0 0 12px;
+}
+
+.es-alerta--erro {
+  color: #922b2b;
+  background: #fff1f1;
+  border-color: #f1caca;
+}
+
+.es-alerta--sucesso {
+  color: #137a47;
+  background: #ecfdf3;
+  border-color: #c8ebd9;
+}
+
+
+/* =========================================================
+   NOTAS
+   ========================================================= */
+
+.es-nota {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  color: #47566b;
+  background: #f8fafc;
+  border-left: 3px solid #0879bd;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.es-motivo {
+  margin: 8px 0 0;
+  color: #922b2b;
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   BOTÕES
+   ========================================================= */
+
+.es-btn {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 16px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.es-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.es-btn--primary {
+  color: #ffffff;
+  background: #0879bd;
+}
+
+.es-btn--primary:hover:not(:disabled) {
+  background: #05649f;
+}
+
+.es-btn--light {
+  color: #244361;
+  background: #ffffff;
+  border-color: #cfdae7;
+}
+
+.es-btn--light:hover:not(:disabled) {
+  background: #f0f6fc;
+}
+
+.es-btn--ghost {
+  color: #05649f;
+  background: transparent;
+  border-color: #cfe3f5;
+}
+
+.es-btn--ghost:hover:not(:disabled) {
+  background: #eef7ff;
+}
+
+.es-btn--danger {
+  color: #b4232a;
+  background: transparent;
+  border-color: #f1caca;
+}
+
+.es-btn--danger:hover:not(:disabled) {
+  background: #fff1f1;
+}
+
+
+/* =========================================================
+   LISTAS
+   ========================================================= */
+
+.es-lista {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.es-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid #e1e9f2;
+  border-radius: 10px;
+}
+
+.es-item--bloco {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.es-item-corpo {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.es-item-corpo strong {
+  color: #16375f;
+  font-size: 14px;
+}
+
+.es-item-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.es-item-meta {
+  display: block;
+  margin-top: 4px;
+  color: #8aa0b8;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.es-texto {
+  margin: 8px 0 0;
+  color: #47566b;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.es-texto--erro {
+  color: #b4232a;
+}
+
+.es-item-acoes {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+
+/* =========================================================
+   ETIQUETAS DE ESTADO
+   ========================================================= */
+
+.es-etiqueta {
+  padding: 4px 11px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.es-etiqueta[data-estado='pendente'],
+.es-etiqueta[data-estado='submetido'] {
+  color: #9a5b00;
+  background: #fff6e6;
+  border-color: #f2ddb4;
+}
+
+.es-etiqueta[data-estado='validado'],
+.es-etiqueta[data-estado='aprovado'] {
+  color: #137a47;
+  background: #ecfdf3;
+  border-color: #c8ebd9;
+}
+
+.es-etiqueta[data-estado='rejeitado'],
+.es-etiqueta[data-estado='recusado'] {
+  color: #922b2b;
+  background: #fff1f1;
+  border-color: #f1caca;
+}
+
+.es-etiqueta[data-estado='substituido'] {
+  color: #4b5a6e;
+  background: #f1f5f9;
+  border-color: #dbe3ec;
+}
+
+
+/* =========================================================
+   PLANO
+   ========================================================= */
+
+.es-plano-estado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.es-plano-estado .es-motivo {
+  margin: 0;
+}
+
+
+/* =========================================================
+   FORMULÁRIOS
+   ========================================================= */
+
+.es-form {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  margin-bottom: 20px;
+  background: #f8fafc;
+  border: 1px solid #e1e9f2;
+  border-radius: 12px;
+}
+
+.es-form--inline {
+  flex: 1 1 100%;
+  margin: 12px 0 0;
+  background: #fff8f8;
+  border-color: #f1caca;
+}
+
+.es-form-grelha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.es-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.es-campo--seletor {
+  max-width: 420px;
+}
+
+.es-campo span {
+  color: #3a4a5e;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.es-campo input,
+.es-campo select,
+.es-campo textarea {
+  padding: 10px 12px;
+  color: #16375f;
+  background: #ffffff;
+  border: 1px solid #cfdae7;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.es-campo textarea {
+  resize: vertical;
+}
+
+.es-form-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+
+/* =========================================================
+   FILTROS DE ASSIDUIDADE
+   ========================================================= */
+
+.es-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.es-filtros-acoes {
+  display: flex;
+  gap: 10px;
+}
+
+
+/* =========================================================
+   RESUMOS
+   ========================================================= */
+
+.es-resumos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.es-resumo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: #f4f7fb;
+  border: 1px solid #e1e9f2;
+  border-radius: 10px;
+}
+
+.es-resumo span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.es-resumo strong {
+  color: #16375f;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.es-resumo--destaque {
+  background: #fff6e6;
+  border-color: #f2ddb4;
+}
+
+.es-resumo--destaque strong {
+  color: #9a5b00;
+}
+
+.es-resumo-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px 20px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  color: #05649f;
+  background: #eef7ff;
+  border: 1px solid #d8ecff;
+  border-radius: 10px;
+}
+
+.es-resumo-total span {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.es-resumo-total strong {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.es-resumo-total small {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   TABELA DE ASSIDUIDADE
+   ========================================================= */
+
+.es-tabela-wrap {
+  overflow-x: auto;
+  border: 1px solid #e1e9f2;
+  border-radius: 10px;
+}
+
+.es-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.es-tabela th {
+  padding: 11px 14px;
+  color: #263e5c;
+  background: #f4f7fb;
+  border-bottom: 2px solid #e1e9f2;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.es-tabela td {
+  padding: 12px 14px;
+  color: #17324f;
+  border-bottom: 1px solid #eef3f8;
+  vertical-align: top;
+}
+
+.es-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #8792a2;
+}
+
+.es-dot--ok {
+  background: #137a47;
+}
+
+.es-dot--aviso {
+  background: #e8a000;
+}
+
+.es-dot--falta {
+  background: #d64545;
+}
+
+.es-dot--justificada {
+  background: #0879bd;
+}
+
+.es-linha-formulario td {
+  padding: 16px;
+  background: #fff8f8;
+}
+
+
+/* =========================================================
+   AVALIAÇÕES
+   ========================================================= */
+
+.es-nota-final {
+  padding: 4px 12px;
+  color: #05649f;
+  background: #eef7ff;
+  border: 1px solid #d8ecff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.es-subnotas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 6px;
+  color: #4b5a6e;
+  font-size: 12px;
+}
+
+.es-subnotas strong {
+  color: #16375f;
+}
+
+
+/* =========================================================
+   RESPONSIVO
+   ========================================================= */
+
+@media (max-width: 620px) {
+
+  .es-cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .es-campo--seletor {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .es-menu-grelha {
+    grid-template-columns: 1fr;
+  }
+
+  .es-menu-btn {
+    min-height: 0;
+  }
+
+  .es-form-cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+}
+
+@media (min-width: 621px) and (max-width: 900px) {
+
+  .es-menu-grelha {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+}
+
+
+/* =========================================================
+   EDIÇÃO DE AVALIAÇÃO
+   ========================================================= */
+
+.es-form--edicao {
+  background: #fffaf2;
+  border-color: #ffd9a8;
+}
+
+.es-form-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #ffd9a8;
+}
+
+.es-form-cabecalho > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.es-form-etiqueta {
+  color: #b45309;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.es-form-cabecalho strong {
+  color: #16375f;
+  font-size: 13.5px;
+}
+
+.es-item--em-edicao {
+  background: #fffaf2;
+  border-color: #ffd9a8;
+  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.12);
+}
+
+
+/* =========================================================
+   HISTÓRICO DE VERSÕES DO PLANO
+   ========================================================= */
+
+.es-historico {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px dashed #d4dfeb;
+}
+
+.es-historico-titulo {
+  margin: 0 0 12px;
+  color: #16375f;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.es-lista--historico {
+  gap: 10px;
+}
+
+.es-item--compacto {
+  padding: 12px 14px;
+  background: #f8fafc;
+}
+
+.es-item--compacto .es-item-titulo strong {
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   ASSIDUIDADE INDIVIDUAL
+   ========================================================= */
+
+.es-seccao-entidade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  background: #f2f7fc;
+  border: 1px solid #d4dfeb;
+  border-radius: 10px;
+}
+
+.es-entidade-etiqueta {
+  color: #64748b;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.es-entidade-nome {
+  color: #16375f;
+  font-size: 15px;
+}
+
+.es-entidade-ref {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.es-form-contexto {
+  color: #64748b;
+  font-size: 11.5px;
+}
+
+.es-form-aviso {
+  flex: 1;
+  margin: 0;
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 620px) {
+
+  .es-entidade-ref {
+    margin-left: 0;
+  }
+
+}

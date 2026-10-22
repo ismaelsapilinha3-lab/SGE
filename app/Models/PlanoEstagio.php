@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PlanoEstagio extends Model
 {
+    use HasFactory;
+
     protected $table = 'planos_estagio';
 
     protected $primaryKey = 'id_plano_estagio';
@@ -64,6 +68,15 @@ class PlanoEstagio extends Model
         );
     }
 
+    public function supervisor(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'id_supervisor',
+            'id_utilizador'
+        );
+    }
+
     public function autor(): BelongsTo
     {
         return $this->belongsTo(
@@ -71,6 +84,34 @@ class PlanoEstagio extends Model
             'id_autor',
             'id_utilizador'
         );
+    }
+
+    public function coordenador(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'id_coordenador',
+            'id_utilizador'
+        );
+    }
+
+    public function historico(): HasMany
+    {
+        return $this->hasMany(
+            PlanoEstagioHistorico::class,
+            'id_plano_estagio',
+            'id_plano_estagio'
+        );
+    }
+
+    public function estaSubmetido(): bool
+    {
+        return $this->estado === 'submetido';
+    }
+
+    public function estaAprovado(): bool
+    {
+        return $this->estado === 'aprovado';
     }
 
     /**
@@ -119,8 +160,27 @@ class PlanoEstagio extends Model
     public function nomeSeguro(): string
     {
         $nome = $this->nome_arquivo
-            ?: 'plano-estagio.' . (strtolower((string) $this->formato) ?: 'pdf');
+            ?: 'plano-estagio.'.(strtolower((string) $this->formato) ?: 'pdf');
 
         return Str::of($nome)->replace(['"', "\r", "\n"], '')->toString();
+    }
+
+    /**
+     * Guarda uma cópia do conteúdo atual antes de o plano ser editado
+     * e reenviado, preservando o rasto das versões anteriores.
+     */
+    public function registarHistorico(?int $alteradoPor = null): PlanoEstagioHistorico
+    {
+        return $this->historico()->create([
+            'objetivos' => $this->objetivos ?? '',
+            'atividades_previstas' => $this->atividades_previstas ?? '',
+            'cronograma' => $this->cronograma ?? '',
+            'data_inicio' => $this->data_inicio,
+            'data_fim' => $this->data_fim,
+            'estado' => $this->estado,
+            'motivo_recusa' => $this->motivo_recusa,
+            'alterado_por' => $alteradoPor,
+            'alterado_em' => now(),
+        ]);
     }
 }

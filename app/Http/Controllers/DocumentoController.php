@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
 class DocumentoController extends Controller
@@ -25,7 +26,7 @@ class DocumentoController extends Controller
     ) {
         $user = $request->user();
 
-        if (!$user || !$user->ativo) {
+        if (! $user || ! $user->ativo) {
             return response()->json([
                 'message' => 'Utilizador não autorizado.',
             ], 403);
@@ -33,7 +34,7 @@ class DocumentoController extends Controller
 
         $candidatura = $documento->candidatura;
 
-        if (!$candidatura) {
+        if (! $candidatura) {
             return response()->json([
                 'message' => 'Candidatura não encontrada.',
             ], 404);
@@ -42,18 +43,39 @@ class DocumentoController extends Controller
         // O estagiário só pode consultar os próprios documentos.
         if (
             $user->tipo_utilizador === 'estagiario' &&
-            $candidatura->email !== $user->email
+            ! $candidatura->pertenceAo($user)
         ) {
             return response()->json([
                 'message' => 'Não tem autorização para consultar este documento.',
             ], 403);
         }
 
-        // Por enquanto, apenas estagiários e administradores.
-        // O acesso dos coordenadores será definido pelo encaminhamento.
-        if (!in_array(
+        /*
+         * O coordenador só pode consultar os documentos das candidaturas
+         * que lhe foram atribuídas dentro da sua direção.
+         */
+        if ($user->tipo_utilizador === 'coordenador') {
+            $idDepartamento = $user->perfil?->id_departamento;
+
+            $atribuidaAoCoordenador =
+                (int) $candidatura->id_coordenador
+                    === (int) $user->id_utilizador
+                && $idDepartamento !== null
+                && (int) $candidatura->id_departamento_selecionado
+                    === (int) $idDepartamento;
+
+            if (! $atribuidaAoCoordenador) {
+                return response()->json([
+                    'message' => 'Não tem autorização para consultar este documento.',
+                ], 403);
+            }
+        }
+
+        // Estagiários, administradores e coordenadores (com candidatura
+        // atribuída) podem consultar o documento.
+        if (! in_array(
             $user->tipo_utilizador,
-            ['estagiario', 'administrador'],
+            ['estagiario', 'administrador', 'coordenador'],
             true
         )) {
             return response()->json([
@@ -63,7 +85,7 @@ class DocumentoController extends Controller
 
         $disk = Storage::disk('local');
 
-        if (!$disk->exists($documento->caminho_arquivo)) {
+        if (! $disk->exists($documento->caminho_arquivo)) {
             return response()->json([
                 'message' => 'O ficheiro solicitado não foi encontrado.',
             ], 404);
@@ -72,14 +94,12 @@ class DocumentoController extends Controller
         return response()->file(
             $disk->path($documento->caminho_arquivo),
             [
-                'Content-Disposition' =>
-                    'inline; filename="' .
-                    addslashes($documento->nome_arquivo) .
+                'Content-Disposition' => 'inline; filename="'.
+                    addslashes($documento->nome_arquivo).
                     '"',
             ]
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -94,8 +114,8 @@ class DocumentoController extends Controller
         $user = $request->user();
 
         if (
-            !$user ||
-            !$user->ativo ||
+            ! $user ||
+            ! $user->ativo ||
             $user->tipo_utilizador !== 'estagiario'
         ) {
             return response()->json([
@@ -123,7 +143,6 @@ class DocumentoController extends Controller
                 $user,
                 $documento,
                 $ficheiro,
-                $disk,
                 &$caminhoNovo
             ) {
                 /*
@@ -137,7 +156,7 @@ class DocumentoController extends Controller
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                if ($candidatura->email !== $user->email) {
+                if (! $candidatura->pertenceAo($user)) {
                     abort(403, 'Não tem autorização para alterar este documento.');
                 }
 
@@ -171,7 +190,7 @@ class DocumentoController extends Controller
 
                 $versaoNova = ((int) $ultimaVersao) + 1;
 
-                $pasta = 'documentos/' .
+                $pasta = 'documentos/'.
                     $candidatura->id_candidatura;
 
                 /*
@@ -180,39 +199,30 @@ class DocumentoController extends Controller
                  */
                 $caminhoNovo = $ficheiro->store($pasta, 'local');
 
-                if (!$caminhoNovo) {
+                if (! $caminhoNovo) {
                     throw new RuntimeException(
                         'Não foi possível guardar o novo documento.'
                     );
                 }
 
                 $novoDocumento = Documento::create([
-                    'id_candidatura' =>
-                        $candidatura->id_candidatura,
+                    'id_candidatura' => $candidatura->id_candidatura,
 
-                    'tipo_documento' =>
-                        $documento->tipo_documento,
+                    'tipo_documento' => $documento->tipo_documento,
 
-                    'versao' =>
-                        $versaoNova,
+                    'versao' => $versaoNova,
 
-                    'nome_arquivo' =>
-                        $ficheiro->getClientOriginalName(),
+                    'nome_arquivo' => $ficheiro->getClientOriginalName(),
 
-                    'caminho_arquivo' =>
-                        $caminhoNovo,
+                    'caminho_arquivo' => $caminhoNovo,
 
-                    'data_upload' =>
-                        now(),
+                    'data_upload' => now(),
 
-                    'validade' =>
-                        null,
+                    'validade' => null,
 
-                    'estado' =>
-                        'pendente',
+                    'estado' => 'pendente',
 
-                    'descricao' =>
-                        'Substituição da versão ' .
+                    'descricao' => 'Substituição da versão '.
                         $documento->versao,
                 ]);
 
@@ -221,24 +231,19 @@ class DocumentoController extends Controller
                  * anterior, sem alterar o seu registo.
                  */
                 HistoricoEstado::create([
-                    'id_documento' =>
-                        $documento->id_documento,
+                    'id_documento' => $documento->id_documento,
 
-                    'estado_anterior' =>
-                        $documento->estado,
+                    'estado_anterior' => $documento->estado,
 
-                    'estado_novo' =>
-                        'substituido',
+                    'estado_novo' => 'substituido',
 
-                    'motivo' =>
-                        'Substituição da versão ' .
-                        $documento->versao .
-                        ' pela versão ' .
-                        $versaoNova .
+                    'motivo' => 'Substituição da versão '.
+                        $documento->versao.
+                        ' pela versão '.
+                        $versaoNova.
                         '.',
 
-                    'id_utilizador' =>
-                        $user->id_utilizador,
+                    'id_utilizador' => $user->id_utilizador,
                 ]);
 
                 return $novoDocumento;
@@ -258,7 +263,7 @@ class DocumentoController extends Controller
                 $disk->delete($caminhoNovo);
             }
 
-            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
+            if ($e instanceof HttpException) {
                 throw $e;
             }
 

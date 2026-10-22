@@ -33,10 +33,12 @@ return new class extends Migration
             $table->timestamp('created_at')->useCurrent(); // registo imutável
         });
 
-        DB::statement('ALTER TABLE historico_estados ADD CONSTRAINT chk_historico_uma_entidade CHECK (
-            (id_candidatura IS NOT NULL) + (id_estagio IS NOT NULL)
-            + (id_documento IS NOT NULL) + (id_plano_estagio IS NOT NULL) = 1
-        )');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE historico_estados ADD CONSTRAINT chk_historico_uma_entidade CHECK (
+                (id_candidatura IS NOT NULL) + (id_estagio IS NOT NULL)
+                + (id_documento IS NOT NULL) + (id_plano_estagio IS NOT NULL) = 1
+            )');
+        }
     }
 
     public function down(): void

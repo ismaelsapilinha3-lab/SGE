@@ -2,6 +2,9 @@ import { Routes } from '@angular/router';
 
 import { authGuard } from './core/auth.guard';
 import { adminGuard } from './core/admin.guard';
+import { coordenadorGuard } from './core/coordenador.guard';
+import { estagiarioGuard } from './core/estagiario.guard';
+import { supervisorGuard } from './core/supervisor.guard';
 
 import { AcessoComponent } from './components/first-component/acesso';
 import { PainelestagiarioComponent } from './components/first-component/painelestagiario';
@@ -12,55 +15,118 @@ import { AreaReservadaComponent } from './components/first-component/area-reserv
 import { estagioAtivoGuard } from './core/estagio-ativo.guard';
 import { UtilizadoresAdminComponent } from './components/admin/utilizadores-admin/utilizadores-admin';
 
+import {
+  PainelCoordenadorComponent
+} from './components/coordenador/painel-coordenador/painel-coordenador';
+
+import {
+  PainelSupervisorComponent
+} from './components/supervisor/painel-supervisor/painel-supervisor';
+
+
 export const routes: Routes = [
 
-  // Página inicial
+  // ============================================================
+  // PÁGINA INICIAL
+  // ============================================================
   {
     path: '',
     redirectTo: 'telainicial',
     pathMatch: 'full'
   },
 
-  // Portal público
+
+  // ============================================================
+  // PORTAL PÚBLICO
+  // ============================================================
   {
     path: 'telainicial',
     component: TelainicialComponent
   },
 
-{
-path: 'area-reservada',
-component: AreaReservadaComponent,
-canActivate: [authGuard, estagioAtivoGuard]
-},
+  {
+    path: 'area-reservada',
+    component: AreaReservadaComponent,
+    canActivate: [authGuard, estagioAtivoGuard]
+  },
 
-  // Autenticação
+  // ============================================================
+  // AUTENTICAÇÃO
+  // ============================================================
   {
     path: 'acesso',
     component: AcessoComponent
   },
 
-  // Painel do estagiário
+
+  // ============================================================
+  // PAINEL DO ESTAGIÁRIO
+  // ============================================================
   {
     path: 'estagiario',
     component: PainelestagiarioComponent,
-    canActivate: [authGuard]
+    canActivate: [
+      authGuard,
+      estagiarioGuard
+    ]
   },
 
-  // Painel administrativo
+
+  // ============================================================
+  // PAINEL DO COORDENADOR
+  // ============================================================
+  {
+    path: 'coordenador',
+    component: PainelCoordenadorComponent,
+    canActivate: [
+      authGuard,
+      coordenadorGuard
+    ]
+  },
+
+
+  // ============================================================
+  // PAINEL DO SUPERVISOR
+  // ============================================================
+  {
+    path: 'supervisor',
+    component: PainelSupervisorComponent,
+    canActivate: [
+      authGuard,
+      supervisorGuard
+    ]
+  },
+
+
+  // ============================================================
+  // PAINEL ADMINISTRATIVO
+  // ============================================================
   {
     path: 'admin',
     component: PainelAdmin,
-    canActivate: [authGuard, adminGuard]
+    canActivate: [
+      authGuard,
+      adminGuard
+    ]
   },
 
-  // Gestão de utilizadores
+
+  // ============================================================
+  // GESTÃO DE UTILIZADORES
+  // ============================================================
   {
     path: 'admin/utilizadores',
     component: UtilizadoresAdminComponent,
-    canActivate: [authGuard, adminGuard]
+    canActivate: [
+      authGuard,
+      adminGuard
+    ]
   },
 
-  // Rota desconhecida
+
+  // ============================================================
+  // ROTA DESCONHECIDA
+  // ============================================================
   {
     path: '**',
     redirectTo: 'telainicial'

@@ -1,0 +1,218 @@
+:host {
+  display: inline-block;
+  position: relative;
+}
+
+
+.sino-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+
+.sino-btn {
+  position: relative;
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #244361;
+  background: #ffffff;
+  border: 1px solid #cfdae7;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgb(23 58 97 / 10%);
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.sino-btn:hover {
+  background: #f0f6fc;
+  border-color: #a9c4dd;
+}
+
+
+.sino-icone {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+
+.sino-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: inline-flex;
+  min-width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  color: #ffffff;
+  background: #dc2626;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+
+.sino-painel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  width: min(380px, calc(100vw - 40px));
+  max-height: 460px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #e1e9f2;
+  border-radius: 14px;
+  box-shadow: 0 18px 45px rgb(23 58 97 / 22%);
+}
+
+
+.sino-painel-topo {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 18px;
+  background: #f4f7fb;
+  border-bottom: 1px solid #e1e9f2;
+  border-radius: 14px 14px 0 0;
+}
+
+.sino-painel-topo strong {
+  color: #16375f;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+
+.sino-acao {
+  padding: 0;
+  color: #05649f;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sino-acao:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+
+.sino-vazio {
+  margin: 0;
+  padding: 28px 18px;
+  color: #64748b;
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.7;
+}
+
+
+.sino-erro {
+  margin: 12px 14px;
+  padding: 12px 14px;
+  color: #922b2b;
+  background: #fff1f1;
+  border: 1px solid #f1caca;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+
+.sino-lista {
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+}
+
+
+.sino-item {
+  padding: 12px 12px 10px;
+  border-radius: 10px;
+}
+
+.sino-item + .sino-item {
+  margin-top: 2px;
+}
+
+.sino-item.nao-lida {
+  background: #eef7ff;
+  border-left: 3px solid #0879bd;
+  padding-left: 9px;
+}
+
+
+.sino-item-corpo strong {
+  display: block;
+  color: #16375f;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.sino-item-corpo p {
+  margin: 4px 0 0;
+  color: #47566b;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+
+.sino-item-data {
+  display: block;
+  margin-top: 6px;
+  color: #8aa0b8;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+
+.sino-item-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.sino-item-acoes button {
+  padding: 0;
+  color: #5c7189;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sino-item-acoes button:hover {
+  color: #16375f;
+  text-decoration: underline;
+}
+
+.sino-item-acoes button:disabled {
+  opacity: 0.5;
+  cursor: default;
+  text-decoration: none;
+}

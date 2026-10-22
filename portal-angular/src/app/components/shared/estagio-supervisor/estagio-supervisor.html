@@ -1,0 +1,1551 @@
+<section class="es">
+
+  <!-- =======================================================
+       CARREGAMENTO
+       ======================================================= -->
+  @if (carregando()) {
+
+    <p class="es-vazio" role="status">
+      A carregar os estágios atribuídos...
+    </p>
+
+  }
+
+  <!-- =======================================================
+       ERRO INICIAL
+       ======================================================= -->
+  @else if (erro() && estagios().length === 0) {
+
+    <div class="es-alerta es-alerta--erro" role="alert">
+
+      <strong>Não foi possível carregar os estágios</strong>
+
+      <p>{{ erro() }}</p>
+
+      <button
+        type="button"
+        class="es-btn es-btn--light"
+        (click)="recarregar()"
+      >
+        Tentar novamente
+      </button>
+
+    </div>
+
+  }
+
+  <!-- =======================================================
+       SEM ESTÁGIOS ATRIBUÍDOS
+       ======================================================= -->
+  @else if (estagios().length === 0) {
+
+    <p class="es-vazio" role="status">
+      Não tens estágios atribuídos de momento.
+    </p>
+
+  }
+
+  <!-- =======================================================
+       GESTÃO DO ESTÁGIO
+       ======================================================= -->
+  @else if (estagioSelecionado(); as e) {
+
+    <header class="es-cabecalho">
+
+      <div class="es-cabecalho-info">
+
+        <label class="es-campo es-campo--seletor">
+          <span>Estágio</span>
+
+          <select
+            [value]="e.id_estagio"
+            (change)="aoMudarEstagio($event)"
+          >
+            @for (estagio of estagios(); track estagio.id_estagio) {
+
+              <option [value]="estagio.id_estagio">
+                {{ nomeEstagio(estagio) }}
+                — {{ formatarData(estagio.data_inicio) }}
+                ({{ rotuloEstadoEstagio(estagio.estado) }})
+              </option>
+
+            }
+          </select>
+        </label>
+
+        <p class="es-datas">
+
+          <span>
+            Início: <strong>{{ formatarData(e.data_inicio) }}</strong>
+          </span>
+
+          <span>
+            Fim previsto:
+            <strong>{{ formatarData(e.data_fim_prevista) }}</strong>
+          </span>
+
+          @if (e.data_fim_real) {
+
+            <span>
+              Fim: <strong>{{ formatarData(e.data_fim_real) }}</strong>
+            </span>
+
+          }
+
+        </p>
+
+      </div>
+
+      <span class="es-chip" [attr.data-estado]="e.estado">
+        {{ rotuloEstadoEstagio(e.estado) }}
+      </span>
+
+    </header>
+
+
+    <!-- =====================================================
+         MENU DE GESTÃO DO ESTÁGIO
+         ===================================================== -->
+    <nav
+      class="es-menu"
+      aria-label="Gestão do estágio"
+    >
+
+      <span class="es-menu-titulo">
+        GESTÃO DO ESTÁGIO
+      </span>
+
+      <div class="es-menu-grelha" role="tablist">
+
+        @for (definicao of abas; track definicao.id) {
+
+          <button
+            type="button"
+            role="tab"
+            class="es-menu-btn"
+            [class.ativa]="aba() === definicao.id"
+            [attr.aria-selected]="aba() === definicao.id"
+            [attr.title]="definicao.descricao"
+            (click)="definirAba(definicao.id)"
+          >
+            <span class="es-menu-icone" aria-hidden="true">
+              {{ definicao.icone }}
+            </span>
+
+            <span class="es-menu-rotulo">
+              {{ definicao.rotulo }}
+            </span>
+
+            <span class="es-menu-descricao">
+              {{ definicao.descricao }}
+            </span>
+          </button>
+
+        }
+
+      </div>
+
+    </nav>
+
+
+    <!-- =====================================================
+         MENSAGENS
+         ===================================================== -->
+    @if (sucesso()) {
+
+      <div class="es-alerta es-alerta--sucesso" role="status">
+        {{ sucesso() }}
+      </div>
+
+    }
+
+    @if (erroAcao()) {
+
+      <div class="es-alerta es-alerta--erro" role="alert">
+        {{ erroAcao() }}
+      </div>
+
+    }
+
+
+    <!-- =====================================================
+         CONTEÚDO DAS ABAS
+         ===================================================== -->
+    <div class="es-conteudo">
+
+      @switch (aba()) {
+
+        <!-- =================================================
+             PLANO DE ESTÁGIO
+             ================================================= -->
+        @case ('plano') {
+
+          <div class="es-seccao">
+
+            @if (carregandoPlano()) {
+
+              <p class="es-vazio">A carregar o plano de estágio...</p>
+
+            } @else {
+
+              @if (plano(); as p) {
+
+                <div class="es-plano-estado">
+
+                  <span
+                    class="es-etiqueta"
+                    [attr.data-estado]="p.estado"
+                  >
+                    {{ rotuloEstadoPlano(p.estado) }}
+                  </span>
+
+                  @if (p.motivo_recusa) {
+
+                    <p class="es-motivo">
+                      Motivo da recusa: {{ p.motivo_recusa }}
+                    </p>
+
+                  }
+
+                </div>
+
+              }
+
+              @if (estagioAtivo()) {
+
+                <form
+                  id="es-form-plano"
+                  class="es-form"
+                  (ngSubmit)="guardarPlano()"
+                  novalidate
+                >
+
+                  <label class="es-campo">
+                    <span>Objetivos *</span>
+
+                    <textarea
+                      name="planoObjetivos"
+                      rows="3"
+                      maxlength="5000"
+                      [(ngModel)]="planoObjetivos"
+                      [disabled]="processando()"
+                    ></textarea>
+                  </label>
+
+                  <label class="es-campo">
+                    <span>Atividades previstas *</span>
+
+                    <textarea
+                      name="planoAtividadesPrevistas"
+                      rows="3"
+                      maxlength="5000"
+                      [(ngModel)]="planoAtividadesPrevistas"
+                      [disabled]="processando()"
+                    ></textarea>
+                  </label>
+
+                  <label class="es-campo">
+                    <span>Cronograma *</span>
+
+                    <textarea
+                      name="planoCronograma"
+                      rows="3"
+                      maxlength="5000"
+                      [(ngModel)]="planoCronograma"
+                      [disabled]="processando()"
+                    ></textarea>
+                  </label>
+
+                  <div class="es-form-grelha">
+
+                    <label class="es-campo">
+                      <span>Data de início *</span>
+
+                      <input
+                        type="date"
+                        name="planoDataInicio"
+                        [(ngModel)]="planoDataInicio"
+                        [disabled]="processando()"
+                      >
+                    </label>
+
+                    <label class="es-campo">
+                      <span>Data de fim *</span>
+
+                      <input
+                        type="date"
+                        name="planoDataFim"
+                        [(ngModel)]="planoDataFim"
+                        [disabled]="processando()"
+                      >
+                    </label>
+
+                  </div>
+
+                  <div class="es-form-acoes">
+
+                    <button
+                      type="submit"
+                      class="es-btn es-btn--primary"
+                      [disabled]="processando()"
+                    >
+                      @if (!plano()) {
+                        Submeter plano
+                      } @else if (plano()?.estado === 'recusado') {
+                        Reenviar plano
+                      } @else if (plano()?.estado === 'aprovado') {
+                        Submeter nova versão
+                      } @else {
+                        Guardar alterações
+                      }
+                    </button>
+
+                  </div>
+
+                </form>
+
+              } @else {
+
+                <p class="es-nota">
+                  O plano só pode ser submetido enquanto o estágio
+                  estiver ativo.
+                </p>
+
+                @if (plano(); as p) {
+
+                  <ul class="es-lista">
+
+                    <li class="es-item es-item--bloco">
+
+                      <div class="es-item-corpo">
+
+                        <p class="es-texto">
+                          <strong>Objetivos:</strong> {{ p.objetivos }}
+                        </p>
+
+                        <p class="es-texto">
+                          <strong>Atividades previstas:</strong>
+                          {{ p.atividades_previstas }}
+                        </p>
+
+                        <p class="es-texto">
+                          <strong>Cronograma:</strong> {{ p.cronograma }}
+                        </p>
+
+                        <span class="es-item-meta">
+                          {{ formatarData(p.data_inicio) }}
+                          a {{ formatarData(p.data_fim) }}
+                        </span>
+
+                      </div>
+
+                    </li>
+
+                  </ul>
+
+                }
+
+              }
+
+
+              @if (historicoPlano().length > 0) {
+
+                <div class="es-historico">
+
+                  <h4 class="es-historico-titulo">
+                    Histórico de versões
+                  </h4>
+
+                  <ul class="es-lista es-lista--historico">
+
+                    @for (
+                      versao of historicoPlano();
+                      track versao.id_plano_historico
+                    ) {
+
+                      <li class="es-item es-item--compacto">
+
+                        <div class="es-item-corpo">
+
+                          <div class="es-item-titulo">
+
+                            <strong>
+                              Versão de
+                              {{ formatarData(versao.alterado_em) }}
+                            </strong>
+
+                            <span
+                              class="es-etiqueta"
+                              [attr.data-estado]="versao.estado"
+                            >
+                              {{ rotuloEstadoPlano(versao.estado) }}
+                            </span>
+
+                          </div>
+
+                          <span class="es-item-meta">
+                            {{ formatarData(versao.data_inicio) }}
+                            a {{ formatarData(versao.data_fim) }}
+                          </span>
+
+                          @if (versao.motivo_recusa) {
+
+                            <p class="es-texto es-texto--erro">
+                              <strong>Motivo:</strong>
+                              {{ versao.motivo_recusa }}
+                            </p>
+
+                          }
+
+                        </div>
+
+                        <div class="es-item-acoes">
+
+                          <button
+                            type="button"
+                            class="es-btn es-btn--ghost"
+                            (click)="reutilizarVersaoPlano(versao)"
+                            [disabled]="processando() || !estagioAtivo()"
+                          >
+                            Reutilizar
+                          </button>
+
+                        </div>
+
+                      </li>
+
+                    }
+
+                  </ul>
+
+                </div>
+
+              }
+
+            }
+
+          </div>
+
+        }
+
+        <!-- =================================================
+             CONTRATO
+             ================================================= -->
+        @case ('contrato') {
+
+          <div class="es-seccao">
+
+            @if (carregandoDocumentos()) {
+
+              <p class="es-vazio">A carregar documentos...</p>
+
+            } @else if (documentos().length === 0) {
+
+              <p class="es-vazio">
+                Ainda não foi carregado nenhum contrato.
+              </p>
+
+            } @else {
+
+              <ul class="es-lista">
+
+                @for (documento of documentos(); track documento.id_documento_estagio) {
+
+                  <li class="es-item es-item--bloco">
+
+                    <div class="es-item-corpo">
+
+                      <div class="es-item-titulo">
+
+                        <strong>Versão {{ documento.versao }}</strong>
+
+                        <span
+                          class="es-etiqueta"
+                          [attr.data-estado]="documento.estado"
+                        >
+                          {{ rotuloEstadoDocumento(documento.estado) }}
+                        </span>
+
+                      </div>
+
+                      <span class="es-item-meta">
+                        {{ documento.nome_arquivo }}
+                      </span>
+
+                      <span class="es-item-meta">
+                        Enviado a {{ formatarData(documento.data_upload) }}
+                      </span>
+
+                      @if (documento.estado === 'rejeitado' && documento.descricao) {
+
+                        <p class="es-texto es-texto--erro">
+                          <strong>Motivo:</strong> {{ documento.descricao }}
+                        </p>
+
+                      }
+
+                    </div>
+
+                    <div class="es-item-acoes">
+
+                      <button
+                        type="button"
+                        class="es-btn es-btn--ghost"
+                        (click)="descarregarDocumento(documento)"
+                      >
+                        Ver documento
+                      </button>
+
+                      @if (documento.estado !== 'validado') {
+
+                        <button
+                          type="button"
+                          class="es-btn es-btn--primary"
+                          (click)="validarDocumento(documento)"
+                          [disabled]="processando()"
+                        >
+                          Validar
+                        </button>
+
+                      }
+
+                      @if (documento.estado !== 'rejeitado') {
+
+                        <button
+                          type="button"
+                          class="es-btn es-btn--danger"
+                          (click)="abrirRejeicao(documento)"
+                          [disabled]="processando()"
+                        >
+                          Rejeitar
+                        </button>
+
+                      }
+
+                    </div>
+
+                    @if (documentoEmRejeicao()?.id_documento_estagio === documento.id_documento_estagio) {
+
+                      <div class="es-form es-form--inline">
+
+                        <label class="es-campo">
+                          <span>Motivo da rejeição *</span>
+
+                          <textarea
+                            rows="2"
+                            maxlength="1000"
+                            [(ngModel)]="motivoRejeicao"
+                            [disabled]="processando()"
+                          ></textarea>
+                        </label>
+
+                        <div class="es-form-acoes">
+
+                          <button
+                            type="button"
+                            class="es-btn es-btn--light"
+                            (click)="cancelarRejeicao()"
+                            [disabled]="processando()"
+                          >
+                            Cancelar
+                          </button>
+
+                          <button
+                            type="button"
+                            class="es-btn es-btn--danger"
+                            (click)="confirmarRejeicao()"
+                            [disabled]="processando()"
+                          >
+                            Confirmar rejeição
+                          </button>
+
+                        </div>
+
+                      </div>
+
+                    }
+
+                  </li>
+
+                }
+
+              </ul>
+
+            }
+
+          </div>
+
+        }
+
+        <!-- =================================================
+             RELATÓRIOS
+             ================================================= -->
+        @case ('relatorios') {
+
+          <div class="es-seccao">
+
+            @if (carregandoRelatorios()) {
+
+              <p class="es-vazio">A carregar relatórios...</p>
+
+            } @else if (relatorios().length === 0) {
+
+              <p class="es-vazio">
+                Ainda não existem relatórios submetidos.
+              </p>
+
+            } @else {
+
+              <ul class="es-lista">
+
+                @for (relatorio of relatorios(); track relatorio.id_relatorio) {
+
+                  <li class="es-item es-item--bloco">
+
+                    <div class="es-item-corpo">
+
+                      <div class="es-item-titulo">
+
+                        <strong>
+                          Relatório {{ rotuloTipo(relatorio.tipo) }}
+                        </strong>
+
+                        <span class="es-item-meta">
+                          Período:
+                          {{ formatarData(relatorio.periodo_referencia) }}
+                        </span>
+
+                      </div>
+
+                      <p class="es-texto">
+                        {{ relatorio.atividades }}
+                      </p>
+
+                      <p class="es-texto">
+                        <strong>Resultados:</strong>
+                        {{ relatorio.resultados }}
+                      </p>
+
+                      @if (relatorio.constrangimentos) {
+
+                        <p class="es-texto">
+                          <strong>Constrangimentos:</strong>
+                          {{ relatorio.constrangimentos }}
+                        </p>
+
+                      }
+
+                      @if (relatorio.objetivos) {
+
+                        <p class="es-texto">
+                          <strong>Objetivos:</strong>
+                          {{ relatorio.objetivos }}
+                        </p>
+
+                      }
+
+                      <span class="es-item-meta">
+                        Submetido a
+                        {{ formatarData(relatorio.submetido_em) }}
+                      </span>
+
+                    </div>
+
+                  </li>
+
+                }
+
+              </ul>
+
+            }
+
+          </div>
+
+        }
+
+        <!-- =================================================
+             ASSIDUIDADE
+             ================================================= -->
+        @case ('assiduidade') {
+
+          <div class="es-seccao">
+
+            <!--
+              A assiduidade é registada individualmente, por estagiário.
+              Esta faixa fixa o estagiário em causa para não haver troca.
+            -->
+            <div class="es-seccao-entidade">
+              <span class="es-entidade-etiqueta">Estagiário</span>
+              <strong class="es-entidade-nome">{{ nomeEstagiarioAtual() }}</strong>
+              <span class="es-entidade-ref">
+                Estágio {{ referenciaEstagioAtual() }}
+              </span>
+            </div>
+
+            @if (supervisionaVarios()) {
+
+              <p class="es-nota">
+                Acompanhas mais do que um estagiário. Cada registo de
+                assiduidade é individual: confirma o estagiário
+                selecionado antes de guardar.
+              </p>
+
+            }
+
+            <div class="es-resumos">
+
+              <div class="es-resumo">
+                <span>Presente</span>
+                <strong>{{ resumoAssiduidade().presente }}</strong>
+              </div>
+
+              <div class="es-resumo">
+                <span>Atraso</span>
+                <strong>{{ resumoAssiduidade().atraso }}</strong>
+              </div>
+
+              <div class="es-resumo">
+                <span>Falta</span>
+                <strong>{{ resumoAssiduidade().falta }}</strong>
+              </div>
+
+              <div class="es-resumo">
+                <span>Justificadas</span>
+                <strong>{{ resumoAssiduidade().falta_justificada }}</strong>
+              </div>
+
+              <div class="es-resumo es-resumo--destaque">
+                <span>Justificações pendentes</span>
+                <strong>{{ resumoAssiduidade().justificacoes_pendentes }}</strong>
+              </div>
+
+            </div>
+
+
+            <div class="es-filtros">
+
+              <label class="es-campo">
+                <span>Mês</span>
+
+                <input
+                  type="month"
+                  name="mesFiltro"
+                  [(ngModel)]="mesFiltro"
+                >
+              </label>
+
+              <label class="es-campo">
+                <span>Estado</span>
+
+                <select
+                  name="estadoFiltro"
+                  [(ngModel)]="estadoFiltro"
+                >
+                  <option value="">Todos</option>
+                  <option value="presente">Presente</option>
+                  <option value="atraso">Atraso</option>
+                  <option value="falta">Falta</option>
+                  <option value="falta_justificada">Falta justificada</option>
+                </select>
+              </label>
+
+              <div class="es-filtros-acoes">
+
+                <button
+                  type="button"
+                  class="es-btn es-btn--primary"
+                  (click)="aplicarFiltrosAssiduidade()"
+                >
+                  Filtrar
+                </button>
+
+                <button
+                  type="button"
+                  class="es-btn es-btn--ghost"
+                  (click)="limparFiltrosAssiduidade()"
+                >
+                  Limpar
+                </button>
+
+              </div>
+
+            </div>
+
+
+            @if (estagioAtivo()) {
+
+              <form
+                class="es-form"
+                (ngSubmit)="guardarAssiduidade()"
+                novalidate
+              >
+
+                <div class="es-form-cabecalho">
+
+                  <span class="es-form-etiqueta">
+                    Assiduidade de {{ nomeEstagiarioAtual() }}
+                  </span>
+
+                  <small class="es-form-contexto">
+                    Estágio {{ referenciaEstagioAtual() }} · um registo por
+                    dia e por estagiário
+                  </small>
+
+                </div>
+
+                <div class="es-form-grelha">
+
+                  <label class="es-campo">
+                    <span>Data *</span>
+
+                    <input
+                      type="date"
+                      name="assiduidadeData"
+                      [ngModel]="assiduidadeData()"
+                      (ngModelChange)="assiduidadeData.set($event)"
+                      [disabled]="processando()"
+                    >
+                  </label>
+
+                  <label class="es-campo">
+                    <span>Estado *</span>
+
+                    <select
+                      name="assiduidadeEstado"
+                      [ngModel]="assiduidadeEstado()"
+                      (ngModelChange)="assiduidadeEstado.set($event)"
+                      [disabled]="processando()"
+                    >
+                      <option value="presente">Presente</option>
+                      <option value="atraso">Atraso</option>
+                      <option value="falta">Falta</option>
+                      <option value="falta_justificada">Falta justificada</option>
+                    </select>
+                  </label>
+
+                </div>
+
+                @if (!assiduidadeEhFalta()) {
+
+                  <div class="es-form-grelha">
+
+                    <label class="es-campo">
+                      <span>Hora de entrada</span>
+
+                      <input
+                        type="time"
+                        name="assiduidadeHoraEntrada"
+                        [(ngModel)]="assiduidadeHoraEntrada"
+                        [disabled]="processando()"
+                      >
+                    </label>
+
+                    <label class="es-campo">
+                      <span>Hora de saída</span>
+
+                      <input
+                        type="time"
+                        name="assiduidadeHoraSaida"
+                        [(ngModel)]="assiduidadeHoraSaida"
+                        [disabled]="processando()"
+                      >
+                    </label>
+
+                  </div>
+
+                }
+
+                @if (assiduidadeEstado() === 'falta_justificada') {
+
+                  <label class="es-campo">
+                    <span>Justificação *</span>
+
+                    <textarea
+                      name="assiduidadeJustificacao"
+                      rows="2"
+                      maxlength="1000"
+                      [(ngModel)]="assiduidadeJustificacao"
+                      [disabled]="processando()"
+                    ></textarea>
+                  </label>
+
+                }
+
+                <div class="es-form-acoes">
+
+                  @if (assiduidadeDoDia(); as existente) {
+
+                    <p class="es-form-aviso" role="status">
+                      Já existe um registo a
+                      {{ formatarData(existente.data) }}.
+                      Guardar irá atualizá-lo.
+                    </p>
+
+                  }
+
+                  <button
+                    type="submit"
+                    class="es-btn es-btn--primary"
+                    [disabled]="processando()"
+                  >
+                    {{ assiduidadeDoDia() ? 'Atualizar registo' : 'Registar assiduidade' }}
+                  </button>
+
+                </div>
+
+              </form>
+
+            } @else {
+
+              <p class="es-nota">
+                Só é possível lançar assiduidade enquanto o estágio
+                estiver ativo.
+              </p>
+
+            }
+
+
+            @if (carregandoAssiduidade()) {
+
+              <p class="es-vazio">A carregar assiduidade...</p>
+
+            } @else if (assiduidades().length === 0) {
+
+              <p class="es-vazio">
+                Não existem registos de assiduidade para os filtros
+                selecionados.
+              </p>
+
+            } @else {
+
+              <div class="es-tabela-wrap">
+
+                <table class="es-tabela">
+
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Estado</th>
+                      <th>Entrada</th>
+                      <th>Saída</th>
+                      <th>Justificação</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+
+                    @for (registo of assiduidades(); track registo.id_assiduidade) {
+
+                      <tr>
+
+                        <td>{{ formatarData(registo.data) }}</td>
+
+                        <td>
+                          <span class="es-dot" [ngClass]="classeAssiduidade(registo.estado)"></span>
+                          {{ rotuloAssiduidade(registo.estado) }}
+                        </td>
+
+                        <td>{{ formatarHora(registo.hora_entrada) }}</td>
+
+                        <td>{{ formatarHora(registo.hora_saida) }}</td>
+
+                        <td>
+                          {{ rotuloJustificacao(registo.justificacao_estado) }}
+
+                          @if (registo.justificacao) {
+
+                            <small class="es-item-meta">
+                              {{ registo.justificacao }}
+                            </small>
+
+                          }
+
+                          @if (registo.motivo_recusa) {
+
+                            <small class="es-item-meta es-texto--erro">
+                              {{ registo.motivo_recusa }}
+                            </small>
+
+                          }
+
+                        </td>
+
+                        <td>
+
+                          <div class="es-item-acoes">
+
+                            @if (registo.justificacao_estado === 'pendente') {
+
+                              <button
+                                type="button"
+                                class="es-btn es-btn--primary"
+                                (click)="aprovarJustificacao(registo)"
+                                [disabled]="processando()"
+                              >
+                                Aprovar
+                              </button>
+
+                              <button
+                                type="button"
+                                class="es-btn es-btn--danger"
+                                (click)="abrirRecusaJustificacao(registo)"
+                                [disabled]="processando()"
+                              >
+                                Recusar
+                              </button>
+
+                            }
+
+                            @if (estagioAtivo()) {
+
+                              <button
+                                type="button"
+                                class="es-btn es-btn--ghost"
+                                (click)="removerAssiduidade(registo)"
+                                [disabled]="processando()"
+                              >
+                                Remover
+                              </button>
+
+                            }
+
+                          </div>
+
+                        </td>
+
+                      </tr>
+
+                      @if (justificacaoEmRecusa()?.id_assiduidade === registo.id_assiduidade) {
+
+                        <tr class="es-linha-formulario">
+
+                          <td colspan="6">
+
+                            <label class="es-campo">
+                              <span>Motivo da recusa *</span>
+
+                              <textarea
+                                rows="2"
+                                maxlength="1000"
+                                [(ngModel)]="motivoRecusaJustificacao"
+                                [disabled]="processando()"
+                              ></textarea>
+                            </label>
+
+                            <div class="es-form-acoes">
+
+                              <button
+                                type="button"
+                                class="es-btn es-btn--light"
+                                (click)="cancelarRecusaJustificacao()"
+                                [disabled]="processando()"
+                              >
+                                Cancelar
+                              </button>
+
+                              <button
+                                type="button"
+                                class="es-btn es-btn--danger"
+                                (click)="confirmarRecusaJustificacao()"
+                                [disabled]="processando()"
+                              >
+                                Confirmar recusa
+                              </button>
+
+                            </div>
+
+                          </td>
+
+                        </tr>
+
+                      }
+
+                    }
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            }
+
+          </div>
+
+        }
+
+        <!-- =================================================
+             AVALIAÇÕES
+             ================================================= -->
+        @case ('avaliacoes') {
+
+          <div class="es-seccao">
+
+            @if (resumoAvaliacoes(); as resumo) {
+
+              @if (resumo.media_nota !== null) {
+
+                <div class="es-resumo-total">
+
+                  <span>Média global</span>
+
+                  <strong>
+                    {{ resumo.media_nota | number:'1.2-2' }}
+                    <small>/ 20</small>
+                  </strong>
+
+                  <span>{{ resumo.total }} avaliação(ões)</span>
+
+                </div>
+
+              }
+
+            }
+
+
+            @if (aceitaRegistosDeFecho()) {
+
+              <form
+                id="es-form-avaliacao"
+                class="es-form"
+                [class.es-form--edicao]="avaliacaoEmEdicao()"
+                (ngSubmit)="guardarAvaliacao()"
+                novalidate
+              >
+
+                @if (avaliacaoEmEdicao(); as emEdicao) {
+
+                  <div class="es-form-cabecalho">
+
+                    <div>
+
+                      <span class="es-form-etiqueta">
+                        A EDITAR AVALIAÇÃO
+                      </span>
+
+                      <strong>
+                        {{ rotuloTipo(emEdicao.tipo) }} ·
+                        {{ formatarData(emEdicao.periodo_referencia) }}
+                      </strong>
+
+                    </div>
+
+                    <button
+                      type="button"
+                      class="es-btn es-btn--light"
+                      (click)="cancelarEdicaoAvaliacao()"
+                      [disabled]="processando()"
+                    >
+                      Cancelar edição
+                    </button>
+
+                  </div>
+
+                }
+
+                <div class="es-form-grelha">
+
+                  <label class="es-campo">
+                    <span>Tipo *</span>
+
+                    <select
+                      name="avaliacaoTipo"
+                      [(ngModel)]="avaliacaoTipo"
+                      [disabled]="processando()"
+                    >
+                      <option value="semanal">Semanal</option>
+                      <option value="mensal">Mensal</option>
+                      <option value="final">Final</option>
+                    </select>
+                  </label>
+
+                  <label class="es-campo">
+                    <span>Período de referência *</span>
+
+                    <input
+                      type="date"
+                      name="avaliacaoPeriodo"
+                      [(ngModel)]="avaliacaoPeriodo"
+                      [disabled]="processando()"
+                    >
+                  </label>
+
+                </div>
+
+                <div class="es-form-grelha es-form-grelha--notas">
+
+                  <label class="es-campo">
+                    <span>Nota final (0–20) *</span>
+
+                    <input
+                      type="number"
+                      name="avaliacaoNota"
+                      min="0"
+                      max="20"
+                      step="0.5"
+                      [(ngModel)]="avaliacaoNota"
+                      [disabled]="processando()"
+                    >
+                  </label>
+
+                  <label class="es-campo">
+                    <span>Atividades (0–20)</span>
+
+                    <input
+                      type="number"
+                      name="avaliacaoNotaAtividades"
+                      min="0"
+                      max="20"
+                      step="0.5"
+                      [(ngModel)]="avaliacaoNotaAtividades"
+                      [disabled]="processando()"
+                    >
+                  </label>
+
+                  <label class="es-campo">
+                    <span>Assiduidade (0–20)</span>
+
+                    <input
+                      type="number"
+                      name="avaliacaoNotaAssiduidade"
+                      min="0"
+                      max="20"
+                      step="0.5"
+                      [(ngModel)]="avaliacaoNotaAssiduidade"
+                      [disabled]="processando()"
+                    >
+                  </label>
+
+                  <label class="es-campo">
+                    <span>Pontualidade (0–20)</span>
+
+                    <input
+                      type="number"
+                      name="avaliacaoNotaPontualidade"
+                      min="0"
+                      max="20"
+                      step="0.5"
+                      [(ngModel)]="avaliacaoNotaPontualidade"
+                      [disabled]="processando()"
+                    >
+                  </label>
+
+                </div>
+
+                <label class="es-campo">
+                  <span>Comentários</span>
+
+                  <textarea
+                    name="avaliacaoComentarios"
+                    rows="2"
+                    maxlength="5000"
+                    [(ngModel)]="avaliacaoComentarios"
+                    [disabled]="processando()"
+                  ></textarea>
+                </label>
+
+                @if (avaliacaoTipo !== 'semanal') {
+
+                  <div class="es-form-grelha">
+
+                    <label class="es-campo">
+                      <span>Pontos fortes</span>
+
+                      <textarea
+                        name="avaliacaoPontosFortes"
+                        rows="2"
+                        maxlength="5000"
+                        [(ngModel)]="avaliacaoPontosFortes"
+                        [disabled]="processando()"
+                      ></textarea>
+                    </label>
+
+                    <label class="es-campo">
+                      <span>Áreas de melhoria</span>
+
+                      <textarea
+                        name="avaliacaoAreasMelhoria"
+                        rows="2"
+                        maxlength="5000"
+                        [(ngModel)]="avaliacaoAreasMelhoria"
+                        [disabled]="processando()"
+                      ></textarea>
+                    </label>
+
+                  </div>
+
+                }
+
+                <div class="es-form-acoes">
+
+                  @if (avaliacaoEmEdicao()) {
+
+                    <button
+                      type="button"
+                      class="es-btn es-btn--light"
+                      (click)="cancelarEdicaoAvaliacao()"
+                      [disabled]="processando()"
+                    >
+                      Cancelar
+                    </button>
+
+                  }
+
+                  <button
+                    type="submit"
+                    class="es-btn es-btn--primary"
+                    [disabled]="processando()"
+                  >
+                    @if (avaliacaoEmEdicao()) {
+                      Guardar alterações
+                    } @else {
+                      Registar avaliação
+                    }
+                  </button>
+
+                </div>
+
+              </form>
+
+            } @else {
+
+              <p class="es-nota">
+                Não é possível avaliar um estágio cancelado.
+              </p>
+
+            }
+
+
+            @if (carregandoAvaliacoes()) {
+
+              <p class="es-vazio">A carregar avaliações...</p>
+
+            } @else if (avaliacoes().length === 0) {
+
+              <p class="es-vazio">
+                Ainda não existem avaliações registadas.
+              </p>
+
+            } @else {
+
+              <ul class="es-lista">
+
+                @for (avaliacao of avaliacoes(); track avaliacao.id_avaliacao) {
+
+                  <li
+                    class="es-item es-item--bloco"
+                    [class.es-item--em-edicao]="
+                      avaliacaoEmEdicao()?.id_avaliacao ===
+                      avaliacao.id_avaliacao
+                    "
+                  >
+
+                    <div class="es-item-corpo">
+
+                      <div class="es-item-titulo">
+
+                        <strong>
+                          Avaliação {{ rotuloTipo(avaliacao.tipo) }}
+                        </strong>
+
+                        <span class="es-nota-final">
+                          {{ formatarNota(avaliacao.nota) }} / 20
+                        </span>
+
+                      </div>
+
+                      <span class="es-item-meta">
+                        Período:
+                        {{ formatarData(avaliacao.periodo_referencia) }}
+                      </span>
+
+                      <div class="es-subnotas">
+
+                        <span>
+                          Atividades:
+                          <strong>{{ formatarNota(avaliacao.nota_atividades) }}</strong>
+                        </span>
+
+                        <span>
+                          Assiduidade:
+                          <strong>{{ formatarNota(avaliacao.nota_assiduidade) }}</strong>
+                        </span>
+
+                        <span>
+                          Pontualidade:
+                          <strong>{{ formatarNota(avaliacao.nota_pontualidade) }}</strong>
+                        </span>
+
+                      </div>
+
+                      @if (avaliacao.comentarios) {
+
+                        <p class="es-texto">{{ avaliacao.comentarios }}</p>
+
+                      }
+
+                      @if (avaliacao.pontos_fortes) {
+
+                        <p class="es-texto">
+                          <strong>Pontos fortes:</strong>
+                          {{ avaliacao.pontos_fortes }}
+                        </p>
+
+                      }
+
+                      @if (avaliacao.areas_melhoria) {
+
+                        <p class="es-texto">
+                          <strong>Áreas de melhoria:</strong>
+                          {{ avaliacao.areas_melhoria }}
+                        </p>
+
+                      }
+
+                    </div>
+
+                    <div class="es-item-acoes">
+
+                      <button
+                        type="button"
+                        class="es-btn es-btn--ghost"
+                        (click)="editarAvaliacao(avaliacao)"
+                        [disabled]="processando()"
+                      >
+                        Editar
+                      </button>
+
+                      <button
+                        type="button"
+                        class="es-btn es-btn--danger"
+                        (click)="removerAvaliacao(avaliacao)"
+                        [disabled]="processando()"
+                      >
+                        Remover
+                      </button>
+
+                    </div>
+
+                  </li>
+
+                }
+
+              </ul>
+
+            }
+
+          </div>
+
+        }
+
+        <!-- =================================================
+             FEEDBACK
+             ================================================= -->
+        @case ('feedback') {
+
+          <div class="es-seccao">
+
+            <p class="es-nota">
+              Feedback partilhado pelo estagiário sobre o estágio.
+            </p>
+
+            @if (carregandoFeedback()) {
+
+              <p class="es-vazio">A carregar feedback...</p>
+
+            } @else if (!feedback()) {
+
+              <p class="es-vazio">
+                O estagiário ainda não submeteu feedback.
+              </p>
+
+            } @else if (feedback(); as f) {
+
+              <div class="es-resumo-total">
+
+                <span>Nota geral</span>
+
+                <strong>
+                  {{ f.nota_geral }}
+                  <small>/ 10</small>
+                </strong>
+
+              </div>
+
+              @if (f.comentario) {
+
+                <p class="es-texto">{{ f.comentario }}</p>
+
+              }
+
+              @if (f.sugestoes) {
+
+                <p class="es-texto">
+                  <strong>Sugestões:</strong> {{ f.sugestoes }}
+                </p>
+
+              }
+
+            }
+
+          </div>
+
+        }
+
+        <!-- =================================================
+             ATIVIDADES
+             ================================================= -->
+        @case ('atividades') {
+
+          <div class="es-seccao">
+
+            @if (carregandoAtividades()) {
+
+              <p class="es-vazio">A carregar atividades...</p>
+
+            } @else if (atividades().length === 0) {
+
+              <p class="es-vazio">
+                Ainda não existem atividades registadas pelo estagiário.
+              </p>
+
+            } @else {
+
+              <ul class="es-lista">
+
+                @for (atividade of atividades(); track atividade.id_atividade) {
+
+                  <li class="es-item es-item--bloco">
+
+                    <div class="es-item-corpo">
+
+                      <strong>{{ atividade.titulo }}</strong>
+
+                      <span class="es-item-meta">
+                        {{ formatarData(atividade.data) }}
+                      </span>
+
+                      <p class="es-texto">{{ atividade.descricao }}</p>
+
+                    </div>
+
+                  </li>
+
+                }
+
+              </ul>
+
+            }
+
+          </div>
+
+        }
+
+      }
+
+    </div>
+
+  }
+
+</section>
