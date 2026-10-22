@@ -331,7 +331,7 @@
 
           <button
             type="button"
-            class="est-btn-light"
+            class="est-btn est-btn--secundario est-btn--sm"
             (click)="recarregar()"
           >
             Tentar novamente
@@ -780,7 +780,7 @@
 
                   <button
                     type="button"
-                    class="est-doc-ver"
+                    class="est-btn est-btn--secundario est-btn--sm est-doc-ver"
                     [disabled]="documentoEmSubstituicao() !== null"
                     (click)="ver(d)"
                   >
@@ -825,7 +825,7 @@
 
                     <label
                       [for]="'ficheiro-documento-' + d.id_documento"
-                      class="est-doc-substituir"
+                      class="est-btn est-btn--neutro est-btn--sm est-doc-substituir"
                       [class.is-disabled]="
                         c.estado !== 'analise' ||
                         documentoEmSubstituicao() !== null
@@ -1146,7 +1146,7 @@
                   </p>
 
                   <a
-                    class="est-preview-download"
+                    class="est-btn est-btn--primario est-btn--sm est-preview-download"
                     [href]="documentoPreviewUrl()"
                     [download]="documentoPreviewNome()"
                   >
@@ -1163,7 +1163,7 @@
 
               <button
                 type="button"
-                class="est-btn-light"
+                class="est-btn est-btn--neutro"
                 (click)="fecharPreviewDocumento()"
               >
                 Fechar
