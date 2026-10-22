@@ -5,6 +5,8 @@ namespace App\Services\Sms\Provedores;
 use App\Services\Sms\SmsProvedor;
 use App\Services\Sms\SmsResultado;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -12,20 +14,28 @@ use Throwable;
 /**
  * Provedor para gateways SMS com API REST genérica.
  *
- * Envia um POST JSON com o número, o texto e o remetente. A autenticação é
- * configurável porque cada gateway usa o seu próprio esquema.
+ * O método HTTP, o esquema de autenticação e os nomes dos campos são
+ * configuráveis, para que um gateway novo seja ligado apenas pelo .env.
  */
 class SmsProvedorHttp implements SmsProvedor
 {
     /**
-     * @param  array<string, mixed>  $opcoes
+     * @param  array<string, mixed>  $camposExtra
      */
     public function __construct(
         private readonly ?string $endpoint,
-        private readonly ?string $apiKey,
-        private readonly ?string $apiSecret,
+        private readonly string $metodo = 'POST',
+        private readonly string $autenticacao = 'bearer',
+        private readonly ?string $apiKey = null,
+        private readonly ?string $apiSecret = null,
         private readonly string $authHeader = 'Authorization',
         private readonly string $authScheme = 'Bearer',
+        private readonly string $authQueryParam = 'api_key',
+        private readonly string $campoDestino = 'to',
+        private readonly string $campoMensagem = 'text',
+        private readonly string $campoRemetente = 'from',
+        private readonly array $camposExtra = [],
+        private readonly string $campoReferencia = 'id',
         private readonly int $timeout = 10,
         private readonly string $remetente = 'MULTITEL',
     ) {}
@@ -40,25 +50,18 @@ class SmsProvedorHttp implements SmsProvedor
             );
         }
 
+        $corpo = array_merge($this->corpoDoPedido($telefone, $mensagem), $this->camposExtra);
+
         $cabecalhos = [
             'Accept' => 'application/json',
         ];
 
-        $autorizacao = $this->cabecalhoAutorizacao();
+        $parametros = [];
 
-        if ($autorizacao !== null) {
-            $cabecalhos[$this->authHeader] = $autorizacao;
-        }
+        $this->aplicarAutenticacao($cabecalhos, $parametros);
 
         try {
-            $resposta = Http::withHeaders($cabecalhos)
-                ->timeout($this->timeout)
-                ->post($this->endpoint, [
-                    'from' => $this->remetente,
-                    'to' => $telefone,
-                    'text' => $mensagem,
-                    'message' => $mensagem,
-                ]);
+            $resposta = $this->executar($cabecalhos, $parametros, $corpo);
 
             if (! $resposta->successful()) {
                 Log::channel('sms')->warning('Gateway de SMS respondeu com erro', [
@@ -103,19 +106,85 @@ class SmsProvedorHttp implements SmsProvedor
     }
 
     /**
-     * Monta o valor do cabeçalho de autorização, quando há credenciais.
+     * Monta o corpo do pedido com os nomes de campos configurados.
+     *
+     * @return array<string, mixed>
      */
-    private function cabecalhoAutorizacao(): ?string
+    private function corpoDoPedido(string $telefone, string $mensagem): array
     {
-        if (filled($this->apiKey) && filled($this->apiSecret)) {
-            return 'Basic '.base64_encode($this->apiKey.':'.$this->apiSecret);
+        return array_filter([
+            $this->campoRemetente => $this->remetente,
+            $this->campoDestino => $telefone,
+            $this->campoMensagem => $mensagem,
+        ], fn ($valor) => filled($valor));
+    }
+
+    /**
+     * Aplica o esquema de autenticação configurado.
+     *
+     * @param  array<string, string>  $cabecalhos
+     * @param  array<string, string>  $parametros
+     */
+    private function aplicarAutenticacao(array &$cabecalhos, array &$parametros): void
+    {
+        if ($this->autenticacao === 'none' || blank($this->apiKey)) {
+            return;
         }
 
-        if (filled($this->apiKey)) {
-            return trim($this->authScheme.' '.$this->apiKey);
+        match ($this->autenticacao) {
+            'basic' => $cabecalhos[$this->authHeader] = 'Basic '.base64_encode(
+                $this->apiKey.':'.($this->apiSecret ?? '')
+            ),
+
+            'header' => $cabecalhos[$this->authHeader] = $this->apiKey,
+
+            'query' => $parametros[$this->authQueryParam] = $this->apiKey,
+
+            'bearer' => $cabecalhos[$this->authHeader] = trim(
+                $this->authScheme.' '.$this->apiKey
+            ),
+
+            default => null,
+        };
+    }
+
+    /**
+     * Executa o pedido HTTP no método configurado.
+     *
+     * @param  array<string, string>  $cabecalhos
+     * @param  array<string, string>  $parametros
+     * @param  array<string, mixed>  $corpo
+     */
+    private function executar(
+        array $cabecalhos,
+        array $parametros,
+        array $corpo
+    ): Response {
+        $pedido = $this->prepararPedido($cabecalhos, $parametros);
+
+        return match (strtoupper($this->metodo)) {
+            'GET' => $pedido->get($this->endpoint, $corpo),
+            'PUT' => $pedido->put($this->endpoint, $corpo),
+            'PATCH' => $pedido->patch($this->endpoint, $corpo),
+            default => $pedido->post($this->endpoint, $corpo),
+        };
+    }
+
+    /**
+     * @param  array<string, string>  $cabecalhos
+     * @param  array<string, string>  $parametros
+     */
+    private function prepararPedido(
+        array $cabecalhos,
+        array $parametros
+    ): PendingRequest {
+        $pedido = Http::withHeaders($cabecalhos)->timeout($this->timeout);
+
+        if ($parametros !== []) {
+            $pedido = $pedido->withQueryParameters($parametros);
         }
 
-        return null;
+        return $pedido;
     }
 
     /**
@@ -127,7 +196,16 @@ class SmsProvedorHttp implements SmsProvedor
             return null;
         }
 
-        foreach (['id', 'messageId', 'message_id', 'reference', 'sid'] as $chave) {
+        $candidatos = array_unique([
+            $this->campoReferencia,
+            'id',
+            'messageId',
+            'message_id',
+            'reference',
+            'sid',
+        ]);
+
+        foreach ($candidatos as $chave) {
             if (isset($corpo[$chave]) && is_scalar($corpo[$chave])) {
                 return (string) $corpo[$chave];
             }

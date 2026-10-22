@@ -225,6 +225,84 @@ describe('provedores de SMS', function () {
 
         expect(app(SmsProvedor::class)->nome())->toBe('simulado');
     });
+
+    it('respeita os nomes de campos e os campos extra do gateway', function () {
+        config([
+            'sms.provider' => 'http',
+            'sms.endpoint' => 'https://sms.test/envio',
+            'sms.campo_destino' => 'msisdn',
+            'sms.campo_mensagem' => 'body',
+            'sms.campo_remetente' => 'sender',
+            'sms.campos_extra' => '{"route":"premium"}',
+        ]);
+
+        Http::fake(['*' => Http::response(['id' => 'abc'], 200)]);
+
+        app(SmsService::class)->enviar('927722699', 'Olá');
+
+        Http::assertSent(function ($pedido) {
+            return $pedido['msisdn'] === '+244927722699'
+                && $pedido['body'] === 'Olá'
+                && $pedido['sender'] === 'MULTITEL'
+                && $pedido['route'] === 'premium'
+                && ! isset($pedido['to'])
+                && ! isset($pedido['text']);
+        });
+    });
+
+    it('envia a chave de API na query string quando assim está configurado', function () {
+        config([
+            'sms.provider' => 'http',
+            'sms.endpoint' => 'https://sms.test/envio',
+            'sms.auth' => 'query',
+            'sms.api_key' => 'chave-123',
+            'sms.auth_query_param' => 'token',
+        ]);
+
+        Http::fake(['*' => Http::response([], 200)]);
+
+        app(SmsService::class)->enviar('927722699', 'Olá');
+
+        Http::assertSent(function ($pedido) {
+            return $pedido->url() === 'https://sms.test/envio?token=chave-123'
+                && ! $pedido->hasHeader('Authorization');
+        });
+    });
+
+    it('envia a chave num cabeçalho próprio quando assim está configurado', function () {
+        config([
+            'sms.provider' => 'http',
+            'sms.endpoint' => 'https://sms.test/envio',
+            'sms.auth' => 'header',
+            'sms.auth_header' => 'X-Api-Key',
+            'sms.api_key' => 'chave-123',
+        ]);
+
+        Http::fake(['*' => Http::response([], 200)]);
+
+        app(SmsService::class)->enviar('927722699', 'Olá');
+
+        Http::assertSent(function ($pedido) {
+            return $pedido->hasHeader('X-Api-Key', 'chave-123');
+        });
+    });
+
+    it('suporta gateways que recebem o pedido por GET', function () {
+        config([
+            'sms.provider' => 'http',
+            'sms.endpoint' => 'https://sms.test/envio',
+            'sms.http_method' => 'GET',
+            'sms.auth' => 'none',
+        ]);
+
+        Http::fake(['*' => Http::response([], 200)]);
+
+        $resultado = app(SmsService::class)->enviar('927722699', 'Olá');
+
+        expect($resultado->enviado)->toBeTrue();
+
+        Http::assertSent(fn ($pedido) => $pedido->method() === 'GET');
+    });
 });
 
 describe('resultado do envio', function () {

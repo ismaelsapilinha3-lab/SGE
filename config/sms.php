@@ -38,9 +38,21 @@ return [
     |--------------------------------------------------------------------------
     | API REST genérica
     |--------------------------------------------------------------------------
+    |
+    | Cada gateway usa nomes de campos e esquemas de autenticação próprios.
+    | Tudo o que varia está aqui, para ligar um gateway novo sem tocar no
+    | código.
+    |
     */
 
     'endpoint' => env('SMS_ENDPOINT'),
+
+    'http_method' => env('SMS_HTTP_METHOD', 'POST'),
+
+    /*
+    | Autenticação: bearer | basic | header | query | none
+    */
+    'auth' => env('SMS_AUTH', 'bearer'),
 
     'api_key' => env('SMS_API_KEY'),
 
@@ -49,6 +61,27 @@ return [
     'auth_header' => env('SMS_AUTH_HEADER', 'Authorization'),
 
     'auth_scheme' => env('SMS_AUTH_SCHEME', 'Bearer'),
+
+    'auth_query_param' => env('SMS_AUTH_QUERY_PARAM', 'api_key'),
+
+    /*
+    | Nomes dos campos no corpo do pedido.
+    */
+    'campo_destino' => env('SMS_CAMPO_DESTINO', 'to'),
+
+    'campo_mensagem' => env('SMS_CAMPO_MENSAGEM', 'text'),
+
+    'campo_remetente' => env('SMS_CAMPO_REMETENTE', 'from'),
+
+    /*
+    | Campos fixos adicionais, em JSON (ex.: {"sender":"MULTITEL"}).
+    */
+    'campos_extra' => env('SMS_CAMPOS_EXTRA'),
+
+    /*
+    | Campo da resposta que traz o identificador do envio.
+    */
+    'campo_referencia' => env('SMS_CAMPO_REFERENCIA', 'id'),
 
     'timeout' => (int) env('SMS_TIMEOUT', 10),
 
