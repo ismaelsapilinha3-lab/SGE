@@ -1190,6 +1190,86 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
 
   // ============================================================
+  // RÓTULO E NOTA DO ESTADO DO ESTÁGIO
+  // ============================================================
+
+  rotuloEstadoEstagio(estado?: string | null): string {
+    switch (estado) {
+      case 'ativo':
+        return 'Ativo';
+
+      case 'aprovada':
+        return 'A aguardar início';
+
+      case 'suspenso':
+        return 'Suspenso';
+
+      case 'concluido':
+        return 'Concluído';
+
+      case 'cancelado':
+        return 'Cancelado';
+
+      default:
+        return 'Sem estágio';
+    }
+  }
+
+
+  notaEstadoEstagio(estagiario: Estagiario): string {
+    switch (estagiario.estado_estagio) {
+      case 'ativo': {
+        const dias = this.diasRestantes(estagiario);
+
+        if (dias === null) {
+          return 'Sem data de término';
+        }
+
+        if (dias <= 0) {
+          return 'Prazo terminado';
+        }
+
+        return `${dias} dia(s) restante(s)`;
+      }
+
+      case 'suspenso':
+        return estagiario.motivo_suspensao || 'Motivo não registado';
+
+      case 'aprovada':
+        return 'A aguardar início do estágio';
+
+      case 'concluido':
+        return 'Estágio concluído';
+
+      case 'cancelado':
+        return 'Estágio cancelado';
+
+      default:
+        return 'Sem estágio associado';
+    }
+  }
+
+
+  // ============================================================
+  // FORMATAR DATA (YYYY-MM-DD -> DD/MM/YYYY)
+  // ============================================================
+
+  formatarData(data?: string | null): string {
+    if (!data) {
+      return '—';
+    }
+
+    const partes = data.substring(0, 10).split('-');
+
+    if (partes.length !== 3) {
+      return data;
+    }
+
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  }
+
+
+  // ============================================================
   // INICIAIS DO CANDIDATO
   // ============================================================
 

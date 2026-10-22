@@ -33,7 +33,7 @@
 
         <button
           type="button"
-          class="botao-atualizar"
+          class="btn btn--claro"
           (click)="atualizarPainel()"
           [disabled]="
             carregandoDashboard() ||
@@ -41,7 +41,7 @@
             carregandoDepartamentos()
           "
         >
-          <span aria-hidden="true">↻</span>
+          <span class="btn-icone" aria-hidden="true">↻</span>
           Atualizar
         </button>
 
@@ -138,40 +138,67 @@
 
             <div class="grafico-legenda">
 
-              <div class="legenda-item">
-                <span class="legenda-cor legenda-cor--analise"></span>
+              <div class="legenda-item legenda-item--analise">
+                <span class="legenda-cor"></span>
 
-                <div class="legenda-texto">
-                  <span>Em análise</span>
-                  <strong>
-                    {{ dashboard().em_analise }}
-                    <small>({{ percentEmAnalise() }}%)</small>
-                  </strong>
-                </div>
+                <span class="legenda-rotulo">Em análise</span>
+
+                <strong class="legenda-valor">
+                  {{ dashboard().em_analise }}
+                </strong>
+
+                <span class="legenda-percentual">
+                  {{ percentEmAnalise() }}%
+                </span>
+
+                <span class="legenda-barra">
+                  <span
+                    class="legenda-barra-valor"
+                    [style.width.%]="percentEmAnalise()"
+                  ></span>
+                </span>
               </div>
 
-              <div class="legenda-item">
-                <span class="legenda-cor legenda-cor--aprovadas"></span>
+              <div class="legenda-item legenda-item--aprovadas">
+                <span class="legenda-cor"></span>
 
-                <div class="legenda-texto">
-                  <span>Aprovadas</span>
-                  <strong>
-                    {{ dashboard().aprovadas }}
-                    <small>({{ percentAprovadas() }}%)</small>
-                  </strong>
-                </div>
+                <span class="legenda-rotulo">Aprovadas</span>
+
+                <strong class="legenda-valor">
+                  {{ dashboard().aprovadas }}
+                </strong>
+
+                <span class="legenda-percentual">
+                  {{ percentAprovadas() }}%
+                </span>
+
+                <span class="legenda-barra">
+                  <span
+                    class="legenda-barra-valor"
+                    [style.width.%]="percentAprovadas()"
+                  ></span>
+                </span>
               </div>
 
-              <div class="legenda-item">
-                <span class="legenda-cor legenda-cor--recusadas"></span>
+              <div class="legenda-item legenda-item--recusadas">
+                <span class="legenda-cor"></span>
 
-                <div class="legenda-texto">
-                  <span>Recusadas</span>
-                  <strong>
-                    {{ dashboard().recusadas }}
-                    <small>({{ percentRecusadas() }}%)</small>
-                  </strong>
-                </div>
+                <span class="legenda-rotulo">Recusadas</span>
+
+                <strong class="legenda-valor">
+                  {{ dashboard().recusadas }}
+                </strong>
+
+                <span class="legenda-percentual">
+                  {{ percentRecusadas() }}%
+                </span>
+
+                <span class="legenda-barra">
+                  <span
+                    class="legenda-barra-valor"
+                    [style.width.%]="percentRecusadas()"
+                  ></span>
+                </span>
               </div>
 
             </div>
@@ -417,7 +444,7 @@
 
         <button
           type="button"
-          class="botao-limpar-filtros"
+          class="btn btn--neutro"
           (click)="limparFiltros()"
         >
           Limpar filtros
@@ -455,11 +482,10 @@
             <thead>
               <tr>
                 <th scope="col">Candidato</th>
-                <th scope="col">Curso</th>
-                <th scope="col">Universidade</th>
+                <th scope="col">Formação</th>
                 <th scope="col">Departamento</th>
                 <th scope="col">Estado</th>
-                <th scope="col">Data</th>
+                <th scope="col">Submetida em</th>
                 <th scope="col" class="coluna-acoes">Ações</th>
               </tr>
             </thead>
@@ -487,20 +513,20 @@
                   </td>
 
                   <td>
-                    <span class="texto-tabela">
-                      {{ candidatura.curso || '—' }}
-                    </span>
+                    <div class="dados-agrupados">
+                      <strong>
+                        {{ candidatura.curso || '—' }}
+                      </strong>
+
+                      <span>
+                        {{ candidatura.universidade || 'Sem instituição registada' }}
+                      </span>
+                    </div>
                   </td>
 
                   <td>
-                    <span class="texto-tabela">
-                      {{ candidatura.universidade || '—' }}
-                    </span>
-                  </td>
-
-                  <td>
-                    <span class="texto-tabela">
-                      {{ candidatura.departamento?.nome || '—' }}
+                    <span class="etiqueta-departamento">
+                      {{ candidatura.departamento?.nome || 'Não atribuído' }}
                     </span>
                   </td>
 
@@ -522,7 +548,7 @@
                   <td class="coluna-acoes">
                     <button
                       type="button"
-                      class="botao-visualizar"
+                      class="btn btn--primario btn--sm"
                       (click)="abrirDetalhes(candidatura.id_candidatura)"
                     >
                       Ver detalhes
@@ -613,10 +639,10 @@
 
         <button
           type="button"
-          class="botao-novo-departamento"
+          class="btn btn--primario"
           (click)="novoDepartamento()"
         >
-          <span aria-hidden="true">+</span>
+          <span class="btn-icone" aria-hidden="true">+</span>
           Novo departamento
         </button>
 
@@ -724,7 +750,7 @@
 
             <button
               type="button"
-              class="botao-cancelar-departamento"
+              class="btn btn--neutro"
               (click)="cancelarFormularioDepartamento()"
               [disabled]="guardandoDepartamento()"
             >
@@ -733,7 +759,7 @@
 
             <button
               type="button"
-              class="botao-guardar-departamento"
+              class="btn btn--primario"
               (click)="guardarDepartamento()"
               [disabled]="guardandoDepartamento()"
             >
@@ -809,7 +835,7 @@
               <footer class="cartao-departamento-acoes">
                 <button
                   type="button"
-                  class="botao-editar-departamento"
+                  class="btn btn--secundario btn--bloco"
                   (click)="editarDepartamento(departamento)"
                 >
                   Editar departamento
@@ -836,98 +862,142 @@
          ===================================================== -->
     <section
       id="estagiarios"
-      class="secao-painel"
+      class="area-estagiarios"
       [style.display]="secaoAtiva() === 'estagiarios' ? 'block' : 'none'"
     >
 
-      <header class="secao-cabecalho">
+      <header class="cabecalho-secao">
 
         <div>
+          <span class="subtitulo">Gestão de estágios</span>
           <h2>Estagiários</h2>
-          <p>Consulta os estagiários registados no sistema.</p>
+          <p>
+            Consulta os estagiários registados e gere o estágio
+            de cada um.
+          </p>
         </div>
 
-        <button
-          type="button"
-          (click)="carregarEstagiarios()"
-        >
-          Atualizar
-        </button>
+        <div class="cabecalho-secao-acoes">
+
+          <span class="contador-candidaturas">
+            {{ estagiarios().length }} estagiário(s)
+          </span>
+
+          <button
+            type="button"
+            class="btn btn--secundario"
+            (click)="carregarEstagiarios()"
+            [disabled]="carregandoEstagiarios()"
+          >
+            <span class="btn-icone" aria-hidden="true">↻</span>
+            Atualizar
+          </button>
+
+        </div>
 
       </header>
 
       <form
-        class="filtros-candidaturas"
+        class="filtros-candidaturas filtros-estagiarios"
         (submit)="$event.preventDefault(); pesquisarEstagiarios()"
       >
 
-        <input
-          type="search"
-          aria-label="Pesquisar estagiários"
-          placeholder="Pesquisar por nome ou e-mail"
-          [value]="pesquisaEstagiarios()"
-          (input)="pesquisaEstagiarios.set($any($event.target).value)"
-        />
+        <div class="filtro-pesquisa">
+          <label for="pesquisaEstagiarios">Pesquisar estagiários</label>
 
-        <select
-          aria-label="Filtrar por estado"
-          [value]="estadoEstagiarios()"
-          (change)="estadoEstagiarios.set($any($event.target).value); carregarEstagiarios()"
+          <div class="campo-pesquisa-profissional">
+
+            <span class="icone-pesquisa" aria-hidden="true">⌕</span>
+
+            <input
+              id="pesquisaEstagiarios"
+              type="search"
+              placeholder="Nome, e-mail, curso ou universidade"
+              [value]="pesquisaEstagiarios()"
+              (input)="pesquisaEstagiarios.set($any($event.target).value)"
+              autocomplete="off"
+            />
+
+          </div>
+        </div>
+
+        <div class="filtro-select">
+          <label for="estadoEstagiarios">Estado do estágio</label>
+
+          <select
+            id="estadoEstagiarios"
+            [value]="estadoEstagiarios()"
+            (change)="estadoEstagiarios.set($any($event.target).value); carregarEstagiarios()"
+          >
+            <option value="">Todos os estados</option>
+            <option value="aprovada">Aprovada a aguardar início</option>
+            <option value="ativo">Ativo</option>
+            <option value="concluido">Concluído</option>
+            <option value="suspenso">Suspenso</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn--primario"
         >
-          <option value="">Todos os estados</option>
-          <option value="aprovada">Aprovada a aguardar início</option>
-          <option value="ativo">Ativo</option>
-          <option value="concluido">Concluído</option>
-          <option value="suspenso">Suspenso</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-
-        <button type="submit">Pesquisar</button>
+          Pesquisar
+        </button>
 
       </form>
 
       @if (carregandoEstagiarios()) {
 
-        <p class="estado-vazio">A carregar estagiários...</p>
+        <div class="estado-vazio">
+          <div class="spinner"></div>
+          <p>A carregar estagiários...</p>
+        </div>
 
       } @else if (erroEstagiarios()) {
 
-        <p class="mensagem-erro" role="alert">
+        <div class="mensagem-erro faixa-interna" role="alert">
           {{ erroEstagiarios() }}
-        </p>
+        </div>
 
-        <button
-          type="button"
-          (click)="carregarEstagiarios()"
-        >
-          Tentar novamente
-        </button>
+        <div class="estado-vazio">
+          <div class="estado-vazio-icone" aria-hidden="true">!</div>
+          <h3>Não foi possível carregar os estagiários</h3>
+          <p>Tenta novamente para atualizar a lista.</p>
+
+          <button
+            type="button"
+            class="btn btn--primario"
+            (click)="carregarEstagiarios()"
+          >
+            Tentar novamente
+          </button>
+        </div>
 
       } @else if (estagiarios().length === 0) {
 
-        <p class="estado-vazio">
-          Não existem estagiários para apresentar.
-        </p>
+        <div class="estado-vazio">
+          <div class="estado-vazio-icone" aria-hidden="true">∅</div>
+          <h3>Nenhum estagiário para apresentar</h3>
+          <p>
+            Não existem estagiários que correspondam aos filtros selecionados.
+          </p>
+        </div>
 
       } @else {
 
-        <div class="tabela-responsiva">
+        <div class="tabela-wrapper">
 
-          <table>
+          <table class="tabela-candidaturas tabela-estagiarios">
 
             <thead>
               <tr>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Telefone</th>
-                <th>Curso</th>
-                <th>Universidade</th>
-                <th>Departamento</th>
-                <th>Início</th>
-                <th>Fim previsto</th>
-                <th>Estado</th>
-                <th>Informação</th>
-                <th>Ações</th>
+                <th scope="col">Estagiário</th>
+                <th scope="col">Formação</th>
+                <th scope="col">Departamento</th>
+                <th scope="col">Período do estágio</th>
+                <th scope="col">Estado</th>
+                <th scope="col" class="coluna-acoes">Ações</th>
               </tr>
             </thead>
 
@@ -939,77 +1009,77 @@
               ) {
 
                 <tr>
+
                   <td>
-                    <div class="estagiario-identidade">
-                      <span class="estagiario-avatar" aria-hidden="true">
+                    <div class="candidato-info">
+                      <div class="estagiario-avatar">
                         {{ iniciais(estagiario.nome) }}
-                      </span>
-                      <span class="estagiario-nome">
-                        {{ estagiario.nome }}
+                      </div>
+
+                      <div>
+                        <strong>{{ estagiario.nome }}</strong>
+                        <span>{{ estagiario.email }}</span>
+
+                        @if (estagiario.telefone) {
+                          <span class="linha-contacto">
+                            {{ estagiario.telefone }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="dados-agrupados">
+                      <strong>
+                        {{ estagiario.curso || '—' }}
+                      </strong>
+
+                      <span>
+                        {{ estagiario.universidade || 'Sem instituição registada' }}
                       </span>
                     </div>
                   </td>
-                  <td>{{ estagiario.email }}</td>
-                  <td>{{ estagiario.telefone || '—' }}</td>
-                  <td>{{ estagiario.curso || '—' }}</td>
-                  <td>{{ estagiario.universidade || '—' }}</td>
+
                   <td>
                     <span class="etiqueta-departamento">
                       {{ estagiario.departamento || 'Não atribuído' }}
                     </span>
                   </td>
-                  <td>{{ estagiario.data_inicio || '—' }}</td>
-                  <td>{{ estagiario.data_fim_prevista || '—' }}</td>
+
                   <td>
-                    <span
-                      class="estado-badge"
-                      [class.estado-ativo]="estagiario.estado_estagio === 'ativo'"
-                      [class.estado-aprovada]="estagiario.estado_estagio === 'aprovada'"
-                      [class.estado-suspenso]="estagiario.estado_estagio === 'suspenso'"
-                      [class.estado-concluido]="estagiario.estado_estagio === 'concluido'"
-                      [class.estado-recusada]="estagiario.estado_estagio === 'cancelado'"
-                    >
-                      {{ estagiario.estado_estagio || 'Sem estágio' }}
-                    </span>
-                  </td>
+                    <div class="dados-agrupados">
+                      <span class="dado-rotulo">Início</span>
+                      <strong>{{ formatarData(estagiario.data_inicio) }}</strong>
 
-                  <td class="info-estagio">
-
-                    @if (estagiario.estado_estagio === 'ativo') {
-
-                      @if (diasRestantes(estagiario) === null) {
-                        Data de término não definida
-                      } @else if (diasRestantes(estagiario)! <= 0) {
-                        Prazo terminado
-                      } @else {
-                        {{ diasRestantes(estagiario) }} dias restantes
-                      }
-
-                    } @else if (estagiario.estado_estagio === 'suspenso') {
-
-                      Motivo:
-                      {{ estagiario.motivo_suspensao || 'Motivo não registado' }}
-
-                    } @else if (estagiario.estado_estagio === 'aprovada') {
-
-                      A aguardar início do estágio
-
-                    } @else if (estagiario.estado_estagio === 'concluido') {
-
-                      Estágio concluído
-
-                    } @else if (estagiario.estado_estagio === 'cancelado') {
-
-                      Estágio cancelado
-
-                    }
-
+                      <span class="dado-rotulo">Fim previsto</span>
+                      <strong>{{ formatarData(estagiario.data_fim_prevista) }}</strong>
+                    </div>
                   </td>
 
                   <td>
+                    <div class="dados-agrupados">
+                      <span
+                        class="estado-badge"
+                        [class.estado-ativo]="estagiario.estado_estagio === 'ativo'"
+                        [class.estado-aprovada]="estagiario.estado_estagio === 'aprovada'"
+                        [class.estado-suspenso]="estagiario.estado_estagio === 'suspenso'"
+                        [class.estado-concluido]="estagiario.estado_estagio === 'concluido'"
+                        [class.estado-recusada]="estagiario.estado_estagio === 'cancelado'"
+                      >
+                        {{ rotuloEstadoEstagio(estagiario.estado_estagio) }}
+                      </span>
+
+                      <span class="estado-nota">
+                        {{ notaEstadoEstagio(estagiario) }}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td class="coluna-acoes">
                     <button
                       type="button"
-                      class="btn-gerir-estagio"
+                      class="btn btn--primario btn--sm"
                       (click)="abrirGestaoEstagio(estagiario)"
                     >
                       Gerir estágio
@@ -1147,6 +1217,7 @@
 
                 <button
                   type="button"
+                  class="btn btn--neutro"
                   (click)="fecharGestaoEstagio()"
                   [disabled]="aGuardarEstadoEstagio()"
                 >
@@ -1155,6 +1226,7 @@
 
                 <button
                   type="submit"
+                  class="btn btn--primario"
                   [disabled]="aGuardarEstadoEstagio()"
                 >
                   {{ aGuardarEstadoEstagio() ? 'A guardar...' : 'Guardar estado' }}
@@ -1419,11 +1491,11 @@
          ===================================================== -->
     <section
       id="estagios"
-      class="secao-painel"
+      class="area-estagios"
       [style.display]="secaoAtiva() === 'estagios' ? 'block' : 'none'"
     >
 
-      <header class="secao-cabecalho">
+      <header class="cabecalho-secao">
 
         <div>
           <span class="subtitulo">Ciclo de vida</span>
@@ -1436,7 +1508,9 @@
 
       </header>
 
-      <app-estagio-admin></app-estagio-admin>
+      <div class="area-estagios-conteudo">
+        <app-estagio-admin></app-estagio-admin>
+      </div>
 
     </section>
 
@@ -1644,7 +1718,7 @@
 
                         <button
                           type="button"
-                          class="botao-documento"
+                          class="btn btn--secundario btn--sm"
                           (click)="visualizarDocumento(documento)"
                           [disabled]="abrindoDocumento()"
                         >
@@ -1724,7 +1798,7 @@
 
                       <button
                         type="button"
-                        class="botao-cancelar-encaminhamento"
+                        class="btn btn--neutro"
                         (click)="cancelarEncaminhamento()"
                         [disabled]="processandoEncaminhamento()"
                       >
@@ -1733,7 +1807,7 @@
 
                       <button
                         type="button"
-                        class="botao-confirmar-encaminhamento"
+                        class="btn btn--primario"
                         (click)="confirmarEncaminhamento()"
                         [disabled]="processandoEncaminhamento()"
                       >
@@ -1750,7 +1824,7 @@
 
                     <button
                       type="button"
-                      class="botao-encaminhar"
+                      class="btn btn--primario"
                       (click)="abrirEncaminhamento()"
                       [disabled]="processandoEncaminhamento()"
                     >
@@ -1837,7 +1911,7 @@
                 </p>
 
                 <a
-                  class="botao-download-documento"
+                  class="btn btn--primario"
                   [href]="documentoPreviewUrl()"
                   [download]="documentoPreviewNome()"
                 >
@@ -1853,7 +1927,7 @@
           <footer class="modal-documento-footer">
             <button
               type="button"
-              class="botao-fechar-recusa"
+              class="btn btn--neutro"
               (click)="fecharPreviewDocumento()"
             >
               Fechar

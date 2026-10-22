@@ -43,157 +43,6 @@ button {
   cursor: pointer;
 }
 
-.est-topbar {
-  width: 100%;
-  background: var(--branco);
-  border-bottom: 1px solid var(--borda);
-}
-
-.est-navbar {
-  width: min(1240px, 100%);
-  min-height: 76px;
-  margin: 0 auto;
-  padding: 14px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-}
-
-.est-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--azul);
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.4px;
-}
-
-.est-brand img {
-  display: block;
-  width: auto;
-  max-width: 150px;
-  max-height: 48px;
-  object-fit: contain;
-}
-
-.est-navlinks {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.est-navlinks a,
-.est-navlinks button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 9px 13px;
-  color: #475569;
-  background: transparent;
-  border: 0;
-  border-radius: 9px;
-  font-size: 14px;
-  font-weight: 600;
-  transition: background 0.2s ease, color 0.2s ease;
-}
-
-.est-navlinks a:hover,
-.est-navlinks button:hover {
-  color: var(--azul);
-  background: var(--azul-claro);
-}
-
-.est-user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--azul);
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.est-user img {
-  width: 42px;
-  height: 42px;
-  object-fit: cover;
-  border: 2px solid #e5edf6;
-  border-radius: 50%;
-}
-
-.est-logout {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 10px 15px;
-  color: #a12c2c;
-  background: #fff4f2;
-  border: 1px solid #ffded8;
-  border-radius: 9px;
-  font-size: 13px;
-  font-weight: 700;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.est-logout:hover {
-  background: #ffe8e3;
-  transform: translateY(-1px);
-}
-
-.est-hero {
-  position: relative;
-  overflow: hidden;
-  padding: 64px 24px 82px;
-  color: var(--branco);
-  background:
-    radial-gradient(circle at 90% 10%, rgba(40, 99, 147, 0.35), transparent 30%),
-    linear-gradient(125deg, #091f36 0%, #174a7e 65%, #286393 100%);
-}
-
-.est-hero::after {
-  position: absolute;
-  right: -90px;
-  bottom: -170px;
-  width: 360px;
-  height: 360px;
-  content: "";
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.est-hero > * {
-  position: relative;
-  z-index: 1;
-}
-
-.est-hero h1 {
-  max-width: 760px;
-  margin: 0 0 16px;
-  color: var(--branco);
-  font-size: clamp(30px, 4vw, 44px);
-  font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.8px;
-}
-
-.est-hero p {
-  max-width: 680px;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 16px;
-  line-height: 1.8;
-}
-
-.est-hero .est-btn-primary {
-  margin-top: 24px;
-}
-
 .est-main {
   position: relative;
   z-index: 2;
@@ -316,7 +165,6 @@ button {
   overflow-wrap: anywhere;
 }
 
-.est-doc-icon,
 .est-bloqueio svg {
   display: none !important;
 }
@@ -381,7 +229,6 @@ button {
   border-radius: 10px;
 }
 
-.est-doc-open,
 .est-doc-ver {
   display: inline-flex;
   align-items: center;
@@ -399,51 +246,9 @@ button {
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
-.est-doc-open:hover,
 .est-doc-ver:hover {
   color: var(--azul);
   background: #dceafb;
-  transform: translateY(-1px);
-}
-
-.est-btn-primary,
-.est-btn-light {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 12px 19px;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  font-size: 14px;
-  font-weight: 750;
-  text-align: center;
-  text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
-
-.est-btn-primary {
-  color: var(--branco);
-  background: #174a7e;
-  border-color: #174a7e;
-  box-shadow: 0 5px 14px rgba(10, 37, 64, 0.18);
-}
-
-.est-btn-primary:hover {
-  background: #0a2540;
-  box-shadow: 0 8px 18px rgba(10, 37, 64, 0.24);
-  transform: translateY(-1px);
-}
-
-.est-btn-light {
-  color: var(--azul);
-  background: var(--branco);
-  border-color: #d5e0ec;
-}
-
-.est-btn-light:hover {
-  background: #f0f5fb;
   transform: translateY(-1px);
 }
 
@@ -485,28 +290,6 @@ button {
   border-radius: 50%;
 }
 
-.est-footer {
-  padding: 28px 24px;
-  color: #cbd5e1;
-  background: #091f36;
-  text-align: center;
-  font-size: 13px;
-  line-height: 1.8;
-}
-
-.est-footer p {
-  margin: 0;
-}
-
-.est-footer a {
-  color: var(--branco);
-  text-decoration: none;
-}
-
-.est-footer a:hover {
-  color: #7fb2e0;
-}
-
 .est-bloqueio {
   padding: 18px;
   color: #80520b;
@@ -515,28 +298,6 @@ button {
   border-radius: 10px;
   font-size: 14px;
   line-height: 1.7;
-}
-
-.est-success {
-  color: #176344;
-  background: #ecfdf5;
-  border-color: #b9efd4;
-}
-
-.est-warning {
-  color: #80520b;
-  background: #fff8e8;
-  border-color: #f3dfae;
-}
-
-.est-error {
-  color: #9f2929;
-  background: #fff1f1;
-  border-color: #f6cccc;
-}
-
-.est-muted {
-  color: var(--texto-suave);
 }
 
 .est-status a,
@@ -705,79 +466,12 @@ button {
 }
 
 @media (max-width: 900px) {
-  .est-navbar {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .est-brand {
-    margin-right: auto;
-  }
-
-  .est-navlinks {
-    order: 3;
-    width: 100%;
-  }
-
-  .est-user {
-    margin-left: auto;
-  }
-
   .est-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 650px) {
-  .est-navbar {
-    min-height: 64px;
-    padding: 12px 16px;
-    gap: 12px;
-  }
-
-  .est-brand {
-    font-size: 16px;
-  }
-
-  .est-brand img {
-    max-width: 120px;
-    max-height: 40px;
-  }
-
-  .est-user {
-    gap: 8px;
-    font-size: 12px;
-  }
-
-  .est-user img {
-    width: 36px;
-    height: 36px;
-  }
-
-  .est-navlinks {
-    justify-content: flex-start;
-    gap: 4px;
-  }
-
-  .est-navlinks a,
-  .est-navlinks button {
-    min-height: 38px;
-    padding: 8px 10px;
-    font-size: 12px;
-  }
-
-  .est-hero {
-    padding: 38px 20px 58px;
-  }
-
-  .est-hero h1 {
-    font-size: clamp(27px, 7vw, 36px);
-  }
-
-  .est-hero p {
-    font-size: 14px;
-  }
-
   .est-main {
     margin-top: -24px;
     padding: 0 14px 40px;
@@ -815,11 +509,6 @@ button {
 
   .est-hist {
     padding: 6px 18px;
-  }
-
-  .est-btn-primary,
-  .est-btn-light {
-    width: 100%;
   }
 }
 
@@ -989,8 +678,8 @@ button {
 }
 
 #pagina-estagiario .abas li:nth-child(4) .ic {
-  color: #6d28d9;
-  background: #ece1fd;
+  color: #7c3aed;
+  background: #ede9fe;
 }
 
 #pagina-estagiario .sair .ic {
@@ -1154,12 +843,6 @@ button {
   color: #e2eaf3;
   font-size: 15px;
   line-height: 1.8;
-}
-
-#pagina-estagiario .est-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
 }
 
 #pagina-estagiario .est-main {
@@ -1779,15 +1462,6 @@ button {
     font-size: clamp(24px, 7vw, 32px);
   }
 
-  #pagina-estagiario .est-hero-actions {
-    flex-direction: column;
-  }
-
-  #pagina-estagiario .est-hero-actions .est-btn-primary,
-  #pagina-estagiario .est-hero-actions .est-btn-light {
-    width: 100%;
-  }
-
   #pagina-estagiario .est-main {
     margin-top: -24px;
     padding: 0 14px 40px;
@@ -1993,28 +1667,6 @@ button {
   box-shadow: none;
 }
 
-#pagina-estagiario .est-hero-actions .est-btn-primary {
-  color: #fff;
-  background: #174a7e;
-  border-color: #174a7e;
-}
-
-#pagina-estagiario .est-hero-actions .est-btn-primary:hover {
-  background: #0a2540;
-  border-color: #0a2540;
-}
-
-#pagina-estagiario .est-hero-actions .est-btn-light {
-  color: #174a7e;
-  background: #fff;
-  border-color: #fff;
-}
-
-#pagina-estagiario .est-hero-actions .est-btn-light:hover {
-  background: #edf4fc;
-  border-color: #edf4fc;
-}
-
 #pagina-estagiario .cab-label,
 #pagina-estagiario .est-status,
 #pagina-estagiario .est-card,
@@ -2128,6 +1780,18 @@ button {
   color: #176344;
 }
 
+/* Ícones de contactos com cor própria (rodapé escuro) */
+
+#pagina-estagiario .contacto-icon--telefone {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.16);
+}
+
+#pagina-estagiario .contacto-icon--email {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.16);
+}
+
 #pagina-estagiario .est-doc-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2214,6 +1878,213 @@ button {
 #pagina-estagiario .est-doc-status.rejeitado {
   color: #9f2929;
   background: #fff1f1;
+}
+
+
+/* =====================================================
+   SISTEMA DE BOTÕES
+   ===================================================== */
+
+#pagina-estagiario .est-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.15s ease;
+}
+
+#pagina-estagiario .est-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+#pagina-estagiario .est-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+#pagina-estagiario .est-btn .ic {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ---------- Primário ---------- */
+
+#pagina-estagiario .est-btn--primario {
+  color: #fff;
+  background: #174a7e;
+  border-color: #174a7e;
+  box-shadow: 0 6px 16px rgba(23, 74, 126, 0.22);
+}
+
+#pagina-estagiario .est-btn--primario:hover:not(:disabled) {
+  background: #0f3a66;
+  border-color: #0f3a66;
+}
+
+/* ---------- Secundário ---------- */
+
+#pagina-estagiario .est-btn--secundario {
+  color: #174a7e;
+  background: #fff;
+  border-color: #cfdff2;
+}
+
+#pagina-estagiario .est-btn--secundario:hover:not(:disabled) {
+  background: #edf4fc;
+  border-color: #a9c8ea;
+}
+
+/* ---------- Neutro ---------- */
+
+#pagina-estagiario .est-btn--neutro {
+  color: #475569;
+  background: #f8fafd;
+  border-color: #dbe3ec;
+}
+
+#pagina-estagiario .est-btn--neutro:hover:not(:disabled) {
+  color: #0a2540;
+  background: #eef2f7;
+}
+
+/* ---------- Variantes ---------- */
+
+#pagina-estagiario .est-btn--sm {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 9px;
+  font-size: 12.5px;
+}
+
+/* Botão de acção principal sobre a ficha do documento. */
+#pagina-estagiario .est-doc-ver {
+  color: #174a7e;
+  background: #fff;
+  border-color: #cfdff2;
+}
+
+#pagina-estagiario .est-doc-ver:hover:not(:disabled) {
+  color: #fff;
+  background: #174a7e;
+  border-color: #174a7e;
+}
+
+/* Botão "terminar sessão" — variante destrutiva. */
+#pagina-estagiario .sair {
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+#pagina-estagiario .sair:hover {
+  color: #fff;
+  background: #b42318;
+  border-color: #b42318;
+}
+
+
+/* =====================================================
+   ORGANIZAÇÃO DOS DADOS
+   ===================================================== */
+
+/* Duas fichas lado a lado, com a largura útil toda ocupada. */
+#pagina-estagiario .est-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Lista de campos: rótulo discreto em cima, valor com destaque. */
+#pagina-estagiario .est-data {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 28px;
+}
+
+#pagina-estagiario .est-data-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 13px 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #eef2f7;
+  border-radius: 0;
+}
+
+#pagina-estagiario .est-data-row span {
+  margin: 0;
+  color: #8795a8;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+}
+
+#pagina-estagiario .est-data-row strong {
+  color: #14213a;
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+#pagina-estagiario .est-data-full {
+  grid-column: 1 / -1;
+}
+
+/* Cartão do documento: etiqueta do tipo de ficheiro. */
+#pagina-estagiario .est-doc-prev {
+  display: grid;
+  place-items: center;
+  min-width: 84px;
+  min-height: 96px;
+  padding: 12px;
+  color: #174a7e;
+  background: #edf4fc;
+  border: 1px solid #dbe8f6;
+  border-radius: 12px;
+}
+
+#pagina-estagiario .est-doc-prev .doc-type {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+#pagina-estagiario .est-doc-actions {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #eef2f7;
+}
+
+#pagina-estagiario .est-doc-status {
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+
+#pagina-estagiario .est-doc-ajuda {
+  padding-left: 2px;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 10px;
 }
 
 
