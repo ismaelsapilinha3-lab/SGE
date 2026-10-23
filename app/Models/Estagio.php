@@ -228,6 +228,21 @@ class Estagio extends Model
         return $this->estado === 'suspenso';
     }
 
+    /**
+     * Indica se a data de início do estágio já foi atingida.
+     *
+     * A comparação é feita por dia, para não depender da hora nem do fuso
+     * horário usado na serialização da data.
+     */
+    public function jaComecou(): bool
+    {
+        if ($this->data_inicio === null) {
+            return true;
+        }
+
+        return $this->data_inicio->format('Y-m-d') <= now()->format('Y-m-d');
+    }
+
     public function estaTerminado(): bool
     {
         return in_array($this->estado, ['concluido', 'cancelado'], true);

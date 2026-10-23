@@ -254,4 +254,39 @@ class UtilizadorAdminController extends Controller
             ]),
         ]);
     }
+
+    /**
+     * Eliminar um utilizador (eliminação lógica).
+     *
+     * O registo mantém-se na base de dados para preservar o histórico do
+     * estágio, mas deixa de aparecer nas listagens e não permite iniciar
+     * sessão. Os tokens activos são revogados de imediato.
+     */
+    public function destroy(Request $request, int $id)
+    {
+        $utilizador = User::findOrFail($id);
+
+        if ($utilizador->id_utilizador === $request->user()->id_utilizador) {
+            throw ValidationException::withMessages([
+                'utilizador' => [
+                    'Não podes eliminar a tua própria conta.',
+                ],
+            ]);
+        }
+
+        if ($utilizador->tipo_utilizador === 'administrador') {
+            throw ValidationException::withMessages([
+                'utilizador' => [
+                    'Uma conta de administrador não pode ser eliminada.',
+                ],
+            ]);
+        }
+
+        $utilizador->tokens()->delete();
+        $utilizador->delete();
+
+        return response()->json([
+            'message' => 'Utilizador eliminado com sucesso.',
+        ]);
+    }
 }

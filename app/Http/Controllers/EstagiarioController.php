@@ -28,7 +28,8 @@ class EstagiarioController extends Controller
 
     public function estagio(Request $request)
     {
-        $estagio = $this->estagioDoEstagiario($request->user());
+        // Consulta permitida antes do início: mostra as datas do estágio.
+        $estagio = $this->estagioDoEstagiario($request->user(), false);
 
         $estagio->load([
             'candidatura.departamento',
@@ -57,7 +58,8 @@ class EstagiarioController extends Controller
     {
         $utilizador = $request->user();
 
-        $estagio = $this->estagioDoEstagiario($utilizador);
+        // O contrato faz parte da preparação e pode ser enviado antes do início.
+        $estagio = $this->estagioDoEstagiario($utilizador, false);
 
         if (! $estagio->aceitaRegistos()) {
             return response()->json([
@@ -730,8 +732,10 @@ class EstagiarioController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    private function estagioDoEstagiario(User $utilizador): Estagio
-    {
+    private function estagioDoEstagiario(
+        User $utilizador,
+        bool $exigeInicio = true
+    ): Estagio {
         $estagio = Estagio::where(
             'id_estagiario',
             $utilizador->id_utilizador
@@ -743,6 +747,19 @@ class EstagiarioController extends Controller
             abort(response()->json([
                 'message' => 'Não foi encontrado nenhum estágio associado a este estagiário.',
             ], 404));
+        }
+
+        /*
+         * Os registos de acompanhamento (relatórios, assiduidade, atividades,
+         * avaliações e feedback) só ficam disponíveis a partir do dia de
+         * início. A consulta do estágio e o envio do contrato continuam
+         * acessíveis antes dessa data.
+         */
+        if ($exigeInicio && ! $estagio->jaComecou()) {
+            abort(response()->json([
+                'message' => 'O estágio ainda não começou.',
+                'data_inicio' => $estagio->data_inicio?->format('Y-m-d'),
+            ], 403));
         }
 
         return $estagio;

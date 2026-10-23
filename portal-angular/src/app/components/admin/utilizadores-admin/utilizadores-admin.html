@@ -210,6 +210,16 @@
                     >
                       {{ u.ativo ? 'Desactivar' : 'Activar' }}
                     </button>
+
+                    <button
+                      type="button"
+                      class="btn-acao btn-eliminar"
+                      (click)="eliminar(u)"
+                      [disabled]="u.tipo_utilizador === 'administrador'"
+                      title="Eliminar utilizador"
+                    >
+                      Eliminar
+                    </button>
                   </div>
                 </td>
               </tr>

@@ -293,6 +293,41 @@ export class UtilizadoresAdminComponent implements OnInit {
     });
   }
 
+  eliminar(utilizador: UtilizadorAdmin): void {
+    if (utilizador.tipo_utilizador === 'administrador') {
+      this.erro.set('Não é permitido eliminar uma conta de administrador nesta página.');
+      return;
+    }
+
+    const confirmado = window.confirm(
+      `Tens a certeza de que pretendes eliminar a conta de ${utilizador.nome}? ` +
+      'O histórico do estágio mantém-se, mas a conta deixa de poder iniciar sessão.'
+    );
+
+    if (!confirmado) {
+      return;
+    }
+
+    this.erro.set('');
+    this.sucesso.set('');
+
+    this.service.eliminar(utilizador.id_utilizador).subscribe({
+      next: resposta => {
+        this.sucesso.set(resposta.message);
+
+        if (this.utilizadores().length === 1 && this.paginaAtual() > 1) {
+          this.paginaAtual.set(this.paginaAtual() - 1);
+        }
+
+        this.carregarUtilizadores();
+      },
+      error: erro => {
+        console.error('Erro ao eliminar utilizador:', erro);
+        this.erro.set(this.mensagemErro(erro));
+      }
+    });
+  }
+
   irParaPagina(pagina: number): void {
     if (pagina < 1 || pagina > this.totalPaginas()) {
       return;

@@ -6,6 +6,7 @@ use App\Models\Candidatura;
 use App\Models\Departamento;
 use App\Models\Documento;
 use App\Models\Estagio;
+use App\Models\Notificacao;
 use App\Models\PlanoEstagio;
 use App\Models\Relatorio;
 use App\Models\User;
@@ -13,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class RelatorioController extends Controller
@@ -46,7 +46,7 @@ class RelatorioController extends Controller
     {
         $utilizador = $request->user();
 
-        if (!$utilizador || $utilizador->tipo_utilizador !== 'estagiario') {
+        if (! $utilizador || $utilizador->tipo_utilizador !== 'estagiario') {
             return response()->json([
                 'message' => 'Apenas estagiários podem consultar os seus relatórios.',
             ], 403);
@@ -54,7 +54,7 @@ class RelatorioController extends Controller
 
         $estagio = $this->estagioAtivo($utilizador);
 
-        if (!$estagio) {
+        if (! $estagio) {
             return response()->json([
                 'message' => 'Não existe um estágio ativo associado à sua conta.',
             ], 404);
@@ -172,7 +172,7 @@ class RelatorioController extends Controller
     {
         $utilizador = $request->user();
 
-        if (!$utilizador || $utilizador->tipo_utilizador !== 'estagiario') {
+        if (! $utilizador || $utilizador->tipo_utilizador !== 'estagiario') {
             return response()->json([
                 'message' => 'Apenas estagiários podem consultar os seus relatórios.',
             ], 403);
@@ -180,7 +180,7 @@ class RelatorioController extends Controller
 
         $estagio = $this->estagioAtivo($utilizador);
 
-        if (!$estagio) {
+        if (! $estagio) {
             return response()->json([
                 'message' => 'Não existe um estágio ativo associado à sua conta.',
             ], 404);
@@ -210,7 +210,7 @@ class RelatorioController extends Controller
     {
         $utilizador = $request->user();
 
-        if (!$utilizador || $utilizador->tipo_utilizador !== 'estagiario') {
+        if (! $utilizador || $utilizador->tipo_utilizador !== 'estagiario') {
             return response()->json([
                 'message' => 'Apenas estagiários podem consultar os seus atrasos.',
             ], 403);
@@ -218,7 +218,7 @@ class RelatorioController extends Controller
 
         $estagio = $this->estagioAtivo($utilizador);
 
-        if (!$estagio) {
+        if (! $estagio) {
             return response()->json([
                 'message' => 'Não existe um estágio ativo associado à sua conta.',
             ], 404);
@@ -246,7 +246,7 @@ class RelatorioController extends Controller
     {
         $utilizador = $request->user();
 
-        if (!$utilizador || $utilizador->tipo_utilizador !== 'estagiario') {
+        if (! $utilizador || $utilizador->tipo_utilizador !== 'estagiario') {
             return response()->json([
                 'message' => 'Apenas estagiários podem submeter relatórios.',
             ], 403);
@@ -267,7 +267,7 @@ class RelatorioController extends Controller
 
         $estagio = $this->estagioAtivo($utilizador);
 
-        if (!$estagio) {
+        if (! $estagio) {
             return response()->json([
                 'message' => 'Não existe um estágio ativo associado à sua conta.',
             ], 404);
@@ -329,7 +329,7 @@ class RelatorioController extends Controller
     {
         $utilizador = $request->user();
 
-        if (!$utilizador || $utilizador->tipo_utilizador !== 'estagiario') {
+        if (! $utilizador || $utilizador->tipo_utilizador !== 'estagiario') {
             return response()->json([
                 'message' => 'Apenas estagiários podem carregar relatórios.',
             ], 403);
@@ -343,8 +343,8 @@ class RelatorioController extends Controller
             'ficheiro' => [
                 'required',
                 'file',
-                'max:' . self::TAMANHO_MAXIMO_RELATORIO,
-                'mimes:' . implode(',', self::FORMATOS_RELATORIO),
+                'max:'.self::TAMANHO_MAXIMO_RELATORIO,
+                'mimes:'.implode(',', self::FORMATOS_RELATORIO),
             ],
         ], [
             'ficheiro.required' => 'Selecciona o ficheiro do relatório.',
@@ -354,7 +354,7 @@ class RelatorioController extends Controller
 
         $estagio = $this->estagioAtivo($utilizador);
 
-        if (!$estagio) {
+        if (! $estagio) {
             return response()->json([
                 'message' => 'Não existe um estágio ativo associado à sua conta.',
             ], 404);
@@ -371,7 +371,7 @@ class RelatorioController extends Controller
         $relatorio = Relatorio::query()
             ->where('id_estagio', $estagio->id_estagio)
             ->when(
-                !empty($dados['relatorio_id']),
+                ! empty($dados['relatorio_id']),
                 fn ($query) => $query->where('id_relatorio', $dados['relatorio_id'])
             )
             ->orderByDesc('id_relatorio')
@@ -381,7 +381,7 @@ class RelatorioController extends Controller
          * Sem relatório pendente identificado, cria-se um novo
          * registo para o mês indicado.
          */
-        if (!$relatorio) {
+        if (! $relatorio) {
             $mes = $dados['mes_referencia']
                 ? Carbon::parse($dados['mes_referencia'])->startOfMonth()
                 : now()->startOfMonth();
@@ -394,14 +394,14 @@ class RelatorioController extends Controller
                 ->whereDate('mes_referencia', $mes->toDateString())
                 ->first();
 
-            if (!$relatorio) {
+            if (! $relatorio) {
                 $relatorio = Relatorio::create([
                     'id_estagio' => $estagio->id_estagio,
                     'tipo' => $tipo,
                     'mes_referencia' => $mes->toDateString(),
                     'periodo_referencia' => $mes->toDateString(),
                     'prazo_envio' => $estagio->prazoParaMes($mes)->toDateString(),
-                    'atividades' => 'Relatório entregue em ficheiro (' . strtoupper($ficheiro->getClientOriginalExtension()) . ').',
+                    'atividades' => 'Relatório entregue em ficheiro ('.strtoupper($ficheiro->getClientOriginalExtension()).').',
                     'resultados' => 'Consultar o ficheiro anexado.',
                     'estado_avaliacao' => Relatorio::ESTADO_PENDENTE,
                 ]);
@@ -414,13 +414,13 @@ class RelatorioController extends Controller
             ], 422);
         }
 
-        $pasta = 'relatorios_estagio/' . $estagio->id_estagio;
+        $pasta = 'relatorios_estagio/'.$estagio->id_estagio;
 
         $caminhoAnterior = $relatorio->ficheiro_path;
 
         $caminhoNovo = $ficheiro->store($pasta, 'local');
 
-        if (!$caminhoNovo) {
+        if (! $caminhoNovo) {
             return response()->json([
                 'message' => 'Não foi possível guardar o ficheiro do relatório.',
             ], 500);
@@ -471,13 +471,13 @@ class RelatorioController extends Controller
             ->with('estagio')
             ->find($id);
 
-        if (!$relatorio || !$relatorio->estagio) {
+        if (! $relatorio || ! $relatorio->estagio) {
             return response()->json([
                 'message' => 'Relatório não encontrado.',
             ], 404);
         }
 
-        if (!$utilizador || $this->podeVerRelatorio($utilizador, $relatorio) === false) {
+        if (! $utilizador || $this->podeVerRelatorio($utilizador, $relatorio) === false) {
             return response()->json([
                 'message' => 'Não tem autorização para consultar este relatório.',
             ], 403);
@@ -505,8 +505,8 @@ class RelatorioController extends Controller
             'ficheiro' => [
                 'required',
                 'file',
-                'max:' . self::TAMANHO_MAXIMO_RELATORIO,
-                'mimes:' . implode(',', array_keys(PlanoEstagio::FORMATOS_ACEITES)),
+                'max:'.self::TAMANHO_MAXIMO_RELATORIO,
+                'mimes:'.implode(',', array_keys(PlanoEstagio::FORMATOS_ACEITES)),
             ],
         ], [
             'ficheiro.required' => 'Seleciona o documento do plano de estágio.',
@@ -524,11 +524,11 @@ class RelatorioController extends Controller
             ->where('id_estagio', $estagio->id_estagio)
             ->max('versao') + 1;
 
-        $pasta = 'planos_estagio/' . $estagio->id_estagio;
+        $pasta = 'planos_estagio/'.$estagio->id_estagio;
 
         $caminho = $ficheiro->store($pasta, 'local');
 
-        if (!$caminho) {
+        if (! $caminho) {
             return response()->json([
                 'message' => 'Não foi possível guardar o plano de estágio.',
             ], 500);
@@ -569,7 +569,7 @@ class RelatorioController extends Controller
          * O estagiário é avisado de que o plano está disponível.
          */
         if ($estagio->id_estagiario) {
-            \App\Models\Notificacao::enviar(
+            Notificacao::enviar(
                 $estagio->id_estagiario,
                 'Plano de estágio disponível',
                 'O teu plano de estágio foi carregado pela Multitel. Consulta-o na tua área reservada.'
@@ -609,7 +609,7 @@ class RelatorioController extends Controller
             ->with('estagio')
             ->find($id);
 
-        if (!$plano || !$plano->estagio) {
+        if (! $plano || ! $plano->estagio) {
             return response()->json([
                 'message' => 'Plano de estágio não encontrado.',
             ], 404);
@@ -624,7 +624,7 @@ class RelatorioController extends Controller
                 )
             );
 
-        if (!$autorizado) {
+        if (! $autorizado) {
             return response()->json([
                 'message' => 'Não tem autorização para consultar este plano.',
             ], 403);
@@ -645,10 +645,19 @@ class RelatorioController extends Controller
 
     private function estagioAtivo(User $utilizador): ?Estagio
     {
-        return Estagio::query()
+        $estagio = Estagio::query()
             ->where('id_estagiario', $utilizador->id_utilizador)
             ->where('estado', 'ativo')
             ->first();
+
+        if ($estagio && ! $estagio->jaComecou()) {
+            abort(response()->json([
+                'message' => 'O estágio ainda não começou.',
+                'data_inicio' => $estagio->data_inicio?->format('Y-m-d'),
+            ], 403));
+        }
+
+        return $estagio;
     }
 
     private function podeVerRelatorio(User $utilizador, Relatorio $relatorio): bool
@@ -666,7 +675,7 @@ class RelatorioController extends Controller
         ?string $nome,
         ?string $tipo = null
     ) {
-        if (!$caminho || !Storage::disk('local')->exists($caminho)) {
+        if (! $caminho || ! Storage::disk('local')->exists($caminho)) {
             return response()->json([
                 'message' => 'O ficheiro solicitado não foi encontrado.',
             ], 404);
@@ -679,8 +688,8 @@ class RelatorioController extends Controller
             [
                 'Content-Type' => $tipo ?: $disk->mimeType($caminho),
                 'Content-Disposition' => 'inline; filename="'
-                    . addslashes($nome ?: basename($caminho))
-                    . '"',
+                    .addslashes($nome ?: basename($caminho))
+                    .'"',
             ]
         );
     }
@@ -769,7 +778,7 @@ class RelatorioController extends Controller
                         $relatorio->tipo,
                         $relatorio->mes_referencia?->format('m/Y') ?? '-',
                         $relatorio->comentario_admin
-                            ? 'Motivo: ' . $relatorio->comentario_admin
+                            ? 'Motivo: '.$relatorio->comentario_admin
                             : ''
                     ),
                 ];
@@ -794,12 +803,12 @@ class RelatorioController extends Controller
 
     private function notificacoesRecentes(User $utilizador): array
     {
-        return \App\Models\Notificacao::query()
+        return Notificacao::query()
             ->where('id_utilizador', $utilizador->id_utilizador)
             ->orderByDesc('enviada_em')
             ->limit(10)
             ->get()
-            ->map(fn (\App\Models\Notificacao $notificacao) => [
+            ->map(fn (Notificacao $notificacao) => [
                 'id_notificacao' => $notificacao->id_notificacao,
                 'titulo' => $notificacao->titulo,
                 'mensagem' => $notificacao->mensagem,
@@ -819,7 +828,7 @@ class RelatorioController extends Controller
      */
     private function notificarAdmin(string $titulo, string $mensagem): void
     {
-        \App\Models\Notificacao::paraAdministradores($titulo, $mensagem);
+        Notificacao::paraAdministradores($titulo, $mensagem);
     }
 
     private function rotuloEstado(?string $estado): string
@@ -862,14 +871,14 @@ class RelatorioController extends Controller
 
     private function tamanhoLegivel(?int $bytes): string
     {
-        if (!$bytes) {
+        if (! $bytes) {
             return '-';
         }
 
         if ($bytes >= 1024 * 1024) {
-            return round($bytes / (1024 * 1024), 1) . ' MB';
+            return round($bytes / (1024 * 1024), 1).' MB';
         }
 
-        return max(1, round($bytes / 1024)) . ' KB';
+        return max(1, round($bytes / 1024)).' KB';
     }
 }

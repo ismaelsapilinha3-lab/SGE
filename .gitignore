@@ -44,6 +44,9 @@ Thumbs.db
 *.antes-voltar-versao*
 *.antes-recuperacao*
 
+# Scripts locais de diagnóstico (não versionar)
+/ver-users.php
+
 # Pastas de backups locais
 /backups-painel-admin/
 /portal-angular/backup-painel-*/

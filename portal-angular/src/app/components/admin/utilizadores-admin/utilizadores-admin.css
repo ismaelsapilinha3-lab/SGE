@@ -420,6 +420,12 @@ tbody tr:hover {
   background: #fff7f7;
 }
 
+.btn-eliminar {
+  color: #991b1b;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
 .paginacao {
   padding: 18px 22px;
   border-top: 1px solid #e8edf4;

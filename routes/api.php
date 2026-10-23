@@ -549,6 +549,11 @@ Route::middleware('auth:sanctum')->group(function () {
                 'alterarEstado',
             ]);
 
+            Route::delete('/utilizadores/{id}', [
+                UtilizadorAdminController::class,
+                'destroy',
+            ]);
+
         });
 
     /*

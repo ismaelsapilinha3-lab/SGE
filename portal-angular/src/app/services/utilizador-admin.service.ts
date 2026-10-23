@@ -178,6 +178,18 @@ export class UtilizadorAdminService {
 
 
   // ============================================================
+  // ELIMINAR UTILIZADOR
+  // ============================================================
+
+  eliminar(id: number): Observable<{ message: string }> {
+
+    return this.http.delete<{ message: string }>(
+      `${this.api}/${id}`
+    );
+  }
+
+
+  // ============================================================
   // LISTAR DIREÇÕES
   // ============================================================
 

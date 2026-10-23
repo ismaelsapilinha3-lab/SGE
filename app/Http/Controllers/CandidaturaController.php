@@ -420,11 +420,29 @@ class CandidaturaController extends Controller
             ], 403);
         }
 
+        /*
+         * A área reservada só abre a partir do dia de início definido pelo
+         * administrador. Antes disso o estagiário continua no painel da
+         * candidatura.
+         */
+        $inicio = substr((string) $estagio->data_inicio, 0, 10);
+
+        if ($inicio > now()->format('Y-m-d')) {
+            return response()->json([
+                'message' => 'O estágio ainda não começou.',
+                'data_inicio' => $inicio,
+            ], 403);
+        }
+
         return response()->json([
             'id_estagio' => $estagio->id_estagio,
             'id_candidatura' => $estagio->id_candidatura,
-            'data_inicio' => $estagio->data_inicio,
-            'data_fim_prevista' => $estagio->data_fim_prevista,
+            'data_inicio' => $inicio,
+            'data_fim_prevista' => substr(
+                (string) $estagio->data_fim_prevista,
+                0,
+                10
+            ),
             'estado_estagio' => $estagio->estado,
         ]);
     }
