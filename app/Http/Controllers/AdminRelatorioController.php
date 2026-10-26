@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Notificacao;
 use App\Models\Relatorio;
+use App\Services\NotificacaoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class AdminRelatorioController extends Controller
 {
+    public function __construct(
+        private readonly NotificacaoService $notificacoes
+    ) {}
+
     /**
      * Listar relatórios dos estagiários.
      */
@@ -37,12 +41,12 @@ class AdminRelatorioController extends Controller
                 'estagio.estagiario:id_utilizador,nome,email',
             ]);
 
-        if (!empty($filtros['estado'])) {
+        if (! empty($filtros['estado'])) {
             if ($filtros['estado'] === 'em_atraso') {
                 $query->whereNull('enviado_em')
                     ->whereNull('entrega_confirmada_em')
                     ->whereNotNull('prazo_envio')
-                    ->whereDate('prazo_envio', '<', now()->toDateString());
+                    ->where('prazo_envio', '<', now()->toDateString());
             } else {
                 $query->where(
                     'estado_avaliacao',
@@ -51,11 +55,11 @@ class AdminRelatorioController extends Controller
             }
         }
 
-        if (!empty($filtros['tipo'])) {
+        if (! empty($filtros['tipo'])) {
             $query->where('tipo', $filtros['tipo']);
         }
 
-        if (!empty($filtros['pesquisa'])) {
+        if (! empty($filtros['pesquisa'])) {
             $pesquisa = $filtros['pesquisa'];
 
             $query->whereHas(
@@ -110,7 +114,7 @@ class AdminRelatorioController extends Controller
             ->whereNull('enviado_em')
             ->whereNull('entrega_confirmada_em')
             ->whereNotNull('prazo_envio')
-            ->whereDate('prazo_envio', '<', now()->toDateString())
+            ->where('prazo_envio', '<', now()->toDateString())
             ->orderBy('prazo_envio')
             ->get();
 
@@ -142,13 +146,18 @@ class AdminRelatorioController extends Controller
                 'max:5000',
             ],
         ], [
-            'comentario_admin.required_if' =>
-                'Escreve a descrição que explica a recusa do relatório.',
+            'comentario_admin.required_if' => 'Escreve a descrição que explica a recusa do relatório.',
         ]);
 
         $relatorio = Relatorio::query()
             ->with('estagio')
             ->findOrFail($id);
+
+        if (! $relatorio->entregue()) {
+            return response()->json([
+                'message' => 'Só é possível avaliar relatórios já entregues pelo estagiário.',
+            ], 422);
+        }
 
         $rejeicao = $dados['estado_avaliacao'] === 'rejeitado';
 
@@ -157,7 +166,7 @@ class AdminRelatorioController extends Controller
             $relatorio->comentario_admin = $dados['comentario_admin'] ?? null;
             $relatorio->save();
 
-            if (!$rejeicao) {
+            if (! $rejeicao) {
                 return;
             }
 
@@ -165,7 +174,7 @@ class AdminRelatorioController extends Controller
              * A recusa chega ao estagiário no painel dele.
              */
             if ($relatorio->estagio?->id_estagiario) {
-                Notificacao::enviar(
+                $this->notificacoes->paraUtilizador(
                     $relatorio->estagio->id_estagiario,
                     'Relatório recusado',
                     sprintf(

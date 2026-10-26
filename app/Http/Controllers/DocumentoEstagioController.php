@@ -3,12 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\DocumentoEstagio;
-use App\Models\User;
+use App\Services\AcessoFicheiroService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class DocumentoEstagioController extends Controller
 {
+    public function __construct(
+        private readonly AcessoFicheiroService $acessos
+    ) {}
+
     /*
     |--------------------------------------------------------------------------
     | Descarregar um documento de estágio
@@ -23,6 +28,7 @@ class DocumentoEstagioController extends Controller
         Request $request,
         DocumentoEstagio $documento
     ) {
+
         $utilizador = $request->user();
 
         if (! $utilizador || ! $utilizador->ativo) {
@@ -31,7 +37,7 @@ class DocumentoEstagioController extends Controller
             ], 403);
         }
 
-        if (! $this->podeConsultar($utilizador, $documento)) {
+        if (! Gate::forUser($utilizador)->allows('view', $documento)) {
             return response()->json([
                 'message' => 'Não tem autorização para consultar este documento.',
             ], 403);
@@ -45,6 +51,12 @@ class DocumentoEstagioController extends Controller
             ], 404);
         }
 
+        $this->acessos->registarDocumentoEstagio(
+            $request,
+            $utilizador,
+            $documento
+        );
+
         return response()->file(
             $disk->path($documento->caminho_arquivo),
             [
@@ -53,40 +65,5 @@ class DocumentoEstagioController extends Controller
                     '"',
             ]
         );
-    }
-
-    private function podeConsultar(
-        User $utilizador,
-        DocumentoEstagio $documento
-    ): bool {
-
-        if ($utilizador->tipo_utilizador === 'administrador') {
-            return true;
-        }
-
-        if ($utilizador->tipo_utilizador === 'estagiario') {
-            return (int) $documento->id_estagiario
-                === (int) $utilizador->id_utilizador;
-        }
-
-        $estagio = $documento->estagio;
-
-        if (! $estagio) {
-            return false;
-        }
-
-        if ($utilizador->tipo_utilizador === 'supervisor') {
-            return $estagio->supervisores()
-                ->where('id_supervisor', $utilizador->id_utilizador)
-                ->whereNull('removido_em')
-                ->exists();
-        }
-
-        if ($utilizador->tipo_utilizador === 'coordenador') {
-            return (int) $estagio->candidatura?->id_coordenador
-                === (int) $utilizador->id_utilizador;
-        }
-
-        return false;
     }
 }

@@ -67,6 +67,94 @@ describe('visibilidade dos estágios no painel do coordenador', function () {
         )->toBe($this->coordenador->id_utilizador);
     });
 
+    it('assume um estágio cujo coordenador está inativo', function () {
+        $inativo = criarCoordenadorDaDirecao(
+            $this->departamento->id_departamento
+        );
+
+        $inativo->update(['ativo' => false]);
+
+        $estagiario = User::factory()->estagiario()->create();
+
+        $candidatura = Candidatura::factory()->aprovada()->create([
+            'id_utilizador' => $estagiario->id_utilizador,
+            'id_coordenador' => $inativo->id_utilizador,
+            'id_departamento_selecionado' => $this->departamento->id_departamento,
+        ]);
+
+        $estagio = Estagio::factory()->create([
+            'id_candidatura' => $candidatura->id_candidatura,
+            'id_estagiario' => $estagiario->id_utilizador,
+        ]);
+
+        $this->getJson('/api/coordenador/estagios')
+            ->assertOk()
+            ->assertJsonFragment([
+                'id_estagio' => $estagio->id_estagio,
+            ]);
+
+        expect($candidatura->fresh()->id_coordenador)
+            ->toBe($this->coordenador->id_utilizador);
+    });
+
+    it('assume um estágio cujo coordenador foi removido', function () {
+        $removido = criarCoordenadorDaDirecao(
+            $this->departamento->id_departamento
+        );
+
+        $removido->delete();
+
+        $estagiario = User::factory()->estagiario()->create();
+
+        $candidatura = Candidatura::factory()->aprovada()->create([
+            'id_utilizador' => $estagiario->id_utilizador,
+            'id_coordenador' => $removido->id_utilizador,
+            'id_departamento_selecionado' => $this->departamento->id_departamento,
+        ]);
+
+        $estagio = Estagio::factory()->create([
+            'id_candidatura' => $candidatura->id_candidatura,
+            'id_estagiario' => $estagiario->id_utilizador,
+        ]);
+
+        $this->getJson('/api/coordenador/estagios')
+            ->assertOk()
+            ->assertJsonFragment([
+                'id_estagio' => $estagio->id_estagio,
+            ]);
+
+        expect($candidatura->fresh()->id_coordenador)
+            ->toBe($this->coordenador->id_utilizador);
+    });
+
+    it('não assume um estágio de outro coordenador ativo da mesma direção', function () {
+        $outroCoordenador = criarCoordenadorDaDirecao(
+            $this->departamento->id_departamento
+        );
+
+        $estagiario = User::factory()->estagiario()->create();
+
+        $candidatura = Candidatura::factory()->aprovada()->create([
+            'id_utilizador' => $estagiario->id_utilizador,
+            'id_coordenador' => $outroCoordenador->id_utilizador,
+            'id_departamento_selecionado' => $this->departamento->id_departamento,
+        ]);
+
+        $estagio = Estagio::factory()->create([
+            'id_candidatura' => $candidatura->id_candidatura,
+            'id_estagiario' => $estagiario->id_utilizador,
+        ]);
+
+        $this->getJson('/api/coordenador/estagios')
+            ->assertOk()
+            ->assertJsonMissing([
+                'id_estagio' => $estagio->id_estagio,
+            ]);
+
+        expect($candidatura->fresh()->id_coordenador)
+            ->toBe($outroCoordenador->id_utilizador);
+    });
+
     it('não mostra estágios de outra direção', function () {
         $outroDepartamento = Departamento::factory()->create();
 

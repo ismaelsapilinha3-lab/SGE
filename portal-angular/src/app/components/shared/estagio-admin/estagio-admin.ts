@@ -47,6 +47,12 @@ const TRANSICOES: Record<EstadoEstagio, EstadoEstagio[]> = {
 };
 
 
+type Trimestre = {
+  ano: number;
+  numero: number;
+};
+
+
 // ============================================================
 // COMPONENTE
 // ============================================================
@@ -90,6 +96,31 @@ export class EstagioAdminComponent {
   readonly ultimaPagina = signal(1);
 
   readonly totalEstagios = signal(0);
+
+
+  // ==========================================================
+  // TRIMESTRES
+  // ==========================================================
+
+  readonly trimestre = signal<Trimestre>(this.trimestreAtual());
+
+  readonly rotuloTrimestre = computed(() => {
+
+    const { ano, numero } = this.trimestre();
+
+    return `${numero}.º trimestre de ${ano}`;
+
+  });
+
+  readonly periodoTrimestre = computed(() => {
+
+    const { inicio, fim } = this.intervaloDoTrimestre(
+      this.trimestre()
+    );
+
+    return `${this.formatarData(inicio)} a ${this.formatarData(fim)}`;
+
+  });
 
 
   // ==========================================================
@@ -184,6 +215,7 @@ export class EstagioAdminComponent {
       .listarEstagios(
         this.pesquisaEstagios,
         this.estadoFiltroEstagios,
+        this.codigoTrimestre(),
         this.pagina()
       )
       .subscribe({
@@ -259,6 +291,108 @@ export class EstagioAdminComponent {
     this.pagina.set(this.pagina() + 1);
 
     this.carregarEstagios();
+
+  }
+
+
+  trimestreAnterior(): void {
+
+    if (this.carregando() || this.processando()) {
+
+      return;
+
+    }
+
+    const { ano, numero } = this.trimestre();
+
+    this.trimestre.set(
+      numero === 1
+        ? { ano: ano - 1, numero: 4 }
+        : { ano, numero: numero - 1 }
+    );
+
+    this.pagina.set(1);
+
+    this.fecharDetalhe();
+
+    this.carregarEstagios();
+
+  }
+
+
+  trimestreSeguinte(): void {
+
+    if (this.carregando() || this.processando()) {
+
+      return;
+
+    }
+
+    const { ano, numero } = this.trimestre();
+
+    this.trimestre.set(
+      numero === 4
+        ? { ano: ano + 1, numero: 1 }
+        : { ano, numero: numero + 1 }
+    );
+
+    this.pagina.set(1);
+
+    this.fecharDetalhe();
+
+    this.carregarEstagios();
+
+  }
+
+
+  private trimestreAtual(): Trimestre {
+
+    const agora = new Date();
+
+    return {
+      ano: agora.getFullYear(),
+      numero: Math.floor(agora.getMonth() / 3) + 1
+    };
+
+  }
+
+
+  private codigoTrimestre(): string {
+
+    const { ano, numero } = this.trimestre();
+
+    return `${ano}-${numero}`;
+
+  }
+
+
+  private intervaloDoTrimestre(
+    trimestre: Trimestre
+  ): { inicio: string; fim: string } {
+
+    const mesInicial = (trimestre.numero - 1) * 3;
+
+    return {
+      inicio: this.dataParaIso(
+        new Date(trimestre.ano, mesInicial, 1)
+      ),
+      fim: this.dataParaIso(
+        new Date(trimestre.ano, mesInicial + 3, 0)
+      )
+    };
+
+  }
+
+
+  private dataParaIso(data: Date): string {
+
+    const ano = data.getFullYear();
+
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+
+    const dia = String(data.getDate()).padStart(2, '0');
+
+    return `${ano}-${mes}-${dia}`;
 
   }
 

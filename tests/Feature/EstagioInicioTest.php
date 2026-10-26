@@ -57,12 +57,35 @@ it('liberta a área reservada no próprio dia de início', function () {
 
 it('liberta a área reservada depois da data de início', function () {
     [$estagiario] = estagiarioComEstagioAPartirDe(
-        now()->subMonth()->format('Y-m-d')
+        now()->subMonthNoOverflow()->format('Y-m-d')
     );
 
     $this->actingAs($estagiario, 'sanctum')
         ->getJson('/api/estagiario/estagio-ativo')
         ->assertOk();
+});
+
+it('mantém o painel consultável depois da conclusão e durante a suspensão', function () {
+    foreach (['concluido', 'suspenso'] as $estado) {
+        [$estagiario, $estagio] = estagiarioComEstagioAPartirDe(
+            now()->subMonths(2)->format('Y-m-d')
+        );
+
+        $estagio->update(['estado' => $estado]);
+
+        $this->actingAs($estagiario, 'sanctum')
+            ->getJson('/api/estagiario/painel')
+            ->assertOk()
+            ->assertJsonPath('estagio.estado_estagio', $estado);
+
+        $this->actingAs($estagiario, 'sanctum')
+            ->getJson('/api/estagiario/relatorios')
+            ->assertOk();
+
+        $this->actingAs($estagiario, 'sanctum')
+            ->getJson('/api/estagiario/relatorios-atraso')
+            ->assertOk();
+    }
 });
 
 it('mantém a consulta do estágio disponível antes do início', function () {

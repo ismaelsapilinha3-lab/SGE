@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AcessoFicheiro;
 use App\Models\Candidatura;
 use App\Models\Departamento;
 use App\Models\DocumentoEstagio;
@@ -269,6 +270,11 @@ it('deixa o supervisor descarregar o contrato do seu estágio', function () {
     $this->actingAs($supervisor, 'sanctum')
         ->get("/api/documentos-estagio/{$documento->id_documento_estagio}")
         ->assertOk();
+
+    expect(AcessoFicheiro::query()
+        ->where('id_documento_estagio', $documento->id_documento_estagio)
+        ->where('id_utilizador', $supervisor->id_utilizador)
+        ->exists())->toBeTrue();
 });
 
 it('não deixa um estagiário descarregar o contrato de outro', function () {
@@ -288,6 +294,40 @@ it('não deixa um estagiário descarregar o contrato de outro', function () {
     $this->actingAs($outroEstagiario, 'sanctum')
         ->get("/api/documentos-estagio/{$documento->id_documento_estagio}")
         ->assertStatus(403);
+
+    expect(AcessoFicheiro::count())->toBe(0);
+});
+
+it('não expõe o caminho interno dos documentos', function () {
+    [$estagio, $estagiario] = estagioComContrato();
+
+    $documento = DocumentoEstagio::factory()->create([
+        'id_estagio' => $estagio->id_estagio,
+    ]);
+
+    $resposta = $this->actingAs($estagiario, 'sanctum')
+        ->getJson('/api/estagiario/estagio')
+        ->assertOk()
+        ->assertJsonMissingPath('estagio.documentos.0.caminho_arquivo');
+
+    expect($resposta->json('estagio.documentos.0'))
+        ->toHaveKey('url')
+        ->and($resposta->json('estagio.documentos.0.url'))
+        ->toBe("/api/documentos-estagio/{$documento->id_documento_estagio}");
+});
+
+it('não expõe o caminho interno na listagem do coordenador', function () {
+    [$estagio, $coordenador] = estagioDocumentoDoCoordenador();
+
+    DocumentoEstagio::factory()->create([
+        'id_estagio' => $estagio->id_estagio,
+    ]);
+
+    $this->actingAs($coordenador, 'sanctum')
+        ->getJson("/api/coordenador/estagios/{$estagio->id_estagio}/documentos")
+        ->assertOk()
+        ->assertJsonMissingPath('documentos.0.caminho_arquivo')
+        ->assertJsonPath('documentos.0.nome_arquivo', 'contrato.pdf');
 });
 
 it('deixa o coordenador consultar os documentos da sua direção', function () {
@@ -301,4 +341,102 @@ it('deixa o coordenador consultar os documentos da sua direção', function () {
         ->getJson("/api/coordenador/estagios/{$estagio->id_estagio}/documentos")
         ->assertOk()
         ->assertJsonCount(1, 'documentos');
+});
+
+it('deixa o coordenador descarregar documentos de candidatura ainda sem coordenador', function () {
+    Storage::fake('local');
+
+    $departamento = Departamento::factory()->create();
+
+    $coordenador = User::factory()->coordenador()->create();
+
+    Perfil::create([
+        'id_utilizador' => $coordenador->id_utilizador,
+        'id_departamento' => $departamento->id_departamento,
+    ]);
+
+    $candidatura = Candidatura::factory()->aprovada()->create([
+        'id_coordenador' => null,
+        'id_departamento_selecionado' => $departamento->id_departamento,
+    ]);
+
+    $estagio = Estagio::factory()->create([
+        'id_candidatura' => $candidatura->id_candidatura,
+    ]);
+
+    $documento = DocumentoEstagio::factory()->create([
+        'id_estagio' => $estagio->id_estagio,
+    ]);
+
+    Storage::disk('local')->put($documento->caminho_arquivo, 'contrato');
+
+    $this->actingAs($coordenador, 'sanctum')
+        ->get("/api/documentos-estagio/{$documento->id_documento_estagio}")
+        ->assertOk();
+});
+
+it('deixa o coordenador descarregar documentos de candidatura presa a coordenador inativo', function () {
+    Storage::fake('local');
+
+    $departamento = Departamento::factory()->create();
+
+    $coordenador = User::factory()->coordenador()->create();
+
+    Perfil::create([
+        'id_utilizador' => $coordenador->id_utilizador,
+        'id_departamento' => $departamento->id_departamento,
+    ]);
+
+    $inativo = User::factory()->coordenador()->create([
+        'ativo' => false,
+    ]);
+
+    Perfil::create([
+        'id_utilizador' => $inativo->id_utilizador,
+        'id_departamento' => $departamento->id_departamento,
+    ]);
+
+    $candidatura = Candidatura::factory()->aprovada()->create([
+        'id_coordenador' => $inativo->id_utilizador,
+        'id_departamento_selecionado' => $departamento->id_departamento,
+    ]);
+
+    $estagio = Estagio::factory()->create([
+        'id_candidatura' => $candidatura->id_candidatura,
+    ]);
+
+    $documento = DocumentoEstagio::factory()->create([
+        'id_estagio' => $estagio->id_estagio,
+    ]);
+
+    Storage::disk('local')->put($documento->caminho_arquivo, 'contrato');
+
+    $this->actingAs($coordenador, 'sanctum')
+        ->get("/api/documentos-estagio/{$documento->id_documento_estagio}")
+        ->assertOk();
+});
+
+it('não deixa um coordenador descarregar documentos de outra direção', function () {
+    Storage::fake('local');
+
+    $outroDepartamento = Departamento::factory()->create();
+
+    $coordenador = User::factory()->coordenador()->create();
+
+    Perfil::create([
+        'id_utilizador' => $coordenador->id_utilizador,
+        'id_departamento' => $outroDepartamento->id_departamento,
+    ]);
+
+    [$estagio] = estagioDocumentoDoCoordenador();
+
+    $documento = DocumentoEstagio::factory()->create([
+        'id_estagio' => $estagio->id_estagio,
+    ]);
+
+    Storage::disk('local')->put($documento->caminho_arquivo, 'contrato');
+
+    $this->actingAs($coordenador, 'sanctum')
+        ->get("/api/documentos-estagio/{$documento->id_documento_estagio}")
+        ->assertStatus(403);
 });

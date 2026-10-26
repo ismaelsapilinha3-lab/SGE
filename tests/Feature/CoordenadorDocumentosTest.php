@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AcessoFicheiro;
 use App\Models\Candidatura;
 use App\Models\Departamento;
 use App\Models\Documento;
@@ -53,6 +54,11 @@ it('deixa o coordenador ver documentos da candidatura atribuída', function () {
 
     $this->get("/api/documentos/{$documento->id_documento}")
         ->assertOk();
+
+    expect(AcessoFicheiro::query()
+        ->where('id_documento', $documento->id_documento)
+        ->where('id_utilizador', $this->coordenador->id_utilizador)
+        ->exists())->toBeTrue();
 });
 
 it('esconde do coordenador documentos de outra direção', function () {
@@ -76,9 +82,11 @@ it('esconde do coordenador documentos de outra direção', function () {
 
     $this->get("/api/documentos/{$documento->id_documento}")
         ->assertStatus(403);
+
+    expect(AcessoFicheiro::count())->toBe(0);
 });
 
-it('esconde do coordenador documentos de candidaturas não atribuídas', function () {
+it('deixa o coordenador ver documentos de candidaturas ainda sem coordenador', function () {
     $candidatura = Candidatura::factory()->create([
         'id_coordenador' => null,
         'id_departamento_selecionado' => $this->departamento->id_departamento,
@@ -89,7 +97,30 @@ it('esconde do coordenador documentos de candidaturas não atribuídas', functio
     $this->actingAs($this->coordenador, 'sanctum');
 
     $this->get("/api/documentos/{$documento->id_documento}")
-        ->assertStatus(403);
+        ->assertOk();
+});
+
+it('deixa o coordenador ver documentos de candidatura presa a coordenador inativo', function () {
+    $inativo = User::factory()->coordenador()->create([
+        'ativo' => false,
+    ]);
+
+    Perfil::create([
+        'id_utilizador' => $inativo->id_utilizador,
+        'id_departamento' => $this->departamento->id_departamento,
+    ]);
+
+    $candidatura = Candidatura::factory()->create([
+        'id_coordenador' => $inativo->id_utilizador,
+        'id_departamento_selecionado' => $this->departamento->id_departamento,
+    ]);
+
+    $documento = criarDocumentoDaCandidatura($candidatura);
+
+    $this->actingAs($this->coordenador, 'sanctum');
+
+    $this->get("/api/documentos/{$documento->id_documento}")
+        ->assertOk();
 });
 
 it('lista apenas os supervisores da direção do coordenador', function () {

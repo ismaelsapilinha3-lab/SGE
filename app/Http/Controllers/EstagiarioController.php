@@ -2,24 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\DocumentoEstagioResource;
 use App\Models\Assiduidade;
 use App\Models\AtividadeEstagiario;
 use App\Models\DocumentoEstagio;
 use App\Models\Estagio;
 use App\Models\FeedbackEstagio;
-use App\Models\Notificacao;
 use App\Models\Relatorio;
 use App\Models\User;
+use App\Services\NotificacaoService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
 class EstagiarioController extends Controller
 {
+    public function __construct(
+        private readonly NotificacaoService $notificacoes
+    ) {}
+
     /*
     |--------------------------------------------------------------------------
     | Estágio do estagiário autenticado
@@ -40,7 +47,12 @@ class EstagiarioController extends Controller
         ]);
 
         return response()->json([
-            'estagio' => $estagio,
+            'estagio' => [
+                ...$estagio->toArray(),
+                'documentos' => DocumentoEstagioResource::collection(
+                    $estagio->documentos
+                )->resolve(),
+            ],
         ]);
     }
 
@@ -151,7 +163,7 @@ class EstagiarioController extends Controller
                 ]);
             });
 
-            Notificacao::paraUtilizadores(
+            $this->notificacoes->paraUtilizadores(
                 $estagio->supervisoresUtilizadores(),
                 'Contrato submetido',
                 "O estagiário {$utilizador->nome} submeteu o contrato (versão {$documento->versao}) para validação."
@@ -160,7 +172,7 @@ class EstagiarioController extends Controller
             return response()->json([
                 'message' => 'Contrato carregado com sucesso.',
 
-                'documento' => $documento,
+                'documento' => new DocumentoEstagioResource($documento),
             ], 201);
 
         } catch (Throwable $e) {
@@ -205,27 +217,47 @@ class EstagiarioController extends Controller
     {
         $estagio = $this->estagioDoEstagiario($request->user());
 
-        if (! $estagio->aceitaRegistos()) {
+        $dados = $this->validarRelatorio($request, $estagio);
+
+        if (! $estagio->aceitaRelatoriosNoMes($dados['periodo_referencia'])) {
             return response()->json([
-                'message' => 'Só é possível criar relatórios de um estágio ativo.',
+                'message' => 'Só é possível criar relatórios de um estágio ativo ou concluído dentro do prazo.',
             ], 422);
         }
 
-        $dados = $this->validarRelatorio($request);
+        $mes = Carbon::parse($dados['periodo_referencia'])->startOfMonth();
 
-        $existe = $estagio->relatorios()
+        $relatorio = $estagio->relatorios()
             ->where('tipo', $dados['tipo'])
-            ->whereDate('periodo_referencia', $dados['periodo_referencia'])
-            ->exists();
+            ->whereDate('mes_referencia', $mes->toDateString())
+            ->first();
 
-        if ($existe) {
+        if ($relatorio && ! $relatorio->estaRejeitado()
+            && $relatorio->estado_avaliacao !== Relatorio::ESTADO_EM_ATRASO) {
             return response()->json([
                 'message' => 'Já existe um relatório deste tipo para este período.',
             ], 422);
         }
 
+        $atributos = $dados + $this->dadosDeEntrega(
+            $estagio,
+            $dados['periodo_referencia']
+        );
+
+        if ($relatorio) {
+            $relatorio->update(
+                $atributos + $this->dadosReabertura($relatorio)
+            );
+
+            return response()->json([
+                'message' => 'Relatório atualizado com sucesso.',
+
+                'relatorio' => $relatorio->fresh(),
+            ]);
+        }
+
         try {
-            $relatorio = $estagio->relatorios()->create($dados);
+            $relatorio = $estagio->relatorios()->create($atributos);
         } catch (UniqueConstraintViolationException) {
             return response()->json([
                 'message' => 'Já existe um relatório deste tipo para este período.',
@@ -249,24 +281,26 @@ class EstagiarioController extends Controller
             $relatorio
         );
 
-        if ($relatorio->estaSubmetido()) {
+        if (! $relatorio->podeSerAlterado()) {
             return response()->json([
-                'message' => 'Um relatório já submetido não pode ser alterado.',
+                'message' => 'Um relatório aprovado ou já submetido não pode ser alterado.',
             ], 422);
         }
 
-        if (! $estagio->aceitaRegistos()) {
+        $dados = $this->validarRelatorio($request, $estagio);
+
+        if (! $estagio->aceitaRelatoriosNoMes($dados['periodo_referencia'])) {
             return response()->json([
-                'message' => 'Só é possível alterar relatórios de um estágio ativo.',
+                'message' => 'Só é possível alterar relatórios de um estágio ativo ou concluído dentro do prazo.',
             ], 422);
         }
 
-        $dados = $this->validarRelatorio($request);
+        $mes = Carbon::parse($dados['periodo_referencia'])->startOfMonth();
 
         $existe = $estagio->relatorios()
             ->where('id_relatorio', '!=', $relatorio->id_relatorio)
             ->where('tipo', $dados['tipo'])
-            ->whereDate('periodo_referencia', $dados['periodo_referencia'])
+            ->whereDate('mes_referencia', $mes->toDateString())
             ->exists();
 
         if ($existe) {
@@ -275,7 +309,14 @@ class EstagiarioController extends Controller
             ], 422);
         }
 
-        $relatorio->update($dados);
+        $relatorio->update(
+            $dados
+                + $this->dadosDeEntrega(
+                    $estagio,
+                    $dados['periodo_referencia']
+                )
+                + $this->dadosReabertura($relatorio)
+        );
 
         return response()->json([
             'message' => 'Relatório atualizado com sucesso.',
@@ -294,23 +335,36 @@ class EstagiarioController extends Controller
             $relatorio
         );
 
-        if ($relatorio->estaSubmetido()) {
+        if ($relatorio->estaAprovado()) {
+            return response()->json([
+                'message' => 'Este relatório já foi aprovado pelo administrador.',
+            ], 422);
+        }
+
+        if (! $relatorio->podeSerAlterado()) {
             return response()->json([
                 'message' => 'Este relatório já foi submetido.',
             ], 422);
         }
 
-        if (! $estagio->aceitaRegistos()) {
+        $mes = $relatorio->mes_referencia?->toDateString()
+            ?? $relatorio->periodo_referencia?->toDateString();
+
+        if (! $mes || ! $estagio->aceitaRelatoriosNoMes($mes)) {
             return response()->json([
-                'message' => 'Só é possível submeter relatórios de um estágio ativo.',
+                'message' => 'O estágio não aceita relatórios para este período.',
             ], 422);
         }
 
         $relatorio->update([
             'submetido_em' => now(),
+            'enviado_em' => now(),
+            'estado_avaliacao' => Relatorio::ESTADO_PENDENTE,
+            'comentario_admin' => null,
+            'alerta_atraso_enviado_em' => null,
         ]);
 
-        Notificacao::paraUtilizadores(
+        $this->notificacoes->paraUtilizadores(
             $estagio->supervisoresUtilizadores(),
             'Relatório submetido',
             'O estagiário submeteu o relatório '.$relatorio->tipo
@@ -397,7 +451,7 @@ class EstagiarioController extends Controller
             'justificacao_decidida_em' => null,
         ]);
 
-        Notificacao::paraUtilizadores(
+        $this->notificacoes->paraUtilizadores(
             $estagio->supervisoresUtilizadores(),
             'Falta justificada',
             'O estagiário submeteu uma justificação para a falta de '
@@ -583,7 +637,7 @@ class EstagiarioController extends Controller
             ], 422);
         }
 
-        Notificacao::paraUtilizadores(
+        $this->notificacoes->paraUtilizadores(
             $estagio->supervisoresUtilizadores(),
             'Feedback do estagiário',
             'O estagiário registou feedback sobre o estágio.'
@@ -687,9 +741,61 @@ class EstagiarioController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    private function validarRelatorio(Request $request): array
+    /**
+     * Datas de referência e prazo usadas pelo painel do administrador.
+     *
+     * Mantém as duas gerações de API de relatórios alinhadas: o período
+     * indicado pelo estagiário passa a preencher também o mês de
+     * referência e o prazo de entrega definido para o estágio.
+     *
+     * @return array{mes_referencia: string, prazo_envio: string, estado_avaliacao: string}
+     */
+    private function dadosDeEntrega(
+        Estagio $estagio,
+        string $periodoReferencia
+    ): array {
+
+        $mes = Carbon::parse($periodoReferencia)->startOfMonth();
+
+        return [
+            'mes_referencia' => $mes->toDateString(),
+
+            'prazo_envio' => $estagio->prazoParaMes($mes)->toDateString(),
+
+            'estado_avaliacao' => Relatorio::ESTADO_PENDENTE,
+        ];
+    }
+
+    /**
+     * Limpa a entrega anterior de um relatório recusado ou em atraso.
+     *
+     * O relatório volta a rascunho para que o estagiário o possa corrigir
+     * e submeter novamente.
+     *
+     * @return array<string, mixed>
+     */
+    private function dadosReabertura(Relatorio $relatorio): array
     {
-        return $request->validate([
+        if (! $relatorio->estaRejeitado()
+            && $relatorio->estado_avaliacao !== Relatorio::ESTADO_EM_ATRASO) {
+            return [];
+        }
+
+        return [
+            'submetido_em' => null,
+            'enviado_em' => null,
+            'entrega_confirmada_em' => null,
+            'comentario_admin' => null,
+            'alerta_atraso_enviado_em' => null,
+        ];
+    }
+
+    private function validarRelatorio(
+        Request $request,
+        Estagio $estagio
+    ): array {
+
+        $dados = $request->validate([
             'tipo' => [
                 'required',
                 'in:semanal,mensal,final',
@@ -724,6 +830,22 @@ class EstagiarioController extends Controller
                 'max:5000',
             ],
         ]);
+
+        if (! $estagio->contemMes($dados['periodo_referencia'])) {
+            throw ValidationException::withMessages([
+                'periodo_referencia' => 'O período indicado está fora do período do estágio.',
+            ]);
+        }
+
+        if (Carbon::parse($dados['periodo_referencia'])
+            ->startOfMonth()
+            ->greaterThan(now()->startOfMonth())) {
+            throw ValidationException::withMessages([
+                'periodo_referencia' => 'O período indicado não pode ser futuro.',
+            ]);
+        }
+
+        return $dados;
     }
 
     /*

@@ -10,6 +10,8 @@ use App\Models\Notificacao;
 use App\Models\PlanoEstagio;
 use App\Models\Relatorio;
 use App\Models\User;
+use App\Services\AcessoFicheiroService;
+use App\Services\NotificacaoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +20,11 @@ use Illuminate\Validation\Rule;
 
 class RelatorioController extends Controller
 {
+    public function __construct(
+        private readonly NotificacaoService $notificacoes,
+        private readonly AcessoFicheiroService $acessos
+    ) {}
+
     /**
      * Formatos aceites no relatório em ficheiro.
      */
@@ -52,11 +59,11 @@ class RelatorioController extends Controller
             ], 403);
         }
 
-        $estagio = $this->estagioAtivo($utilizador);
+        $estagio = $this->estagioParaConsulta($utilizador);
 
         if (! $estagio) {
             return response()->json([
-                'message' => 'Não existe um estágio ativo associado à sua conta.',
+                'message' => 'Não existe um estágio associado à sua conta.',
             ], 404);
         }
 
@@ -88,6 +95,7 @@ class RelatorioController extends Controller
 
         $planos = PlanoEstagio::query()
             ->where('id_estagio', $estagio->id_estagio)
+            ->doAdministrador()
             ->whereNotNull('caminho_arquivo')
             ->orderByDesc('data_upload')
             ->get();
@@ -178,11 +186,11 @@ class RelatorioController extends Controller
             ], 403);
         }
 
-        $estagio = $this->estagioAtivo($utilizador);
+        $estagio = $this->estagioParaConsulta($utilizador);
 
         if (! $estagio) {
             return response()->json([
-                'message' => 'Não existe um estágio ativo associado à sua conta.',
+                'message' => 'Não existe um estágio associado à sua conta.',
             ], 404);
         }
 
@@ -216,11 +224,11 @@ class RelatorioController extends Controller
             ], 403);
         }
 
-        $estagio = $this->estagioAtivo($utilizador);
+        $estagio = $this->estagioParaConsulta($utilizador);
 
         if (! $estagio) {
             return response()->json([
-                'message' => 'Não existe um estágio ativo associado à sua conta.',
+                'message' => 'Não existe um estágio associado à sua conta.',
             ], 404);
         }
 
@@ -265,11 +273,11 @@ class RelatorioController extends Controller
             'resultados.required' => 'Descreve os resultados alcançados.',
         ]);
 
-        $estagio = $this->estagioAtivo($utilizador);
+        $estagio = $this->estagioParaRelatorios($utilizador);
 
         if (! $estagio) {
             return response()->json([
-                'message' => 'Não existe um estágio ativo associado à sua conta.',
+                'message' => 'Não existe um estágio associado à sua conta.',
             ], 404);
         }
 
@@ -281,28 +289,58 @@ class RelatorioController extends Controller
 
         $mes = Carbon::parse($dados['mes_referencia'])->startOfMonth();
 
-        $duplicado = Relatorio::query()
-            ->where('id_estagio', $estagio->id_estagio)
-            ->where('tipo', $dados['tipo'])
-            ->whereDate('mes_referencia', $mes->toDateString())
-            ->exists();
-
-        if ($duplicado) {
+        if ($this->mesNoFuturo($mes)) {
             return response()->json([
-                'message' => 'Já existe um relatório deste tipo para esse mês.',
+                'message' => 'Não é possível enviar relatórios de um mês futuro.',
             ], 422);
         }
 
-        $relatorio = DB::transaction(function () use ($dados, $estagio, $mes) {
-            return Relatorio::create([
+        if (! $estagio->aceitaRelatoriosNoMes($mes)) {
+            return response()->json([
+                'message' => 'O estágio não aceita relatórios para esse mês.',
+            ], 422);
+        }
+
+        $relatorio = Relatorio::query()
+            ->where('id_estagio', $estagio->id_estagio)
+            ->where('tipo', $dados['tipo'])
+            ->whereDate('mes_referencia', $mes->toDateString())
+            ->first();
+
+        if ($relatorio && $relatorio->estaAprovado()) {
+            return response()->json([
+                'message' => 'Este relatório já foi aprovado pelo administrador.',
+            ], 422);
+        }
+
+        if ($relatorio && ! $relatorio->podeSerAlterado()) {
+            return response()->json([
+                'message' => 'Este relatório já foi submetido e aguarda avaliação.',
+            ], 422);
+        }
+
+        $relatorio = DB::transaction(function () use ($dados, $estagio, $mes, $relatorio) {
+            $atributos = [
                 ...$dados,
-                'id_estagio' => $estagio->id_estagio,
                 'mes_referencia' => $mes->toDateString(),
                 'periodo_referencia' => $mes->toDateString(),
                 'prazo_envio' => $estagio->prazoParaMes($mes)->toDateString(),
                 'submetido_em' => now(),
                 'enviado_em' => now(),
                 'estado_avaliacao' => Relatorio::ESTADO_PENDENTE,
+                'comentario_admin' => null,
+                'alerta_atraso_enviado_em' => null,
+            ];
+
+            if ($relatorio) {
+                $relatorio->update($atributos);
+
+                return $relatorio;
+            }
+
+            return Relatorio::create([
+                ...$atributos,
+                'id_estagio' => $estagio->id_estagio,
             ]);
         });
 
@@ -352,11 +390,11 @@ class RelatorioController extends Controller
             'ficheiro.mimes' => 'O relatório deve estar em PDF ou Word (DOC/DOCX).',
         ]);
 
-        $estagio = $this->estagioAtivo($utilizador);
+        $estagio = $this->estagioParaRelatorios($utilizador);
 
         if (! $estagio) {
             return response()->json([
-                'message' => 'Não existe um estágio ativo associado à sua conta.',
+                'message' => 'Não existe um estágio associado à sua conta.',
             ], 404);
         }
 
@@ -368,50 +406,71 @@ class RelatorioController extends Controller
 
         $ficheiro = $dados['ficheiro'];
 
-        $relatorio = Relatorio::query()
-            ->where('id_estagio', $estagio->id_estagio)
-            ->when(
-                ! empty($dados['relatorio_id']),
-                fn ($query) => $query->where('id_relatorio', $dados['relatorio_id'])
-            )
-            ->orderByDesc('id_relatorio')
-            ->first();
+        $relatorio = null;
+        $tipo = $dados['tipo'];
 
-        /*
-         * Sem relatório pendente identificado, cria-se um novo
-         * registo para o mês indicado.
-         */
-        if (! $relatorio) {
+        if (! empty($dados['relatorio_id'])) {
+            $relatorio = Relatorio::query()
+                ->where('id_estagio', $estagio->id_estagio)
+                ->where('id_relatorio', $dados['relatorio_id'])
+                ->first();
+
+            if (! $relatorio) {
+                return response()->json([
+                    'message' => 'Relatório não encontrado.',
+                ], 404);
+            }
+
+            $tipo = $relatorio->tipo;
+            $mes = $relatorio->mes_referencia
+                ?->copy()
+                ->startOfMonth()
+                ?? Carbon::parse($relatorio->periodo_referencia)->startOfMonth();
+        } else {
             $mes = $dados['mes_referencia']
                 ? Carbon::parse($dados['mes_referencia'])->startOfMonth()
                 : now()->startOfMonth();
-
-            $tipo = $dados['tipo'];
 
             $relatorio = Relatorio::query()
                 ->where('id_estagio', $estagio->id_estagio)
                 ->where('tipo', $tipo)
                 ->whereDate('mes_referencia', $mes->toDateString())
                 ->first();
-
-            if (! $relatorio) {
-                $relatorio = Relatorio::create([
-                    'id_estagio' => $estagio->id_estagio,
-                    'tipo' => $tipo,
-                    'mes_referencia' => $mes->toDateString(),
-                    'periodo_referencia' => $mes->toDateString(),
-                    'prazo_envio' => $estagio->prazoParaMes($mes)->toDateString(),
-                    'atividades' => 'Relatório entregue em ficheiro ('.strtoupper($ficheiro->getClientOriginalExtension()).').',
-                    'resultados' => 'Consultar o ficheiro anexado.',
-                    'estado_avaliacao' => Relatorio::ESTADO_PENDENTE,
-                ]);
-            }
         }
 
-        if ($relatorio->avaliado()) {
+        if ($this->mesNoFuturo($mes)) {
             return response()->json([
-                'message' => 'Este relatório já foi avaliado pelo administrador.',
+                'message' => 'Não é possível enviar relatórios de um mês futuro.',
             ], 422);
+        }
+
+        if ($relatorio?->estaAprovado()) {
+            return response()->json([
+                'message' => 'Este relatório já foi aprovado pelo administrador.',
+            ], 422);
+        }
+
+        if (! $estagio->aceitaRelatoriosNoMes($mes)) {
+            return response()->json([
+                'message' => 'O estágio não aceita relatórios para esse mês.',
+            ], 422);
+        }
+
+        /*
+         * Sem relatório identificado, cria-se um novo registo para o
+         * tipo e mês indicados.
+         */
+        if (! $relatorio) {
+            $relatorio = Relatorio::create([
+                'id_estagio' => $estagio->id_estagio,
+                'tipo' => $tipo,
+                'mes_referencia' => $mes->toDateString(),
+                'periodo_referencia' => $mes->toDateString(),
+                'prazo_envio' => $estagio->prazoParaMes($mes)->toDateString(),
+                'atividades' => 'Relatório entregue em ficheiro ('.strtoupper($ficheiro->getClientOriginalExtension()).').',
+                'resultados' => 'Consultar o ficheiro anexado.',
+                'estado_avaliacao' => Relatorio::ESTADO_PENDENTE,
+            ]);
         }
 
         $pasta = 'relatorios_estagio/'.$estagio->id_estagio;
@@ -483,6 +542,12 @@ class RelatorioController extends Controller
             ], 403);
         }
 
+        $this->acessos->registarRelatorio(
+            $request,
+            $utilizador,
+            $relatorio
+        );
+
         return $this->servirFicheiro(
             $relatorio->ficheiro_path,
             $relatorio->ficheiro_nome
@@ -543,14 +608,17 @@ class RelatorioController extends Controller
             $caminho
         ) {
             /*
-             * Os planos anteriores deixam de estar em vigor.
+             * Os documentos oficiais anteriores deixam de estar em vigor.
+             * Os planos de atividades dos supervisores não são afetados.
              */
             PlanoEstagio::query()
                 ->where('id_estagio', $estagio->id_estagio)
+                ->doAdministrador()
                 ->update(['estado' => 'substituido']);
 
             return PlanoEstagio::create([
                 'id_estagio' => $estagio->id_estagio,
+                'origem' => PlanoEstagio::ORIGEM_ADMINISTRADOR,
                 'nome_arquivo' => $ficheiro->getClientOriginalName(),
                 'caminho_arquivo' => $caminho,
                 'formato' => $formato,
@@ -569,7 +637,7 @@ class RelatorioController extends Controller
          * O estagiário é avisado de que o plano está disponível.
          */
         if ($estagio->id_estagiario) {
-            Notificacao::enviar(
+            $this->notificacoes->paraUtilizador(
                 $estagio->id_estagiario,
                 'Plano de estágio disponível',
                 'O teu plano de estágio foi carregado pela Multitel. Consulta-o na tua área reservada.'
@@ -589,6 +657,7 @@ class RelatorioController extends Controller
     {
         $plano = PlanoEstagio::query()
             ->where('id_estagio', $id)
+            ->doAdministrador()
             ->whereNotNull('caminho_arquivo')
             ->orderByDesc('data_upload')
             ->first();
@@ -630,6 +699,8 @@ class RelatorioController extends Controller
             ], 403);
         }
 
+        $this->acessos->registarPlano($request, $utilizador, $plano);
+
         return $this->servirFicheiro(
             $plano->caminho_arquivo,
             $plano->nomeSeguro(),
@@ -643,11 +714,53 @@ class RelatorioController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    private function estagioAtivo(User $utilizador): ?Estagio
+    /**
+     * Estágio consultável pelo estagiário.
+     *
+     * A leitura mantém-se disponível depois da conclusão e durante uma
+     * suspensão. A entrega de relatórios tem regras próprias em
+     * `estagioParaRelatorios()`.
+     */
+    private function estagioParaConsulta(User $utilizador): ?Estagio
     {
         $estagio = Estagio::query()
             ->where('id_estagiario', $utilizador->id_utilizador)
             ->where('estado', 'ativo')
+            ->latest('id_estagio')
+            ->first();
+
+        $estagio ??= Estagio::query()
+            ->where('id_estagiario', $utilizador->id_utilizador)
+            ->whereIn('estado', ['suspenso', 'concluido'])
+            ->latest('id_estagio')
+            ->first();
+
+        if ($estagio && ! $estagio->jaComecou()) {
+            abort(response()->json([
+                'message' => 'O estágio ainda não começou.',
+                'data_inicio' => $estagio->data_inicio?->format('Y-m-d'),
+            ], 403));
+        }
+
+        return $estagio;
+    }
+
+    private function mesNoFuturo(Carbon $mes): bool
+    {
+        return $mes->greaterThan(now()->startOfMonth());
+    }
+
+    /**
+     * Estágio usado para entregar relatórios.
+     *
+     * Ao contrário do painel, a entrega continua disponível depois da
+     * conclusão, dentro do prazo do mês do relatório.
+     */
+    private function estagioParaRelatorios(User $utilizador): ?Estagio
+    {
+        $estagio = Estagio::query()
+            ->where('id_estagiario', $utilizador->id_utilizador)
+            ->latest('id_estagio')
             ->first();
 
         if ($estagio && ! $estagio->jaComecou()) {
@@ -733,6 +846,7 @@ class RelatorioController extends Controller
     {
         return [
             'id_plano_estagio' => $plano->id_plano_estagio,
+            'origem' => $plano->origem,
             'nome_arquivo' => $plano->nome_arquivo,
             'formato' => strtoupper((string) $plano->formato),
             'formato_legivel' => $plano->formatoLegivel(),
@@ -828,7 +942,7 @@ class RelatorioController extends Controller
      */
     private function notificarAdmin(string $titulo, string $mensagem): void
     {
-        Notificacao::paraAdministradores($titulo, $mensagem);
+        $this->notificacoes->paraAdministradores($titulo, $mensagem);
     }
 
     private function rotuloEstado(?string $estado): string

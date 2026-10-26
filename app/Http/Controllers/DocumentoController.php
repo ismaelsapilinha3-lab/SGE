@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Candidatura;
 use App\Models\Documento;
 use App\Models\HistoricoEstado;
+use App\Services\AcessoFicheiroService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -14,6 +15,10 @@ use Throwable;
 
 class DocumentoController extends Controller
 {
+    public function __construct(
+        private readonly AcessoFicheiroService $acessos
+    ) {}
+
     /*
     |--------------------------------------------------------------------------
     | Visualizar documento
@@ -51,24 +56,17 @@ class DocumentoController extends Controller
         }
 
         /*
-         * O coordenador só pode consultar os documentos das candidaturas
-         * que lhe foram atribuídas dentro da sua direção.
+         * O coordenador pode consultar os documentos das candidaturas da
+         * sua direção, incluindo as que ainda não têm coordenador ou cuja
+         * atribuição ficou presa a um coordenador inativo ou removido.
          */
-        if ($user->tipo_utilizador === 'coordenador') {
-            $idDepartamento = $user->perfil?->id_departamento;
-
-            $atribuidaAoCoordenador =
-                (int) $candidatura->id_coordenador
-                    === (int) $user->id_utilizador
-                && $idDepartamento !== null
-                && (int) $candidatura->id_departamento_selecionado
-                    === (int) $idDepartamento;
-
-            if (! $atribuidaAoCoordenador) {
-                return response()->json([
-                    'message' => 'Não tem autorização para consultar este documento.',
-                ], 403);
-            }
+        if (
+            $user->tipo_utilizador === 'coordenador'
+            && ! $candidatura->podeSerCoordenadaPor($user)
+        ) {
+            return response()->json([
+                'message' => 'Não tem autorização para consultar este documento.',
+            ], 403);
         }
 
         // Estagiários, administradores e coordenadores (com candidatura
@@ -90,6 +88,8 @@ class DocumentoController extends Controller
                 'message' => 'O ficheiro solicitado não foi encontrado.',
             ], 404);
         }
+
+        $this->acessos->registarDocumento($request, $user, $documento);
 
         return response()->file(
             $disk->path($documento->caminho_arquivo),

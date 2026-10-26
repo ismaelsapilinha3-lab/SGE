@@ -55,6 +55,15 @@ class Candidatura extends Model
         );
     }
 
+    public function coordenador()
+    {
+        return $this->belongsTo(
+            User::class,
+            'id_coordenador',
+            'id_utilizador'
+        );
+    }
+
     public function departamento()
     {
         return $this->belongsTo(
@@ -81,22 +90,29 @@ class Candidatura extends Model
     | Atribui a candidatura a um coordenador ativo da direção escolhida caso
     | esta ainda não tenha um. Usado ao iniciar o estágio: o candidato passa a
     | estagiário ativo e o coordenador precisa de o encontrar para lhe
-    | atribuir supervisor. É idempotente.
+    | atribuir supervisor. Quando é indicado um coordenador preferido, é esse
+    | que assume a candidatura órfã. É idempotente.
     |
     */
 
-    public function garantirCoordenador(): ?User
+    public function garantirCoordenador(?User $preferido = null): ?User
     {
-        if ($this->id_coordenador !== null) {
-            return User::query()
-                ->where(
-                    'id_utilizador',
-                    $this->id_coordenador
-                )
-                ->first();
+        if ($this->id_coordenador !== null && $this->temCoordenadorValido()) {
+            return $this->coordenador;
+        }
+
+        if (
+            $preferido !== null
+            && $this->coordenadorPertenceADirecao($preferido)
+        ) {
+            $this->atribuirCoordenador($preferido);
+
+            return $preferido;
         }
 
         if ($this->id_departamento_selecionado === null) {
+            $this->libertarCoordenadorInvalido();
+
             return null;
         }
 
@@ -113,15 +129,74 @@ class Candidatura extends Model
             ->first();
 
         if (! $coordenador) {
+            $this->libertarCoordenadorInvalido();
+
             return null;
         }
 
-        $this->update([
-            'id_coordenador' => $coordenador->id_utilizador,
-            'encaminhada_em' => $this->encaminhada_em ?? now(),
-        ]);
+        $this->atribuirCoordenador($coordenador);
 
         return $coordenador;
+    }
+
+    /**
+     * Indica se a candidatura pode ser gerida pelo coordenador indicado.
+     *
+     * Um coordenador ativo da direção vê as candidaturas que lhe estão
+     * atribuídas, as que ainda não têm coordenador e as que ficaram presas a
+     * um coordenador inativo, removido ou de outra direção.
+     */
+    public function podeSerCoordenadaPor(User $user): bool
+    {
+        if (! $this->coordenadorPertenceADirecao($user)) {
+            return false;
+        }
+
+        return $this->id_coordenador === null
+            || (int) $this->id_coordenador === (int) $user->id_utilizador
+            || ! $this->temCoordenadorValido();
+    }
+
+    /**
+     * Indica se o coordenador atualmente associado continua válido.
+     */
+    public function temCoordenadorValido(): bool
+    {
+        return $this->coordenador !== null
+            && $this->coordenadorPertenceADirecao($this->coordenador);
+    }
+
+    private function coordenadorPertenceADirecao(User $user): bool
+    {
+        if (
+            ! $user->ativo
+            || $user->trashed()
+            || $user->tipo_utilizador !== 'coordenador'
+        ) {
+            return false;
+        }
+
+        $idDepartamento = $user->perfil?->id_departamento;
+
+        return $idDepartamento !== null
+            && $this->id_departamento_selecionado !== null
+            && (int) $idDepartamento
+                === (int) $this->id_departamento_selecionado;
+    }
+
+    private function atribuirCoordenador(User $coordenador): void
+    {
+        $this->update([
+            'id_coordenador' => $coordenador->id_utilizador,
+            'encaminhada_em' => now(),
+        ]);
+    }
+
+    private function libertarCoordenadorInvalido(): void
+    {
+        if ($this->id_coordenador !== null) {
+            $this->update(['id_coordenador' => null]);
+        }
     }
 
     /*

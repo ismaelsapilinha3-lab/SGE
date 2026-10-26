@@ -81,6 +81,33 @@ class Relatorio extends Model
         );
     }
 
+    public function estaAprovado(): bool
+    {
+        return $this->estado_avaliacao === self::ESTADO_APROVADO;
+    }
+
+    public function estaRejeitado(): bool
+    {
+        return $this->estado_avaliacao === self::ESTADO_REJEITADO;
+    }
+
+    /**
+     * O relatório pode ser corrigido ou submetido novamente?
+     *
+     * Um relatório aprovado fica fechado. Um rascunho, um relatório
+     * marcado em atraso ou um relatório recusado podem ser reabertos;
+     * um relatório submetido e ainda pendente de avaliação não pode.
+     */
+    public function podeSerAlterado(): bool
+    {
+        return ! $this->estaAprovado()
+            && (
+                ! $this->estaSubmetido()
+                || $this->estaRejeitado()
+                || $this->estado_avaliacao === self::ESTADO_EM_ATRASO
+            );
+    }
+
     /**
      * O relatório foi entregue pelo estagiário?
      */

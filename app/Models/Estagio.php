@@ -126,11 +126,11 @@ class Estagio extends Model
             PlanoEstagio::class,
             'id_estagio',
             'id_estagio'
-        )->where('estado', 'aprovado');
+        )->doSupervisor()->where('estado', 'aprovado');
     }
 
     /**
-     * Plano de estágio em vigor (o último carregado pelo administrador).
+     * Último documento oficial carregado pelo administrador.
      */
     public function planoAtual(): HasOne
     {
@@ -138,15 +138,30 @@ class Estagio extends Model
             PlanoEstagio::class,
             'id_estagio',
             'id_estagio'
-        )->latestOfMany('data_upload');
+        )->doAdministrador()->latestOfMany('data_upload');
     }
 
     /**
-     * Plano em vigor: o mais recente que ainda não foi substituído.
+     * Plano de atividades em vigor: o mais recente submetido pelo
+     * supervisor que ainda não foi substituído.
      */
     public function planoVigente(): ?PlanoEstagio
     {
         return $this->planos()
+            ->doSupervisor()
+            ->where('estado', '!=', 'substituido')
+            ->latest('id_plano_estagio')
+            ->first();
+    }
+
+    /**
+     * Documento oficial em vigor: o mais recente carregado pelo
+     * administrador que ainda não foi substituído.
+     */
+    public function planoDocumentoVigente(): ?PlanoEstagio
+    {
+        return $this->planos()
+            ->doAdministrador()
             ->where('estado', '!=', 'substituido')
             ->latest('id_plano_estagio')
             ->first();
@@ -272,6 +287,33 @@ class Estagio extends Model
     }
 
     /**
+     * Indica se o estágio aceita a entrega do relatório de um mês.
+     *
+     * Um estágio ativo aceita relatórios de meses dentro do seu período.
+     * Depois de concluído, a entrega continua aberta até ao prazo desse
+     * mês (habitualmente no mês seguinte), para não bloquear o relatório
+     * final no próprio dia em que o estágio termina.
+     */
+    public function aceitaRelatoriosNoMes(DateTimeInterface|string $mes): bool
+    {
+        $mesReferencia = $mes instanceof DateTimeInterface
+            ? $mes->format('Y-m-d')
+            : $mes;
+
+        if (! $this->contemMes($mesReferencia)) {
+            return false;
+        }
+
+        if ($this->estaAtivo()) {
+            return true;
+        }
+
+        return $this->estado === 'concluido'
+            && now()->toDateString()
+                <= $this->prazoParaMes($mesReferencia)->toDateString();
+    }
+
+    /**
      * Indica se o estágio pode passar para o estado indicado.
      */
     public function podeTransitarPara(string $novoEstado): bool
@@ -303,6 +345,33 @@ class Estagio extends Model
         }
 
         if ($fim !== null && $dia > $fim) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Indica se o mês da data indicada pertence ao período do estágio.
+     *
+     * Um estágio que começa a meio do mês inclui esse mês por inteiro,
+     * para efeitos de relatórios e avaliações mensais.
+     */
+    public function contemMes(string $data): bool
+    {
+        $mes = Carbon::parse($data)->startOfMonth();
+
+        $inicio = $this->data_inicio?->copy()->startOfMonth();
+
+        $fim = ($this->data_fim_real ?? $this->data_fim_prevista)
+            ?->copy()
+            ->startOfMonth();
+
+        if ($inicio !== null && $mes->lessThan($inicio)) {
+            return false;
+        }
+
+        if ($fim !== null && $mes->greaterThan($fim)) {
             return false;
         }
 

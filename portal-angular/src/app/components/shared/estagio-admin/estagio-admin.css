@@ -19,6 +19,51 @@
 
 
 /* =========================================================
+   TRIMESTRES
+   ========================================================= */
+
+.ea-trimestres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  background: #eef7ff;
+  border: 1px solid #cfe3f5;
+  border-radius: 12px;
+}
+
+.ea-trimestre-atual {
+  display: flex;
+  flex: 1 1 240px;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.ea-trimestre-kicker {
+  color: #0879bd;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.ea-trimestre-atual strong {
+  color: #16375f;
+  font-size: 18px;
+}
+
+.ea-trimestre-atual small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+
+/* =========================================================
    FILTROS
    ========================================================= */
 
@@ -402,6 +447,10 @@
 
   .ea-filtros .ea-btn:last-child {
     margin-left: 0;
+  }
+
+  .ea-trimestres .ea-btn {
+    width: 100%;
   }
 
   .ea-detalhe-cabecalho {

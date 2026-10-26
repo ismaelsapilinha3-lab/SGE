@@ -1,6 +1,52 @@
 <section class="ea">
 
   <!-- =======================================================
+       NAVEGAÇÃO POR TRIMESTRE
+       ======================================================= -->
+  <nav
+    class="ea-trimestres"
+    aria-label="Navegação dos estágios por trimestre"
+  >
+
+    <button
+      type="button"
+      class="ea-btn ea-btn--ghost"
+      (click)="trimestreAnterior()"
+      [disabled]="carregando() || processando()"
+    >
+      <span aria-hidden="true">←</span>
+      Trimestre anterior
+    </button>
+
+    <div class="ea-trimestre-atual">
+
+      <span class="ea-trimestre-kicker">
+        Estágios por trimestre
+      </span>
+
+      <strong>{{ rotuloTrimestre() }}</strong>
+
+      <small>
+        {{ periodoTrimestre() }}
+        · {{ totalEstagios() }} estágio(s)
+      </small>
+
+    </div>
+
+    <button
+      type="button"
+      class="ea-btn ea-btn--ghost"
+      (click)="trimestreSeguinte()"
+      [disabled]="carregando() || processando()"
+    >
+      Trimestre seguinte
+      <span aria-hidden="true">→</span>
+    </button>
+
+  </nav>
+
+
+  <!-- =======================================================
        FILTROS
        ======================================================= -->
   <form
@@ -75,7 +121,8 @@
   } @else if (estagios().length === 0) {
 
     <p class="ea-vazio" role="status">
-      Não existem estágios para os filtros selecionados.
+      Não existem estágios para os filtros selecionados
+      neste trimestre.
     </p>
 
   } @else {
@@ -153,12 +200,12 @@
         (click)="paginaAnterior()"
         [disabled]="pagina() <= 1"
       >
-        Anterior
+        Página anterior
       </button>
 
       <span>
         Página {{ pagina() }} de {{ ultimaPagina() }}
-        ({{ totalEstagios() }} estágios)
+        ({{ totalEstagios() }} estágios neste trimestre)
       </span>
 
       <button
@@ -167,7 +214,7 @@
         (click)="proximaPagina()"
         [disabled]="pagina() >= ultimaPagina()"
       >
-        Seguinte
+        Página seguinte
       </button>
 
     </div>

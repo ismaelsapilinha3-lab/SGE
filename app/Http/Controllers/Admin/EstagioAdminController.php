@@ -6,14 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Candidatura;
 use App\Models\Estagio;
 use App\Models\HistoricoEstado;
-use App\Models\Notificacao;
 use App\Models\User;
+use App\Services\NotificacaoService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class EstagioAdminController extends Controller
 {
+    public function __construct(
+        private readonly NotificacaoService $notificacoes
+    ) {}
+
     /*
     |--------------------------------------------------------------------------
     | Listar estágios
@@ -39,6 +44,11 @@ class EstagioAdminController extends Controller
                 'in:ativo,suspenso,concluido,cancelado',
             ],
 
+            'trimestre' => [
+                'nullable',
+                'regex:/^\d{4}-[1-4]$/',
+            ],
+
             'por_pagina' => [
                 'nullable',
                 'integer',
@@ -46,6 +56,8 @@ class EstagioAdminController extends Controller
                 'max:50',
             ],
         ]);
+
+        $trimestre = $this->trimestreDe($dados['trimestre'] ?? null);
 
         $query = Estagio::query()
             ->with([
@@ -75,9 +87,69 @@ class EstagioAdminController extends Controller
             $query->where('estado', $dados['estado']);
         }
 
-        return response()->json(
-            $query->paginate($dados['por_pagina'] ?? 15)
-        );
+        if ($trimestre !== null) {
+            /*
+             * Intervalo semiaberto para o filtro continuar a usar o índice
+             * de `data_inicio` e incluir todo o último dia do trimestre.
+             */
+            $query
+                ->where(
+                    'data_inicio',
+                    '>=',
+                    $trimestre['inicio']->toDateString()
+                )
+                ->where(
+                    'data_inicio',
+                    '<',
+                    $trimestre['fim']->copy()->addDay()->toDateString()
+                );
+        }
+
+        $pagina = $query
+            ->paginate($dados['por_pagina'] ?? 15)
+            ->appends($request->query());
+
+        return response()->json([
+            ...$pagina->toArray(),
+
+            'trimestre' => $trimestre === null
+                ? null
+                : [
+                    'ano' => $trimestre['ano'],
+                    'numero' => $trimestre['numero'],
+                    'inicio' => $trimestre['inicio']->toDateString(),
+                    'fim' => $trimestre['fim']->toDateString(),
+                    'rotulo' => $trimestre['rotulo'],
+                ],
+        ]);
+    }
+
+    /**
+     * Intervalo do trimestre civil indicado no formato `AAAA-T`.
+     *
+     * @return array{inicio: Carbon, fim: Carbon, ano: int, numero: int, rotulo: string}|null
+     */
+    private function trimestreDe(?string $valor): ?array
+    {
+        if ($valor === null || $valor === '') {
+            return null;
+        }
+
+        [$ano, $numero] = array_map('intval', explode('-', $valor));
+
+        $inicio = Carbon::createFromDate(
+            $ano,
+            (($numero - 1) * 3) + 1,
+            1
+        )->startOfDay();
+
+        return [
+            'inicio' => $inicio,
+            'fim' => $inicio->copy()->endOfQuarter(),
+            'ano' => $ano,
+            'numero' => $numero,
+            'rotulo' => sprintf('%d.º trimestre de %d', $numero, $ano),
+        ];
     }
 
     /*
@@ -136,7 +208,19 @@ class EstagioAdminController extends Controller
             'data_fim_prevista' => [
                 'nullable',
                 'date',
-                'after:data_inicio',
+            ],
+
+            'duracao_meses' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
+
+            'dia_limite_relatorio' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:28',
             ],
 
             'motivo_suspensao' => [
@@ -231,18 +315,44 @@ class EstagioAdminController extends Controller
 
         $fimPrevisto = $dados['data_fim_prevista'] ?? null;
 
-        if (! $inicio || ! $fimPrevisto) {
+        $duracaoMeses = isset($dados['duracao_meses'])
+            ? (int) $dados['duracao_meses']
+            : null;
+
+        if (! $inicio) {
             return response()->json([
-                'message' => 'Indica a data de início e a data prevista de fim.',
+                'message' => 'Indica a data de início do estágio.',
             ], 422);
         }
+
+        if ($duracaoMeses !== null) {
+            $fimPrevisto = Carbon::parse($inicio)
+                ->addMonthsNoOverflow($duracaoMeses)
+                ->toDateString();
+        }
+
+        if (! $fimPrevisto) {
+            return response()->json([
+                'message' => 'Indica a duração ou a data prevista de fim do estágio.',
+            ], 422);
+        }
+
+        if ($fimPrevisto <= $inicio) {
+            return response()->json([
+                'message' => 'A data prevista de fim não pode ser anterior à data de início.',
+            ], 422);
+        }
+
+        $duracaoMeses ??= $this->calcularDuracaoMeses($inicio, $fimPrevisto);
 
         try {
             $estagio = Estagio::create([
                 'id_candidatura' => $candidatura->id_candidatura,
                 'id_estagiario' => $utilizador->id_utilizador,
                 'data_inicio' => $inicio,
+                'duracao_meses' => $duracaoMeses,
                 'data_fim_prevista' => $fimPrevisto,
+                'dia_limite_relatorio' => $dados['dia_limite_relatorio'] ?? 5,
                 'estado' => 'ativo',
             ]);
         } catch (UniqueConstraintViolationException) {
@@ -263,7 +373,7 @@ class EstagioAdminController extends Controller
             'id_utilizador' => $request->user()->id_utilizador,
         ]);
 
-        Notificacao::paraUtilizador(
+        $this->notificacoes->paraUtilizador(
             $utilizador,
             'Estágio iniciado',
             'O teu estágio foi iniciado em '
@@ -317,8 +427,38 @@ class EstagioAdminController extends Controller
         $inicio = $dados['data_inicio']
             ?? $estagio->data_inicio?->toDateString();
 
+        $duracaoMeses = isset($dados['duracao_meses'])
+            ? (int) $dados['duracao_meses']
+            : (int) ($estagio->duracao_meses ?? 0);
+
         $fimPrevisto = $dados['data_fim_prevista']
             ?? $estagio->data_fim_prevista?->toDateString();
+
+        if (isset($dados['duracao_meses'])) {
+            $fimPrevisto = Carbon::parse($inicio)
+                ->addMonthsNoOverflow($duracaoMeses)
+                ->toDateString();
+        } elseif (
+            isset($dados['data_inicio'])
+            && ! isset($dados['data_fim_prevista'])
+            && $duracaoMeses >= 1
+        ) {
+            $fimPrevisto = Carbon::parse($inicio)
+                ->addMonthsNoOverflow($duracaoMeses)
+                ->toDateString();
+        } elseif (
+            $inicio
+            && $fimPrevisto
+            && (
+                isset($dados['data_inicio'])
+                || isset($dados['data_fim_prevista'])
+            )
+        ) {
+            $duracaoMeses = $this->calcularDuracaoMeses(
+                $inicio,
+                $fimPrevisto
+            );
+        }
 
         if ($inicio && $fimPrevisto && $fimPrevisto <= $inicio) {
             return response()->json([
@@ -334,7 +474,12 @@ class EstagioAdminController extends Controller
             $estagio->update([
                 'data_inicio' => $inicio,
 
+                'duracao_meses' => $duracaoMeses,
+
                 'data_fim_prevista' => $fimPrevisto,
+
+                'dia_limite_relatorio' => $dados['dia_limite_relatorio']
+                    ?? $estagio->dia_limite_relatorio,
 
                 'estado' => $novoEstado,
 
@@ -370,13 +515,13 @@ class EstagioAdminController extends Controller
                 $mensagemEstagiario .= ' Motivo: '.$motivoSuspensao.'.';
             }
 
-            Notificacao::paraUtilizador(
+            $this->notificacoes->paraUtilizador(
                 $estagio->id_estagiario,
                 'Estado do estágio atualizado',
                 $mensagemEstagiario
             );
 
-            Notificacao::paraUtilizadores(
+            $this->notificacoes->paraUtilizadores(
                 $estagio->supervisoresUtilizadores(),
                 'Estado do estágio atualizado',
                 "O estágio #{$estagio->id_estagio} passou de {$estadoAtual} para {$novoEstado}."
@@ -401,6 +546,17 @@ class EstagioAdminController extends Controller
     | candidaturas antigas ainda sem a chave preenchida.
     |
     */
+
+    private function calcularDuracaoMeses(
+        string $inicio,
+        string $fimPrevisto
+    ): int {
+        $meses = Carbon::parse($inicio)
+            ->startOfDay()
+            ->diffInMonths(Carbon::parse($fimPrevisto)->startOfDay());
+
+        return max(1, (int) $meses);
+    }
 
     private function contaDoEstagiario(
         Candidatura $candidatura

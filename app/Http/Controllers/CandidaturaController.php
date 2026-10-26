@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Candidatura;
 use App\Models\Departamento;
 use App\Models\Documento;
-use App\Models\Notificacao;
 use App\Models\User;
 use App\Services\LimiteCandidaturasTrimestrais;
+use App\Services\NotificacaoService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +25,8 @@ class CandidaturaController extends Controller
     ];
 
     public function __construct(
-        private readonly LimiteCandidaturasTrimestrais $limiteCandidaturas
+        private readonly LimiteCandidaturasTrimestrais $limiteCandidaturas,
+        private readonly NotificacaoService $notificacoes
     ) {}
 
     /**
@@ -310,7 +311,7 @@ class CandidaturaController extends Controller
              * Avisar os administradores de que há uma candidatura nova
              * a aguardar análise.
              */
-            Notificacao::paraUtilizadores(
+            $this->notificacoes->paraUtilizadores(
                 User::where('tipo_utilizador', 'administrador')
                     ->where('ativo', true)
                     ->get(),
@@ -527,7 +528,6 @@ class CandidaturaController extends Controller
                     'tipo_documento' => $documento->tipo_documento,
                     'versao' => $documento->versao,
                     'nome_arquivo' => $documento->nome_arquivo,
-                    'caminho_arquivo' => $documento->caminho_arquivo,
                     'data_upload' => $documento->data_upload,
                     'validade' => $documento->validade,
                     'estado' => $documento->estado,

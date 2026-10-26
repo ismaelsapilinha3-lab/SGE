@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Estagio;
 use App\Models\HistoricoEstado;
-use App\Models\Notificacao;
+use App\Services\NotificacaoService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -14,13 +14,19 @@ use Illuminate\Support\Facades\DB;
 #[Description('Conclui automaticamente os estágios cuja data prevista terminou')]
 class AtualizarEstagiosConcluidos extends Command
 {
+    public function __construct(
+        private readonly NotificacaoService $notificacoes
+    ) {
+        parent::__construct();
+    }
+
     public function handle(): int
     {
         $hoje = now()->toDateString();
 
         $ids = Estagio::query()
             ->where('estado', 'ativo')
-            ->whereDate('data_fim_prevista', '<=', $hoje)
+            ->where('data_fim_prevista', '<', $hoje)
             ->pluck('id_estagio');
 
         $quantidade = 0;
@@ -72,13 +78,13 @@ class AtualizarEstagiosConcluidos extends Command
                 'id_utilizador' => null,
             ]);
 
-            Notificacao::paraUtilizador(
+            $this->notificacoes->paraUtilizador(
                 $estagio->id_estagiario,
                 'Estágio concluído',
                 "O teu estágio #{$estagio->id_estagio} foi concluído por ter chegado ao fim previsto."
             );
 
-            Notificacao::paraUtilizadores(
+            $this->notificacoes->paraUtilizadores(
                 $estagio->supervisoresUtilizadores(),
                 'Estágio concluído',
                 "O estágio #{$estagio->id_estagio} foi concluído por ter chegado ao fim previsto."

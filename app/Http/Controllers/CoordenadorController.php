@@ -2,23 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\DocumentoEstagioResource;
+use App\Http\Resources\PlanoEstagioResource;
 use App\Models\Candidatura;
 use App\Models\Estagio;
 use App\Models\HistoricoEstado;
-use App\Models\Notificacao;
 use App\Models\Perfil;
 use App\Models\PlanoEstagio;
 use App\Models\User;
+use App\Services\NotificacaoService;
 use App\Services\Sms\SmsService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 
 class CoordenadorController extends Controller
 {
+    public function __construct(
+        private readonly NotificacaoService $notificacoes
+    ) {}
+
     /*
     |--------------------------------------------------------------------------
     | Obter a direção do coordenador autenticado
@@ -57,15 +65,74 @@ class CoordenadorController extends Controller
         $idDepartamento =
             $this->idDepartamentoDoCoordenador($request);
 
-        return Candidatura::query()
-            ->where(
-                'id_coordenador',
-                $user->id_utilizador
-            )
+        $query = Candidatura::query();
+
+        $this->aplicarVisibilidadeDoCoordenador(
+            $query,
+            $user,
+            $idDepartamento,
+            false
+        );
+
+        return $query;
+    }
+
+    /**
+     * Limita as candidaturas às que o coordenador pode gerir.
+     *
+     * Inclui as candidaturas órfãs e as que ficaram associadas a um
+     * coordenador inativo, removido ou de outra direção, para que a direção
+     * possa retomar a sua gestão.
+     */
+    private function aplicarVisibilidadeDoCoordenador(
+        Builder $query,
+        User $user,
+        int $idDepartamento,
+        bool $incluirSemCoordenador
+    ): void {
+        $query
             ->where(
                 'id_departamento_selecionado',
                 $idDepartamento
-            );
+            )
+            ->where(function (Builder $subquery) use (
+                $user,
+                $idDepartamento,
+                $incluirSemCoordenador
+            ) {
+                $subquery->where(
+                    'id_coordenador',
+                    $user->id_utilizador
+                );
+
+                if ($incluirSemCoordenador) {
+                    $subquery->orWhereNull('id_coordenador');
+                }
+
+                $subquery->orWhere(function (Builder $invalida) use (
+                    $idDepartamento
+                ) {
+                    $invalida
+                        ->whereNotNull('id_coordenador')
+                        ->whereDoesntHave(
+                            'coordenador',
+                            function (Builder $coordenador) use ($idDepartamento) {
+                                $coordenador
+                                    ->where('ativo', true)
+                                    ->where('tipo_utilizador', 'coordenador')
+                                    ->whereHas(
+                                        'perfil',
+                                        function (Builder $perfil) use ($idDepartamento) {
+                                            $perfil->where(
+                                                'id_departamento',
+                                                $idDepartamento
+                                            );
+                                        }
+                                    );
+                            }
+                        );
+                });
+            });
     }
 
     /*
@@ -233,6 +300,8 @@ class CoordenadorController extends Controller
                 ], 422);
             }
 
+            $candidatura->garantirCoordenador($request->user());
+
             $estadoAnterior = $candidatura->estado;
 
             $candidatura->update([
@@ -253,7 +322,7 @@ class CoordenadorController extends Controller
                 'id_utilizador' => $request->user()->id_utilizador,
             ]);
 
-            Notificacao::paraCandidato(
+            $this->notificacoes->paraCandidato(
                 $candidatura,
                 'Candidatura aprovada',
                 'A tua candidatura foi aprovada.'
@@ -359,6 +428,8 @@ class CoordenadorController extends Controller
                 ], 422);
             }
 
+            $candidatura->garantirCoordenador($request->user());
+
             $estadoAnterior = $candidatura->estado;
 
             $candidatura->update([
@@ -379,7 +450,7 @@ class CoordenadorController extends Controller
                 'id_utilizador' => $request->user()->id_utilizador,
             ]);
 
-            Notificacao::paraCandidato(
+            $this->notificacoes->paraCandidato(
                 $candidatura,
                 'Candidatura recusada',
                 "A tua candidatura foi recusada. Motivo: {$dados['motivo']}."
@@ -552,25 +623,16 @@ class CoordenadorController extends Controller
 
         $estagio = Estagio::query()
             ->where('id_estagio', $id)
-            ->whereHas('candidatura', function ($q) use (
+            ->whereHas('candidatura', function (Builder $q) use (
                 $user,
                 $idDepartamento
             ) {
-                $q->where(
-                    'id_departamento_selecionado',
-                    $idDepartamento
-                )->where(function ($sub) use ($user) {
-                    /*
-                     * O coordenador vê as candidaturas que lhe foram
-                     * atribuídas e também as da sua direção que ainda não
-                     * têm coordenador definido (estágios iniciados antes
-                     * do encaminhamento), para as poder assumir.
-                     */
-                    $sub->where(
-                        'id_coordenador',
-                        $user->id_utilizador
-                    )->orWhereNull('id_coordenador');
-                });
+                $this->aplicarVisibilidadeDoCoordenador(
+                    $q,
+                    $user,
+                    $idDepartamento,
+                    true
+                );
             })
             ->first();
 
@@ -617,19 +679,16 @@ class CoordenadorController extends Controller
             $this->idDepartamentoDoCoordenador($request);
 
         $query = Estagio::query()
-            ->whereHas('candidatura', function ($q) use (
+            ->whereHas('candidatura', function (Builder $q) use (
                 $user,
                 $idDepartamento
             ) {
-                $q->where(
-                    'id_departamento_selecionado',
-                    $idDepartamento
-                )->where(function ($sub) use ($user) {
-                    $sub->where(
-                        'id_coordenador',
-                        $user->id_utilizador
-                    )->orWhereNull('id_coordenador');
-                });
+                $this->aplicarVisibilidadeDoCoordenador(
+                    $q,
+                    $user,
+                    $idDepartamento,
+                    true
+                );
             })
             ->with([
                 'estagiario',
@@ -658,8 +717,8 @@ class CoordenadorController extends Controller
          * definido (estágios iniciados antes do encaminhamento). A atribuição
          * passa a ficar registada para as decisões seguintes.
          */
-        $pagina->getCollection()->each(function (Estagio $estagio) {
-            $estagio->candidatura?->garantirCoordenador();
+        $pagina->getCollection()->each(function (Estagio $estagio) use ($user) {
+            $estagio->candidatura?->garantirCoordenador($user);
         });
 
         return response()->json($pagina);
@@ -743,6 +802,8 @@ class CoordenadorController extends Controller
             ], 422);
         }
 
+        $estagio->candidatura?->garantirCoordenador($request->user());
+
         try {
             $vinculo = $estagio->supervisores()->create([
                 'id_supervisor' => $supervisor->id_utilizador,
@@ -757,13 +818,13 @@ class CoordenadorController extends Controller
             ], 422);
         }
 
-        Notificacao::paraUtilizador(
+        $this->notificacoes->paraUtilizador(
             $supervisor,
             'Novo estágio atribuído',
             "Foi-te atribuído o acompanhamento do estágio #{$estagio->id_estagio}."
         );
 
-        Notificacao::paraUtilizador(
+        $this->notificacoes->paraUtilizador(
             $estagio->id_estagiario,
             'Supervisor atribuído',
             "Foi-te atribuído o supervisor {$supervisor->nome}."
@@ -813,6 +874,8 @@ class CoordenadorController extends Controller
             ], 404);
         }
 
+        $estagio->candidatura?->garantirCoordenador($request->user());
+
         $vinculo->update([
             'removido_em' => now(),
         ]);
@@ -841,10 +904,16 @@ class CoordenadorController extends Controller
 
         $plano = $estagio->planoVigente();
 
+        if ($plano) {
+            Gate::authorize('view', $plano);
+        }
+
         return response()->json([
             'id_estagio' => $estagio->id_estagio,
 
-            'plano' => $plano,
+            'plano' => $plano
+                ? new PlanoEstagioResource($plano)
+                : null,
 
             'historico' => $plano
                 ? $plano->historico()
@@ -878,6 +947,10 @@ class CoordenadorController extends Controller
             $estagio
         ) {
 
+            $estagio->candidatura?->garantirCoordenador(
+                $request->user()
+            );
+
             $plano = $this->planoSubmetido($estagio);
 
             if (! $plano) {
@@ -885,6 +958,8 @@ class CoordenadorController extends Controller
                     'message' => 'Não há plano de estágio submetido para aprovar.',
                 ], 422);
             }
+
+            Gate::authorize('decidir', $plano);
 
             $estadoAnterior = $plano->estado;
 
@@ -910,7 +985,7 @@ class CoordenadorController extends Controller
                 'id_utilizador' => $request->user()->id_utilizador,
             ]);
 
-            Notificacao::paraUtilizadores(
+            $this->notificacoes->paraUtilizadores(
                 $estagio->supervisoresUtilizadores(),
                 'Plano de estágio aprovado',
                 "O plano de estágio #{$plano->id_plano_estagio} foi aprovado."
@@ -919,7 +994,7 @@ class CoordenadorController extends Controller
             return response()->json([
                 'message' => 'Plano de estágio aprovado com sucesso.',
 
-                'plano' => $plano->fresh(),
+                'plano' => new PlanoEstagioResource($plano->fresh()),
             ]);
         });
     }
@@ -958,6 +1033,10 @@ class CoordenadorController extends Controller
             $dados
         ) {
 
+            $estagio->candidatura?->garantirCoordenador(
+                $request->user()
+            );
+
             $plano = $this->planoSubmetido($estagio);
 
             if (! $plano) {
@@ -965,6 +1044,8 @@ class CoordenadorController extends Controller
                     'message' => 'Não há plano de estágio submetido para recusar.',
                 ], 422);
             }
+
+            Gate::authorize('decidir', $plano);
 
             $estadoAnterior = $plano->estado;
 
@@ -990,7 +1071,7 @@ class CoordenadorController extends Controller
                 'id_utilizador' => $request->user()->id_utilizador,
             ]);
 
-            Notificacao::paraUtilizadores(
+            $this->notificacoes->paraUtilizadores(
                 $estagio->supervisoresUtilizadores(),
                 'Plano de estágio recusado',
                 "O plano de estágio #{$plano->id_plano_estagio} foi recusado. Motivo: {$dados['motivo']}."
@@ -999,7 +1080,7 @@ class CoordenadorController extends Controller
             return response()->json([
                 'message' => 'Plano de estágio recusado.',
 
-                'plano' => $plano->fresh(),
+                'plano' => new PlanoEstagioResource($plano->fresh()),
             ]);
         });
     }
@@ -1020,9 +1101,11 @@ class CoordenadorController extends Controller
         return response()->json([
             'id_estagio' => $estagio->id_estagio,
 
-            'documentos' => $estagio->documentos()
-                ->orderByDesc('versao')
-                ->get(),
+            'documentos' => DocumentoEstagioResource::collection(
+                $estagio->documentos()
+                    ->orderByDesc('versao')
+                    ->get()
+            ),
         ]);
     }
 
@@ -1129,6 +1212,7 @@ class CoordenadorController extends Controller
     ): ?PlanoEstagio {
 
         return $estagio->planos()
+            ->doSupervisor()
             ->where('estado', 'submetido')
             ->latest('id_plano_estagio')
             ->lockForUpdate()

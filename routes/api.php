@@ -38,12 +38,12 @@ Route::post('/login', [
 Route::get('/departamentos', [
     DepartamentoController::class,
     'index',
-]);
+])->middleware('throttle:60,1');
 
 Route::get('/candidaturas/limite', [
     CandidaturaController::class,
     'limite',
-]);
+])->middleware('throttle:60,1');
 
 Route::post('/candidaturas', [
     CandidaturaController::class,
@@ -56,7 +56,7 @@ Route::post('/candidaturas', [
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------

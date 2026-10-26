@@ -58,6 +58,47 @@ function estagioAvaliacaoDoCoordenador(): array
     return [$estagio, $coordenador];
 }
 
+it('recusa uma avaliação de um período fora do estágio', function () {
+    [$estagio, , $supervisor] = estagioComAvaliacoes();
+
+    $periodoAnterior = $estagio->data_inicio
+        ->copy()
+        ->subMonthNoOverflow()
+        ->startOfMonth()
+        ->toDateString();
+
+    $this->actingAs($supervisor, 'sanctum')
+        ->postJson("/api/supervisor/estagios/{$estagio->id_estagio}/avaliacoes", [
+            'tipo' => 'mensal',
+            'periodo_referencia' => $periodoAnterior,
+            'nota' => 16,
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath(
+            'message',
+            'O período indicado está fora do período do estágio.'
+        );
+});
+
+it('recusa uma avaliação de um mês futuro', function () {
+    [$estagio, , $supervisor] = estagioComAvaliacoes();
+
+    $this->actingAs($supervisor, 'sanctum')
+        ->postJson("/api/supervisor/estagios/{$estagio->id_estagio}/avaliacoes", [
+            'tipo' => 'mensal',
+            'periodo_referencia' => now()
+                ->startOfMonth()
+                ->addMonthNoOverflow()
+                ->toDateString(),
+            'nota' => 16,
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath(
+            'message',
+            'O período indicado não pode ser futuro.'
+        );
+});
+
 it('deixa o supervisor registar uma avaliação', function () {
     [$estagio, , $supervisor] = estagioComAvaliacoes();
 
@@ -191,7 +232,32 @@ it('deixa o supervisor remover uma avaliação', function () {
         ->assertOk()
         ->assertJsonPath('message', 'Avaliação removida com sucesso.');
 
-    expect(Avaliacao::find($avaliacao->id_avaliacao))->toBeNull();
+    expect(Avaliacao::find($avaliacao->id_avaliacao))->toBeNull()
+        ->and(
+            Avaliacao::withTrashed()
+                ->find($avaliacao->id_avaliacao)
+                ->trashed()
+        )->toBeTrue();
+
+    $this->actingAs($supervisor, 'sanctum')
+        ->postJson(
+            "/api/supervisor/estagios/{$estagio->id_estagio}/avaliacoes",
+            [
+                'tipo' => $avaliacao->tipo,
+                'periodo_referencia' => $avaliacao->periodo_referencia
+                    ->toDateString(),
+                'nota' => 16,
+            ]
+        )
+        ->assertOk();
+
+    expect($estagio->avaliacoes()
+        ->where('tipo', $avaliacao->tipo)
+        ->whereDate(
+            'periodo_referencia',
+            $avaliacao->periodo_referencia->toDateString()
+        )
+        ->count())->toBe(1);
 });
 
 it('não deixa avaliar um estágio não atribuído', function () {
@@ -255,8 +321,17 @@ it('recusa avaliar um estágio cancelado', function () {
 it('deixa o estagiário consultar as suas avaliações', function () {
     [$estagio, $estagiario] = estagioComAvaliacoes();
 
-    Avaliacao::factory()->count(2)->create([
+    Avaliacao::factory()->create([
         'id_estagio' => $estagio->id_estagio,
+        'periodo_referencia' => now()->startOfMonth()->toDateString(),
+    ]);
+
+    Avaliacao::factory()->create([
+        'id_estagio' => $estagio->id_estagio,
+        'periodo_referencia' => now()
+            ->subMonthNoOverflow()
+            ->startOfMonth()
+            ->toDateString(),
     ]);
 
     $this->actingAs($estagiario, 'sanctum')

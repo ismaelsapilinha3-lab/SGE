@@ -18,6 +18,7 @@ class PlanoEstagioFactory extends Factory
 
         return [
             'id_estagio' => Estagio::factory(),
+            'origem' => PlanoEstagio::ORIGEM_SUPERVISOR,
             'id_supervisor' => User::factory()->supervisor(),
             'objetivos' => fake()->paragraph(),
             'atividades_previstas' => fake()->paragraph(),
@@ -41,6 +42,26 @@ class PlanoEstagioFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'estado' => 'recusado',
             'motivo_recusa' => 'Objetivos pouco claros.',
+        ]);
+    }
+
+    /**
+     * Documento oficial carregado pelo administrador.
+     */
+    public function doAdministrador(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'origem' => PlanoEstagio::ORIGEM_ADMINISTRADOR,
+            'id_supervisor' => null,
+            'id_autor' => User::factory()->administrador(),
+            'nome_arquivo' => 'plano-estagio.pdf',
+            'caminho_arquivo' => 'planos_estagio/plano-estagio.pdf',
+            'formato' => 'pdf',
+            'tamanho' => 1024,
+            'versao' => 1,
+            'data_upload' => now(),
+            'estado' => 'aprovado',
+            'data_decisao' => now(),
         ]);
     }
 }

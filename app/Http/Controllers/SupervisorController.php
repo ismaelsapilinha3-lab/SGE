@@ -2,17 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\DocumentoEstagioResource;
+use App\Http\Resources\PlanoEstagioResource;
 use App\Models\Assiduidade;
 use App\Models\Avaliacao;
 use App\Models\DocumentoEstagio;
 use App\Models\Estagio;
 use App\Models\HistoricoEstado;
-use App\Models\Notificacao;
+use App\Services\NotificacaoService;
+use App\Services\PlanoEstagioService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class SupervisorController extends Controller
 {
+    public function __construct(
+        private readonly PlanoEstagioService $planos,
+        private readonly NotificacaoService $notificacoes
+    ) {}
+
     /*
     |--------------------------------------------------------------------------
     | Painel do supervisor
@@ -137,10 +147,16 @@ class SupervisorController extends Controller
 
         $plano = $estagio->planoVigente();
 
+        if ($plano) {
+            Gate::authorize('view', $plano);
+        }
+
         return response()->json([
             'id_estagio' => $estagio->id_estagio,
 
-            'plano' => $plano,
+            'plano' => $plano
+                ? new PlanoEstagioResource($plano)
+                : null,
 
             'historico' => $plano
                 ? $plano->historico()
@@ -206,74 +222,19 @@ class SupervisorController extends Controller
             ],
         ]);
 
-        return DB::transaction(function () use (
-            $request,
+        $resultado = $this->planos->submeter(
             $estagio,
+            $request->user(),
             $dados
-        ) {
+        );
 
-            $utilizador = $request->user();
+        return response()->json([
+            'message' => 'Plano de estágio submetido com sucesso.',
 
-            $plano = $estagio->planoVigente();
-
-            $criado = false;
-
-            if ($plano && $plano->estaAprovado()) {
-                $plano->update([
-                    'estado' => 'substituido',
-                ]);
-
-                $plano = null;
-            }
-
-            $conteudo = [
-                'objetivos' => $dados['objetivos'],
-
-                'atividades_previstas' => $dados['atividades_previstas'],
-
-                'cronograma' => $dados['cronograma'],
-
-                'data_inicio' => $dados['data_inicio'],
-
-                'data_fim' => $dados['data_fim'],
-            ];
-
-            if (! $plano) {
-                $plano = $estagio->planos()->create(
-                    $conteudo + [
-                        'id_supervisor' => $utilizador->id_utilizador,
-                        'estado' => 'submetido',
-                    ]
-                );
-
-                $criado = true;
-            } elseif ($plano->estado === 'recusado') {
-                $plano->registarHistorico($utilizador->id_utilizador);
-
-                $plano->update($conteudo + [
-                    'estado' => 'submetido',
-                    'motivo_recusa' => null,
-                    'id_coordenador' => null,
-                    'data_decisao' => null,
-                ]);
-            } else {
-                $plano->update($conteudo);
-            }
-
-            Notificacao::paraUtilizador(
-                $estagio->coordenadorResponsavel(),
-                'Plano de estágio submetido',
-                "O supervisor submeteu o plano do estágio #{$estagio->id_estagio} para a tua aprovação."
-            );
-
-            return response()->json([
-                'message' => 'Plano de estágio submetido com sucesso.',
-
-                'plano' => $plano
-                    ->fresh()
-                    ->load('historico'),
-            ], $criado ? 201 : 200);
-        });
+            'plano' => new PlanoEstagioResource(
+                $resultado['plano']->fresh()->load('historico')
+            ),
+        ], $resultado['criado'] ? 201 : 200);
     }
 
     /*
@@ -292,9 +253,11 @@ class SupervisorController extends Controller
         return response()->json([
             'id_estagio' => $estagio->id_estagio,
 
-            'documentos' => $estagio->documentos()
-                ->orderByDesc('versao')
-                ->get(),
+            'documentos' => DocumentoEstagioResource::collection(
+                $estagio->documentos()
+                    ->orderByDesc('versao')
+                    ->get()
+            ),
         ]);
     }
 
@@ -359,7 +322,7 @@ class SupervisorController extends Controller
                 'id_utilizador' => $request->user()->id_utilizador,
             ]);
 
-            Notificacao::paraUtilizador(
+            $this->notificacoes->paraUtilizador(
                 $estagio->id_estagiario,
                 'Contrato validado',
                 "O contrato (versão {$documentoBloqueado->versao}) foi validado pelo supervisor."
@@ -368,7 +331,9 @@ class SupervisorController extends Controller
             return response()->json([
                 'message' => 'Documento validado com sucesso.',
 
-                'documento' => $documentoBloqueado->fresh(),
+                'documento' => new DocumentoEstagioResource(
+                    $documentoBloqueado->fresh()
+                ),
             ]);
         });
     }
@@ -447,7 +412,7 @@ class SupervisorController extends Controller
                 'id_utilizador' => $request->user()->id_utilizador,
             ]);
 
-            Notificacao::paraUtilizador(
+            $this->notificacoes->paraUtilizador(
                 $estagio->id_estagiario,
                 'Contrato rejeitado',
                 "O contrato (versão {$documentoBloqueado->versao}) foi rejeitado. Motivo: {$dados['descricao']}."
@@ -456,7 +421,9 @@ class SupervisorController extends Controller
             return response()->json([
                 'message' => 'Documento rejeitado.',
 
-                'documento' => $documentoBloqueado->fresh(),
+                'documento' => new DocumentoEstagioResource(
+                    $documentoBloqueado->fresh()
+                ),
             ]);
         });
     }
@@ -617,6 +584,14 @@ class SupervisorController extends Controller
             ],
         ]);
 
+        if (Carbon::parse($dados['data'])->startOfDay()->greaterThan(
+            now()->startOfDay()
+        )) {
+            return response()->json([
+                'message' => 'Não é possível registar assiduidade numa data futura.',
+            ], 422);
+        }
+
         if (! $estagio->contemData($dados['data'])) {
             return response()->json([
                 'message' => 'A data indicada está fora do período do estágio.',
@@ -682,11 +657,16 @@ class SupervisorController extends Controller
         ) {
 
             $assiduidade = $estagio->assiduidades()
+                ->withTrashed()
                 ->whereDate('data', $dados['data'])
                 ->lockForUpdate()
                 ->first();
 
             if ($assiduidade) {
+                if ($assiduidade->trashed()) {
+                    $assiduidade->restore();
+                }
+
                 $assiduidade->update($atributos);
 
                 return $assiduidade;
@@ -811,7 +791,7 @@ class SupervisorController extends Controller
                 'justificacao_decidida_em' => now(),
             ]);
 
-            Notificacao::paraUtilizador(
+            $this->notificacoes->paraUtilizador(
                 $estagio->id_estagiario,
                 'Justificação aprovada',
                 'A tua justificação para a falta de '
@@ -892,7 +872,7 @@ class SupervisorController extends Controller
                 'justificacao_decidida_em' => now(),
             ]);
 
-            Notificacao::paraUtilizador(
+            $this->notificacoes->paraUtilizador(
                 $estagio->id_estagiario,
                 'Justificação recusada',
                 'A tua justificação para a falta de '
@@ -1044,6 +1024,20 @@ class SupervisorController extends Controller
             ], 422);
         }
 
+        if (! $estagio->contemMes($dados['periodo_referencia'])) {
+            return response()->json([
+                'message' => 'O período indicado está fora do período do estágio.',
+            ], 422);
+        }
+
+        if (Carbon::parse($dados['periodo_referencia'])
+            ->startOfMonth()
+            ->greaterThan(now()->startOfMonth())) {
+            return response()->json([
+                'message' => 'O período indicado não pode ser futuro.',
+            ], 422);
+        }
+
         $atributos = [
             'id_supervisor' => $request->user()->id_utilizador,
 
@@ -1076,12 +1070,17 @@ class SupervisorController extends Controller
         ) {
 
             $avaliacao = $estagio->avaliacoes()
+                ->withTrashed()
                 ->where('tipo', $dados['tipo'])
                 ->whereDate('periodo_referencia', $dados['periodo_referencia'])
                 ->lockForUpdate()
                 ->first();
 
             if ($avaliacao) {
+                if ($avaliacao->trashed()) {
+                    $avaliacao->restore();
+                }
+
                 $avaliacao->update($atributos);
 
                 return $avaliacao;
@@ -1098,7 +1097,7 @@ class SupervisorController extends Controller
             );
         });
 
-        Notificacao::paraUtilizador(
+        $this->notificacoes->paraUtilizador(
             $estagio->id_estagiario,
             'Nova avaliação',
             'Foi registada uma avaliação '.$avaliacao->tipo

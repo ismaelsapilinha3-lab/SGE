@@ -5,23 +5,7 @@ import { adminGuard } from './core/admin.guard';
 import { coordenadorGuard } from './core/coordenador.guard';
 import { estagiarioGuard } from './core/estagiario.guard';
 import { supervisorGuard } from './core/supervisor.guard';
-
-import { AcessoComponent } from './components/first-component/acesso';
-import { PainelestagiarioComponent } from './components/first-component/painelestagiario';
-import { TelainicialComponent } from './components/first-component/telainicial';
-
-import { PainelAdmin } from './components/admin/painel-admin/painel-admin';
-import { AreaReservadaComponent } from './components/first-component/area-reservada/area-reservada';
 import { estagioAtivoGuard } from './core/estagio-ativo.guard';
-import { UtilizadoresAdminComponent } from './components/admin/utilizadores-admin/utilizadores-admin';
-
-import {
-  PainelCoordenadorComponent
-} from './components/coordenador/painel-coordenador/painel-coordenador';
-
-import {
-  PainelSupervisorComponent
-} from './components/supervisor/painel-supervisor/painel-supervisor';
 
 
 export const routes: Routes = [
@@ -41,12 +25,18 @@ export const routes: Routes = [
   // ============================================================
   {
     path: 'telainicial',
-    component: TelainicialComponent
+    pathMatch: 'full',
+    loadComponent: () => import(
+      './components/first-component/telainicial'
+    ).then(modulo => modulo.TelainicialComponent)
   },
 
   {
     path: 'area-reservada',
-    component: AreaReservadaComponent,
+    pathMatch: 'full',
+    loadComponent: () => import(
+      './components/first-component/area-reservada/area-reservada'
+    ).then(modulo => modulo.AreaReservadaComponent),
     canActivate: [authGuard, estagioAtivoGuard]
   },
 
@@ -55,7 +45,10 @@ export const routes: Routes = [
   // ============================================================
   {
     path: 'acesso',
-    component: AcessoComponent
+    pathMatch: 'full',
+    loadComponent: () => import(
+      './components/first-component/acesso'
+    ).then(modulo => modulo.AcessoComponent)
   },
 
 
@@ -64,7 +57,10 @@ export const routes: Routes = [
   // ============================================================
   {
     path: 'estagiario',
-    component: PainelestagiarioComponent,
+    pathMatch: 'full',
+    loadComponent: () => import(
+      './components/first-component/painelestagiario'
+    ).then(modulo => modulo.PainelestagiarioComponent),
     canActivate: [
       authGuard,
       estagiarioGuard
@@ -77,7 +73,10 @@ export const routes: Routes = [
   // ============================================================
   {
     path: 'coordenador',
-    component: PainelCoordenadorComponent,
+    pathMatch: 'full',
+    loadComponent: () => import(
+      './components/coordenador/painel-coordenador/painel-coordenador'
+    ).then(modulo => modulo.PainelCoordenadorComponent),
     canActivate: [
       authGuard,
       coordenadorGuard
@@ -90,7 +89,10 @@ export const routes: Routes = [
   // ============================================================
   {
     path: 'supervisor',
-    component: PainelSupervisorComponent,
+    pathMatch: 'full',
+    loadComponent: () => import(
+      './components/supervisor/painel-supervisor/painel-supervisor'
+    ).then(modulo => modulo.PainelSupervisorComponent),
     canActivate: [
       authGuard,
       supervisorGuard
@@ -103,7 +105,10 @@ export const routes: Routes = [
   // ============================================================
   {
     path: 'admin',
-    component: PainelAdmin,
+    pathMatch: 'full',
+    loadComponent: () => import(
+      './components/admin/painel-admin/painel-admin'
+    ).then(modulo => modulo.PainelAdmin),
     canActivate: [
       authGuard,
       adminGuard
@@ -116,7 +121,10 @@ export const routes: Routes = [
   // ============================================================
   {
     path: 'admin/utilizadores',
-    component: UtilizadoresAdminComponent,
+    pathMatch: 'full',
+    loadComponent: () => import(
+      './components/admin/utilizadores-admin/utilizadores-admin'
+    ).then(modulo => modulo.UtilizadoresAdminComponent),
     canActivate: [
       authGuard,
       adminGuard

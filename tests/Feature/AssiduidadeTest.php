@@ -79,6 +79,21 @@ it('deixa o supervisor registar a assiduidade de um dia', function () {
         ->toBe((int) $supervisor->id_utilizador);
 });
 
+it('não regista assiduidade numa data futura', function () {
+    [$estagio, , $supervisor] = estagioComAssiduidade();
+
+    $this->actingAs($supervisor, 'sanctum')
+        ->postJson("/api/supervisor/estagios/{$estagio->id_estagio}/assiduidades", [
+            'data' => now()->addDay()->toDateString(),
+            'estado' => 'presente',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath(
+            'message',
+            'Não é possível registar assiduidade numa data futura.'
+        );
+});
+
 it('atualiza o registo quando o dia já tem assiduidade', function () {
     [$estagio, , $supervisor] = estagioComAssiduidade();
 
@@ -161,7 +176,10 @@ it('recusa uma data fora do período do estágio', function () {
 
     $this->actingAs($supervisor, 'sanctum')
         ->postJson("/api/supervisor/estagios/{$estagio->id_estagio}/assiduidades", [
-            'data' => $estagio->data_inicio->copy()->subMonth()->toDateString(),
+            'data' => $estagio->data_inicio
+                ->copy()
+                ->subMonthNoOverflow()
+                ->toDateString(),
             'estado' => 'presente',
         ])
         ->assertStatus(422)
@@ -212,6 +230,7 @@ it('deixa o supervisor remover um registo de assiduidade', function () {
 
     $assiduidade = Assiduidade::factory()->create([
         'id_estagio' => $estagio->id_estagio,
+        'data' => now()->toDateString(),
     ]);
 
     $this->actingAs($supervisor, 'sanctum')
@@ -221,7 +240,30 @@ it('deixa o supervisor remover um registo de assiduidade', function () {
         ->assertOk()
         ->assertJsonPath('message', 'Registo de assiduidade removido com sucesso.');
 
-    expect(Assiduidade::find($assiduidade->id_assiduidade))->toBeNull();
+    expect(Assiduidade::find($assiduidade->id_assiduidade))->toBeNull()
+        ->and(
+            Assiduidade::withTrashed()
+                ->find($assiduidade->id_assiduidade)
+                ->trashed()
+        )->toBeTrue();
+
+    $this->actingAs($supervisor, 'sanctum')
+        ->postJson(
+            "/api/supervisor/estagios/{$estagio->id_estagio}/assiduidades",
+            [
+                'data' => $assiduidade->data->toDateString(),
+                'estado' => 'presente',
+                'hora_entrada' => '08:00',
+                'hora_saida' => '17:00',
+            ]
+        )
+        ->assertOk()
+        ->assertJsonPath('message', 'Assiduidade atualizada com sucesso.');
+
+    expect($estagio->assiduidades()->whereDate(
+        'data',
+        $assiduidade->data->toDateString()
+    )->count())->toBe(1);
 });
 
 it('deixa o estagiário consultar a sua assiduidade', function () {

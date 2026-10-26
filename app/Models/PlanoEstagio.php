@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +20,7 @@ class PlanoEstagio extends Model
 
     protected $fillable = [
         'id_estagio',
+        'origem',
         'id_supervisor',
         'nome_arquivo',
         'caminho_arquivo',
@@ -39,6 +41,11 @@ class PlanoEstagio extends Model
     ];
 
     /**
+     * O caminho interno nunca é exposto pela API.
+     */
+    protected $hidden = ['caminho_arquivo'];
+
+    /**
      * Formatos aceites no plano de estágio.
      */
     public const FORMATOS_ACEITES = [
@@ -46,6 +53,16 @@ class PlanoEstagio extends Model
         'doc' => 'application/msword',
         'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ];
+
+    /**
+     * Plano de atividades submetido pelo supervisor.
+     */
+    public const ORIGEM_SUPERVISOR = 'supervisor';
+
+    /**
+     * Documento oficial carregado pelo administrador.
+     */
+    public const ORIGEM_ADMINISTRADOR = 'administrador';
 
     protected function casts(): array
     {
@@ -102,6 +119,32 @@ class PlanoEstagio extends Model
             'id_plano_estagio',
             'id_plano_estagio'
         );
+    }
+
+    /**
+     * Planos de atividades submetidos pelos supervisores.
+     */
+    public function scopeDoSupervisor(Builder $query): Builder
+    {
+        return $query->where('origem', self::ORIGEM_SUPERVISOR);
+    }
+
+    /**
+     * Documentos oficiais carregados pelo administrador.
+     */
+    public function scopeDoAdministrador(Builder $query): Builder
+    {
+        return $query->where('origem', self::ORIGEM_ADMINISTRADOR);
+    }
+
+    public function foiSubmetidoPeloSupervisor(): bool
+    {
+        return $this->origem === self::ORIGEM_SUPERVISOR;
+    }
+
+    public function foiCarregadoPeloAdministrador(): bool
+    {
+        return $this->origem === self::ORIGEM_ADMINISTRADOR;
     }
 
     public function estaSubmetido(): bool

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Estagio;
 use App\Models\Relatorio;
+use App\Services\NotificacaoService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -13,6 +14,12 @@ use Illuminate\Support\Carbon;
 #[Description('Marca os relatórios fora de prazo e avisa o administrador')]
 class AlertarRelatoriosEmAtraso extends Command
 {
+    public function __construct(
+        private readonly NotificacaoService $notificacoes
+    ) {
+        parent::__construct();
+    }
+
     public function handle(): int
     {
         /*
@@ -32,7 +39,7 @@ class AlertarRelatoriosEmAtraso extends Command
             ->whereNull('enviado_em')
             ->whereNull('entrega_confirmada_em')
             ->whereNotNull('prazo_envio')
-            ->whereDate('prazo_envio', '<', $hoje)
+            ->where('prazo_envio', '<', $hoje)
             ->get();
 
         if ($relatorios->isEmpty() && $criados === 0) {
@@ -72,7 +79,7 @@ class AlertarRelatoriosEmAtraso extends Command
                 $relatorio->prazo_envio?->format('d/m/Y') ?? '-'
             );
 
-            \App\Models\Notificacao::paraAdministradores(
+            $this->notificacoes->paraAdministradores(
                 'Relatório em atraso',
                 $mensagem
             );
@@ -86,8 +93,8 @@ class AlertarRelatoriosEmAtraso extends Command
 
         $this->info(
             "Meses registados sem relatório: {$criados}. "
-            . "Relatórios marcados em atraso: {$marcados}. "
-            . "Avisos enviados ao administrador: {$avisos}."
+            ."Relatórios marcados em atraso: {$marcados}. "
+            ."Avisos enviados ao administrador: {$avisos}."
         );
 
         return self::SUCCESS;
@@ -131,7 +138,7 @@ class AlertarRelatoriosEmAtraso extends Command
             while ($mes->lessThanOrEqualTo($ultimoMes)) {
                 $chave = $mes->format('Y-m');
 
-                if (!in_array($chave, $existente, true)) {
+                if (! in_array($chave, $existente, true)) {
                     $prazo = $estagio->prazoParaMes($mes);
 
                     /*

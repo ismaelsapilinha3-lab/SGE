@@ -1,12 +1,16 @@
 <?php
 
+use App\Models\AcessoFicheiro;
 use App\Models\Candidatura;
 use App\Models\Departamento;
 use App\Models\Estagio;
 use App\Models\HistoricoEstado;
+use App\Models\Notificacao;
 use App\Models\Perfil;
 use App\Models\PlanoEstagio;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Estágio ativo atribuído a um supervisor.
@@ -88,6 +92,33 @@ it('submete um plano de estágio num estágio atribuído', function () {
     expect($plano)->not->toBeNull()
         ->and($plano->estado)->toBe('submetido')
         ->and($plano->id_supervisor)->toBe($supervisor->id_utilizador);
+});
+
+it('regista o acesso ao ficheiro do plano de estágio', function () {
+    Storage::fake('local');
+
+    $estagiario = User::factory()->estagiario()->create();
+
+    $estagio = Estagio::factory()->create([
+        'id_estagiario' => $estagiario->id_utilizador,
+    ]);
+
+    $plano = PlanoEstagio::factory()->doAdministrador()->create([
+        'id_estagio' => $estagio->id_estagio,
+        'nome_arquivo' => 'plano-estagio.pdf',
+        'caminho_arquivo' => 'planos_estagio/plano-estagio.pdf',
+    ]);
+
+    Storage::disk('local')->put($plano->caminho_arquivo, 'plano');
+
+    $this->actingAs($estagiario, 'sanctum')
+        ->get("/api/estagiario/planos/{$plano->id_plano_estagio}/ficheiro")
+        ->assertOk();
+
+    expect(AcessoFicheiro::query()
+        ->where('id_plano_estagio', $plano->id_plano_estagio)
+        ->where('id_utilizador', $estagiario->id_utilizador)
+        ->exists())->toBeTrue();
 });
 
 it('não submete o plano de um estágio não atribuído', function () {
@@ -313,10 +344,187 @@ it('esconde o plano de um estágio de outra direção', function () {
         ->assertStatus(404);
 });
 
+it('deixa o coordenador consultar o plano preso a um coordenador inativo', function () {
+    [$estagio, $coordenador] = planoEstagioDoCoordenador();
+
+    $inativo = User::factory()->coordenador()->create([
+        'ativo' => false,
+    ]);
+
+    Perfil::create([
+        'id_utilizador' => $inativo->id_utilizador,
+        'id_departamento' => $coordenador->perfil?->id_departamento,
+    ]);
+
+    $estagio->candidatura->update([
+        'id_coordenador' => $inativo->id_utilizador,
+    ]);
+
+    $plano = PlanoEstagio::factory()->create([
+        'id_estagio' => $estagio->id_estagio,
+    ]);
+
+    $this->actingAs($coordenador, 'sanctum')
+        ->getJson("/api/coordenador/estagios/{$estagio->id_estagio}/plano")
+        ->assertOk()
+        ->assertJsonPath('plano.id_plano_estagio', $plano->id_plano_estagio);
+});
+
 it('recusa o acesso de quem não é supervisor', function () {
     $estagiario = User::factory()->estagiario()->create();
 
     $this->actingAs($estagiario, 'sanctum')
         ->getJson('/api/supervisor/estagios')
         ->assertStatus(403);
+});
+
+it('mantém o plano do supervisor quando o administrador carrega o documento oficial', function () {
+    [$estagio, $supervisor] = planoEstagioDoSupervisor();
+
+    $planoSupervisor = PlanoEstagio::factory()->create([
+        'id_estagio' => $estagio->id_estagio,
+        'id_supervisor' => $supervisor->id_utilizador,
+        'estado' => 'submetido',
+    ]);
+
+    Storage::fake('local');
+
+    $administrador = User::factory()->administrador()->create();
+
+    $this->actingAs($administrador, 'sanctum')
+        ->postJson('/api/admin/planos-estagio', [
+            'id_estagio' => $estagio->id_estagio,
+            'ficheiro' => UploadedFile::fake()->create(
+                'plano-oficial.pdf',
+                100,
+                'application/pdf'
+            ),
+        ])
+        ->assertCreated();
+
+    expect($planoSupervisor->fresh()->estado)->toBe('submetido')
+        ->and($estagio->planoVigente()?->id_plano_estagio)
+        ->toBe($planoSupervisor->id_plano_estagio)
+        ->and($estagio->planoDocumentoVigente()?->origem)
+        ->toBe(PlanoEstagio::ORIGEM_ADMINISTRADOR)
+        ->and($estagio->planos()->count())->toBe(2);
+});
+
+it('não substitui o documento oficial quando o supervisor submete o plano', function () {
+    [$estagio, $supervisor] = planoEstagioDoSupervisor();
+
+    $documento = PlanoEstagio::factory()->doAdministrador()->create([
+        'id_estagio' => $estagio->id_estagio,
+    ]);
+
+    $this->actingAs($supervisor, 'sanctum')
+        ->putJson(
+            "/api/supervisor/estagios/{$estagio->id_estagio}/plano",
+            dadosPlanoValido()
+        )
+        ->assertCreated();
+
+    $planoSupervisor = $estagio->planoVigente();
+
+    expect($documento->fresh()->estado)->toBe('aprovado')
+        ->and($planoSupervisor)->not->toBeNull()
+        ->and($planoSupervisor->origem)->toBe(PlanoEstagio::ORIGEM_SUPERVISOR)
+        ->and($estagio->planoDocumentoVigente()?->id_plano_estagio)
+        ->toBe($documento->id_plano_estagio)
+        ->and($estagio->planos()->count())->toBe(2);
+});
+
+it('mostra ao administrador o plano de atividades aprovado pelo coordenador', function () {
+    [$estagio] = planoEstagioDoSupervisor();
+
+    $plano = PlanoEstagio::factory()->aprovado()->create([
+        'id_estagio' => $estagio->id_estagio,
+    ]);
+
+    $administrador = User::factory()->administrador()->create();
+
+    $this->actingAs($administrador, 'sanctum')
+        ->getJson("/api/admin/estagios/{$estagio->id_estagio}")
+        ->assertOk()
+        ->assertJsonPath(
+            'plano_aprovado.id_plano_estagio',
+            $plano->id_plano_estagio
+        );
+});
+
+it('atribui e notifica o coordenador quando o plano é submetido sem coordenador', function () {
+    $departamento = Departamento::factory()->create();
+
+    $coordenador = User::factory()->coordenador()->create();
+
+    Perfil::create([
+        'id_utilizador' => $coordenador->id_utilizador,
+        'id_departamento' => $departamento->id_departamento,
+    ]);
+
+    $candidatura = Candidatura::factory()->aprovada()->create([
+        'id_coordenador' => null,
+        'id_departamento_selecionado' => $departamento->id_departamento,
+    ]);
+
+    $estagio = Estagio::factory()->create([
+        'id_candidatura' => $candidatura->id_candidatura,
+    ]);
+
+    $supervisor = User::factory()->supervisor()->create();
+
+    $estagio->supervisores()->create([
+        'id_supervisor' => $supervisor->id_utilizador,
+        'atribuido_em' => now(),
+    ]);
+
+    $this->actingAs($supervisor, 'sanctum')
+        ->putJson(
+            "/api/supervisor/estagios/{$estagio->id_estagio}/plano",
+            dadosPlanoValido()
+        )
+        ->assertCreated();
+
+    expect($candidatura->fresh()->id_coordenador)
+        ->toBe($coordenador->id_utilizador)
+        ->and(
+            Notificacao::query()
+                ->where('id_utilizador', $coordenador->id_utilizador)
+                ->where('titulo', 'Plano de estágio submetido')
+                ->exists()
+        )->toBeTrue();
+});
+
+it('atribui a candidatura órfã ao coordenador que decide o plano', function () {
+    $departamento = Departamento::factory()->create();
+
+    $coordenador = User::factory()->coordenador()->create();
+
+    Perfil::create([
+        'id_utilizador' => $coordenador->id_utilizador,
+        'id_departamento' => $departamento->id_departamento,
+    ]);
+
+    $candidatura = Candidatura::factory()->aprovada()->create([
+        'id_coordenador' => null,
+        'id_departamento_selecionado' => $departamento->id_departamento,
+    ]);
+
+    $estagio = Estagio::factory()->create([
+        'id_candidatura' => $candidatura->id_candidatura,
+    ]);
+
+    PlanoEstagio::factory()->create([
+        'id_estagio' => $estagio->id_estagio,
+        'estado' => 'submetido',
+    ]);
+
+    $this->actingAs($coordenador, 'sanctum')
+        ->patchJson(
+            "/api/coordenador/estagios/{$estagio->id_estagio}/plano/aprovar"
+        )
+        ->assertOk();
+
+    expect($candidatura->fresh()->id_coordenador)
+        ->toBe($coordenador->id_utilizador);
 });

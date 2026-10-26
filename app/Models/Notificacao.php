@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
 
 class Notificacao extends Model
 {
@@ -103,6 +104,11 @@ class Notificacao extends Model
         string $mensagem
     ): ?self {
         if ($utilizador === null) {
+            Log::warning(
+                'Notificação sem destinatário.',
+                ['titulo' => $titulo]
+            );
+
             return null;
         }
 
@@ -170,10 +176,28 @@ class Notificacao extends Model
         string $titulo,
         string $mensagem
     ): self {
-        return self::create([
-            'id_utilizador' => $candidatura->id_utilizador,
+        return self::paraCandidatoPorId(
+            $candidatura->id_candidatura,
+            $candidatura->id_utilizador,
+            $titulo,
+            $mensagem
+        );
+    }
 
-            'id_candidatura' => $candidatura->id_candidatura,
+    /**
+     * Variante usada pelo pipeline de notificações em fila, que não tem
+     * acesso à instância da candidatura.
+     */
+    public static function paraCandidatoPorId(
+        int $idCandidatura,
+        ?int $idUtilizador,
+        string $titulo,
+        string $mensagem
+    ): self {
+        return self::create([
+            'id_utilizador' => $idUtilizador,
+
+            'id_candidatura' => $idCandidatura,
 
             'canal' => 'sistema',
 

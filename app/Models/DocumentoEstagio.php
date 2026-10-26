@@ -27,6 +27,11 @@ class DocumentoEstagio extends Model
         'descricao',
     ];
 
+    /**
+     * O caminho interno nunca é exposto pela API.
+     */
+    protected $hidden = ['caminho_arquivo'];
+
     protected function casts(): array
     {
         return [

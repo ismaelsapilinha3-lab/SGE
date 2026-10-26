@@ -13,6 +13,11 @@ class Documento extends Model
         'caminho_arquivo', 'data_upload', 'validade', 'estado', 'descricao',
     ];
 
+    /**
+     * O caminho interno nunca é exposto pela API.
+     */
+    protected $hidden = ['caminho_arquivo'];
+
     protected $casts = [
         'data_upload' => 'datetime',
         'validade' => 'date',

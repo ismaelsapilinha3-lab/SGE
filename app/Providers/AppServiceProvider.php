@@ -6,6 +6,9 @@ use App\Services\Sms\Provedores\SmsProvedorHttp;
 use App\Services\Sms\Provedores\SmsProvedorSimulado;
 use App\Services\Sms\Provedores\SmsProvedorTwilio;
 use App\Services\Sms\SmsProvedor;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -82,6 +85,25 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        /*
+        |--------------------------------------------------------------------------
+        | Limite geral da API autenticada
+        |--------------------------------------------------------------------------
+        |
+        | Evita que um utilizador autenticado (ou um IP, quando a autenticação
+        | ainda não está resolvida) consiga saturar a API com pedidos.
+        |
+        */
+        RateLimiter::for('api', function (Request $request) {
+            $utilizador = $request->user();
+
+            return Limit::perMinute(240)->by(
+                $utilizador
+                    ? 'user:'.$utilizador->getAuthIdentifier()
+                    : 'ip:'.$request->ip()
+            );
+        });
+
         /*
         |--------------------------------------------------------------------------
         | Política única de palavra-passe

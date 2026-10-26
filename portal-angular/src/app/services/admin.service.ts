@@ -328,12 +328,22 @@ export interface EstagioAdmin {
 }
 
 
+export interface TrimestreEstagio {
+  ano: number;
+  numero: number;
+  inicio: string;
+  fim: string;
+  rotulo: string;
+}
+
+
 export interface EstagiosAdminResponse {
   data: EstagioAdmin[];
   total: number;
   current_page: number;
   last_page: number;
   per_page: number;
+  trimestre?: TrimestreEstagio | null;
 }
 
 
@@ -663,6 +673,7 @@ export class AdminService {
   listarEstagios(
     pesquisa: string = '',
     estado: string = '',
+    trimestre: string = '',
     pagina: number = 1,
     porPagina: number = 50
   ): Observable<EstagiosAdminResponse> {
@@ -677,6 +688,10 @@ export class AdminService {
 
     if (estado) {
       params = params.set('estado', estado);
+    }
+
+    if (trimestre) {
+      params = params.set('trimestre', trimestre);
     }
 
     return this.http.get<EstagiosAdminResponse>(
