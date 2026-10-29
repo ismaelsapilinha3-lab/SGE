@@ -143,6 +143,7 @@
               <th>Utilizador</th>
               <th>Contacto</th>
               <th>Tipo de conta</th>
+              <th>Direção/departamento</th>
               <th>Estado</th>
               <th class="coluna-acoes">Acções</th>
             </tr>
@@ -176,6 +177,8 @@
                     {{ nomeTipo(u.tipo_utilizador) }}
                   </span>
                 </td>
+
+                <td>{{ u.departamento || 'Não atribuída' }}</td>
 
                 <td>
                   <span
@@ -225,7 +228,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="5">
+                <td colspan="6">
                   <div class="estado-vazio">
                     <strong>Nenhum utilizador encontrado</strong>
                     <p>Altera os filtros ou cria uma nova conta.</p>
@@ -354,24 +357,28 @@
             </select>
           </div>
 
-          @if (tipoUtilizador === 'coordenador' && !utilizadorEditado()) {
-            <div class="campo">
-              <label for="direcao">Direcção</label>
-              <select
-                id="direcao"
-                name="direcao"
-                [(ngModel)]="idDepartamento"
-              >
-                <option [ngValue]="null">Seleccionar direcção</option>
+          <div class="campo">
+            <label for="direcao">
+              Direção/departamento
+              @if (tipoUtilizador === 'estagiario') {
+                *
+              }
+            </label>
+            <select
+              id="direcao"
+              name="direcao"
+              [(ngModel)]="idDepartamento"
+              [required]="tipoUtilizador === 'estagiario'"
+            >
+              <option [ngValue]="null">Seleccionar direção/departamento</option>
 
-                @for (d of departamentos(); track d.id_departamento) {
-                  <option [ngValue]="d.id_departamento">
-                    {{ d.nome }}
-                  </option>
-                }
-              </select>
-            </div>
-          }
+              @for (d of departamentos(); track d.id_departamento) {
+                <option [ngValue]="d.id_departamento">
+                  {{ d.nome }}
+                </option>
+              }
+            </select>
+          </div>
 
           <div class="campo">
             <label for="password">

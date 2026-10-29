@@ -149,6 +149,7 @@ export class UtilizadoresAdminComponent implements OnInit {
     this.telefone = utilizador.telefone ?? '';
     this.tipoUtilizador = utilizador.tipo_utilizador as
       'coordenador' | 'supervisor' | 'estagiario';
+    this.idDepartamento = utilizador.id_departamento ?? null;
 
     this.mostrarFormulario.set(true);
     this.erro.set('');
@@ -184,6 +185,11 @@ export class UtilizadoresAdminComponent implements OnInit {
       return;
     }
 
+    if (this.tipoUtilizador === 'estagiario' && this.idDepartamento === null) {
+      this.erro.set('Seleciona a direção/departamento do estagiário.');
+      return;
+    }
+
     if (this.password || this.passwordConfirmation ||
         !this.utilizadorEditado()) {
       if (
@@ -212,7 +218,8 @@ export class UtilizadoresAdminComponent implements OnInit {
         nome: this.nome.trim(),
         email: this.email.trim(),
         telefone: this.telefone.trim() || null,
-        tipo_utilizador: this.tipoUtilizador
+        tipo_utilizador: this.tipoUtilizador,
+        id_departamento: this.idDepartamento
       };
 
       if (this.password) {
@@ -246,7 +253,7 @@ export class UtilizadoresAdminComponent implements OnInit {
       tipo_utilizador: this.tipoUtilizador
     };
 
-    if (this.tipoUtilizador === 'coordenador' && this.idDepartamento !== null) {
+    if (this.idDepartamento !== null) {
       dados.id_departamento = this.idDepartamento;
     }
 

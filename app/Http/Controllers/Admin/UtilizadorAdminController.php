@@ -44,6 +44,10 @@ class UtilizadorAdminController extends Controller
                 'tipo_utilizador',
                 'ativo',
                 'created_at',
+            ])
+            ->with([
+                'perfil:id_perfil,id_utilizador,id_departamento',
+                'perfil.departamento:id_departamento,nome',
             ]);
 
         if (! empty($dados['pesquisa'])) {
@@ -74,6 +78,15 @@ class UtilizadorAdminController extends Controller
                 'foto_url',
                 $utilizador->fotoUrl()
             );
+            $utilizador->setAttribute(
+                'id_departamento',
+                $utilizador->perfil?->id_departamento
+            );
+            $utilizador->setAttribute(
+                'departamento',
+                $utilizador->perfil?->departamento?->nome
+            );
+            $utilizador->unsetRelation('perfil');
         });
 
         return response()->json($pagina);
@@ -98,6 +111,9 @@ class UtilizadorAdminController extends Controller
                 ]),
             ],
             'id_departamento' => [
+                Rule::requiredIf(
+                    $request->input('tipo_utilizador') === 'estagiario'
+                ),
                 'nullable',
                 'integer',
                 'exists:departamentos,id_departamento',
@@ -114,10 +130,7 @@ class UtilizadorAdminController extends Controller
                 'ativo' => true,
             ]);
 
-            if (
-                $utilizador->tipo_utilizador === 'coordenador'
-                && ! empty($dados['id_departamento'])
-            ) {
+            if (! empty($dados['id_departamento'])) {
                 Perfil::create([
                     'id_utilizador' => $utilizador->id_utilizador,
                     'id_departamento' => $dados['id_departamento'],
@@ -127,16 +140,11 @@ class UtilizadorAdminController extends Controller
             return $utilizador;
         });
 
+        $utilizador->load('perfil.departamento');
+
         return response()->json([
             'message' => 'Utilizador criado com sucesso.',
-            'utilizador' => $utilizador->only([
-                'id_utilizador',
-                'nome',
-                'email',
-                'telefone',
-                'tipo_utilizador',
-                'ativo',
-            ]),
+            'utilizador' => $this->dadosUtilizador($utilizador),
         ], 201);
     }
 
@@ -160,6 +168,8 @@ class UtilizadorAdminController extends Controller
                 'tipo_utilizador' => $utilizador->tipo_utilizador,
                 'ativo' => $utilizador->ativo,
                 'created_at' => $utilizador->created_at,
+                'id_departamento' => $utilizador->perfil?->id_departamento,
+                'departamento' => $utilizador->perfil?->departamento?->nome,
             ],
             'perfil' => $utilizador->perfil,
         ]);
@@ -199,27 +209,43 @@ class UtilizadorAdminController extends Controller
                 Password::default(),
                 'confirmed',
             ],
+            'id_departamento' => [
+                Rule::requiredIf(
+                    $request->input('tipo_utilizador') === 'estagiario'
+                ),
+                'nullable',
+                'integer',
+                'exists:departamentos,id_departamento',
+            ],
         ]);
 
         if (isset($dados['password']) && $dados['password'] !== '') {
             $utilizador->password = Hash::make($dados['password']);
         }
 
-        unset($dados['password']);
+        if (array_key_exists('id_departamento', $dados)) {
+            $perfil = $utilizador->perfil;
+
+            if ($perfil) {
+                $perfil->id_departamento = $dados['id_departamento'];
+                $perfil->save();
+            } elseif (! empty($dados['id_departamento'])) {
+                Perfil::create([
+                    'id_utilizador' => $utilizador->id_utilizador,
+                    'id_departamento' => $dados['id_departamento'],
+                ]);
+            }
+        }
+
+        unset($dados['password'], $dados['id_departamento']);
 
         $utilizador->fill($dados);
         $utilizador->save();
+        $utilizador->load('perfil.departamento');
 
         return response()->json([
             'message' => 'Utilizador actualizado com sucesso.',
-            'utilizador' => $utilizador->only([
-                'id_utilizador',
-                'nome',
-                'email',
-                'telefone',
-                'tipo_utilizador',
-                'ativo',
-            ]),
+            'utilizador' => $this->dadosUtilizador($utilizador),
         ]);
     }
 
@@ -288,5 +314,26 @@ class UtilizadorAdminController extends Controller
         return response()->json([
             'message' => 'Utilizador eliminado com sucesso.',
         ]);
+    }
+
+    /**
+     * Dados do utilizador devolvidos nas respostas de criação e atualização.
+     *
+     * @return array<string, mixed>
+     */
+    private function dadosUtilizador(User $utilizador): array
+    {
+        return [
+            ...$utilizador->only([
+                'id_utilizador',
+                'nome',
+                'email',
+                'telefone',
+                'tipo_utilizador',
+                'ativo',
+            ]),
+            'id_departamento' => $utilizador->perfil?->id_departamento,
+            'departamento' => $utilizador->perfil?->departamento?->nome,
+        ];
     }
 }

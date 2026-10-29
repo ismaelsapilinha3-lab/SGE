@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Departamento;
 use App\Models\Estagio;
+use App\Models\Perfil;
 use App\Models\User;
 
 function adminDeUtilizadores(): User
@@ -138,4 +140,101 @@ it('preserva o estágio do utilizador eliminado', function () {
         'id_estagio' => $estagio->id_estagio,
         'id_estagiario' => $estagiario->id_utilizador,
     ]);
+});
+
+it('cria um estagiario com direcao associada', function () {
+    $admin = adminDeUtilizadores();
+    $departamento = Departamento::factory()->create();
+
+    $resposta = $this->actingAs($admin, 'sanctum')
+        ->postJson('/api/admin/utilizadores', [
+            'nome' => 'Estagiário de Teste',
+            'email' => 'estagiario.teste@example.com',
+            'password' => 'Password123',
+            'password_confirmation' => 'Password123',
+            'tipo_utilizador' => 'estagiario',
+            'id_departamento' => $departamento->id_departamento,
+        ]);
+
+    $resposta->assertCreated()
+        ->assertJsonPath('utilizador.tipo_utilizador', 'estagiario')
+        ->assertJsonPath(
+            'utilizador.id_departamento',
+            $departamento->id_departamento
+        )
+        ->assertJsonPath(
+            'utilizador.departamento',
+            $departamento->nome
+        );
+
+    $this->assertDatabaseHas('perfis', [
+        'id_utilizador' => $resposta->json('utilizador.id_utilizador'),
+        'id_departamento' => $departamento->id_departamento,
+    ]);
+});
+
+it('exige uma direcao ao criar um estagiario', function () {
+    $admin = adminDeUtilizadores();
+
+    $this->actingAs($admin, 'sanctum')
+        ->postJson('/api/admin/utilizadores', [
+            'nome' => 'Estagiário sem Direção',
+            'email' => 'sem.direcao@example.com',
+            'password' => 'Password123',
+            'password_confirmation' => 'Password123',
+            'tipo_utilizador' => 'estagiario',
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('id_departamento');
+});
+
+it('atribui uma direcao a um estagiario existente', function () {
+    $admin = adminDeUtilizadores();
+    $departamento = Departamento::factory()->create();
+    $estagiario = User::factory()->estagiario()->create();
+
+    $this->actingAs($admin, 'sanctum')
+        ->putJson("/api/admin/utilizadores/{$estagiario->id_utilizador}", [
+            'tipo_utilizador' => 'estagiario',
+            'id_departamento' => $departamento->id_departamento,
+        ])
+        ->assertOk()
+        ->assertJsonPath(
+            'utilizador.id_departamento',
+            $departamento->id_departamento
+        )
+        ->assertJsonPath(
+            'utilizador.departamento',
+            $departamento->nome
+        );
+
+    $this->assertDatabaseHas('perfis', [
+        'id_utilizador' => $estagiario->id_utilizador,
+        'id_departamento' => $departamento->id_departamento,
+    ]);
+});
+
+it('lista a direcao associada ao estagiario', function () {
+    $admin = adminDeUtilizadores();
+    $departamento = Departamento::factory()->create();
+    $estagiario = User::factory()->estagiario()->create([
+        'nome' => 'Estagiario com Direcao',
+    ]);
+
+    Perfil::create([
+        'id_utilizador' => $estagiario->id_utilizador,
+        'id_departamento' => $departamento->id_departamento,
+    ]);
+
+    $this->actingAs($admin, 'sanctum')
+        ->getJson('/api/admin/utilizadores?pesquisa=Estagiario+com+Direcao')
+        ->assertOk()
+        ->assertJsonPath(
+            'data.0.id_departamento',
+            $departamento->id_departamento
+        )
+        ->assertJsonPath(
+            'data.0.departamento',
+            $departamento->nome
+        );
 });

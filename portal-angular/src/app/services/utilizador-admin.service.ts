@@ -21,6 +21,8 @@ export interface UtilizadorAdmin {
   foto_url?: string | null;
   tipo_utilizador: TipoUtilizador;
   ativo: boolean;
+  id_departamento?: number | null;
+  departamento?: string | null;
   created_at?: string;
 }
 
@@ -58,6 +60,7 @@ export interface ActualizarUtilizadorAdmin {
   email?: string;
   telefone?: string | null;
   tipo_utilizador?: 'coordenador' | 'supervisor' | 'estagiario';
+  id_departamento?: number | null;
   password?: string;
   password_confirmation?: string;
 }
