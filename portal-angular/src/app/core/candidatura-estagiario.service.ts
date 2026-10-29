@@ -27,6 +27,25 @@ export interface DocumentoEstagiario {
    CANDIDATURA DO ESTAGIÁRIO
    ========================================================= */
 
+/* =========================================================
+   ENTREVISTA DO CANDIDATO
+   ========================================================= */
+
+export type ResultadoEntrevistaEstagiario =
+  | 'pendente'
+  | 'aprovado'
+  | 'reprovado';
+
+export interface EntrevistaEstagiario {
+  id_entrevista: number;
+  data_hora: string;
+  resultado: ResultadoEntrevistaEstagiario;
+  motivo_reprovacao?: string | null;
+  supervisor_representante?: {
+    nome: string;
+  } | null;
+}
+
 export interface CandidaturaEstagiario {
   id: number;
   nome: string;
@@ -40,6 +59,7 @@ export interface CandidaturaEstagiario {
   departamento: string;
   estado: 'analise' | 'aceite' | 'recusado';
   data_submissao: string;
+  entrevista?: EntrevistaEstagiario | null;
   documentos: DocumentoEstagiario[];
 }
 

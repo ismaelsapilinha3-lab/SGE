@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\EntrevistaAdminController;
 use App\Http\Controllers\Admin\EstagioAdminController;
 use App\Http\Controllers\Admin\UtilizadorAdminController;
 use App\Http\Controllers\AdminController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\DocumentoEstagioController;
 use App\Http\Controllers\EstagiarioController;
 use App\Http\Controllers\NotificacaoController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\SupervisorController;
@@ -49,6 +51,22 @@ Route::post('/candidaturas', [
     CandidaturaController::class,
     'store',
 ])->middleware('throttle:5,1');
+
+/*
+|--------------------------------------------------------------------------
+| Recuperação de palavra-passe
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/password/forgot', [
+    PasswordResetController::class,
+    'enviarLink',
+])->middleware('throttle:6,1');
+
+Route::post('/password/reset', [
+    PasswordResetController::class,
+    'redefinir',
+])->middleware('throttle:6,1');
 
 /*
 |--------------------------------------------------------------------------
@@ -407,6 +425,37 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
             Route::get('/candidaturas/{id}', [
                 AdminController::class,
                 'show',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Entrevistas
+            |--------------------------------------------------------------------------
+            |
+            | O administrador agenda a entrevista com um supervisor
+            | representante e registra o resultado. A decisão final da
+            | candidatura continua a pertencer ao coordenador.
+            |
+            */
+
+            Route::get('/candidaturas/{id}/entrevista', [
+                EntrevistaAdminController::class,
+                'show',
+            ]);
+
+            Route::post('/candidaturas/{id}/entrevista', [
+                EntrevistaAdminController::class,
+                'store',
+            ]);
+
+            Route::put('/entrevistas/{id}', [
+                EntrevistaAdminController::class,
+                'update',
+            ]);
+
+            Route::patch('/entrevistas/{id}/resultado', [
+                EntrevistaAdminController::class,
+                'resultado',
             ]);
 
             /*

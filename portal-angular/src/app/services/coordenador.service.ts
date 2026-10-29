@@ -11,6 +11,37 @@ import { environment } from '../../environments/environment';
    CANDIDATURA (VISTA PELO COORDENADOR)
    ========================================================= */
 
+export type ResultadoEntrevistaCoordenador =
+  | 'pendente'
+  | 'aprovado'
+  | 'reprovado';
+
+
+export interface EntrevistaCoordenador {
+
+  id_entrevista: number;
+
+  id_candidatura: number;
+
+  data_hora: string;
+
+  resultado: ResultadoEntrevistaCoordenador;
+
+  motivo_reprovacao?: string | null;
+
+  supervisor_representante?: {
+
+    id_utilizador: number;
+
+    nome: string;
+
+    email: string;
+
+  } | null;
+
+}
+
+
 export interface CandidaturaCoordenador {
 
   id_candidatura: number;
@@ -50,6 +81,8 @@ export interface CandidaturaCoordenador {
     nome: string;
 
   } | null;
+
+  entrevista?: EntrevistaCoordenador | null;
 
   documentos?: {
 

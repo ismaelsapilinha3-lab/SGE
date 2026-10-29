@@ -5,7 +5,10 @@ import {
 
 import {
   Component,
+  Input,
+  OnChanges,
   PLATFORM_ID,
+  SimpleChanges,
   computed,
   inject,
   signal
@@ -155,12 +158,20 @@ const RESUMO_ASSIDUIDADE_VAZIO: ResumoAssiduidade = {
 
   styleUrl: './estagio-supervisor.css'
 })
-export class EstagioSupervisorComponent {
+export class EstagioSupervisorComponent implements OnChanges {
 
   private readonly estagioService =
     inject(EstagioSupervisorService);
 
   private readonly platformId = inject(PLATFORM_ID);
+
+  /** Estágio pedido pelo destino de uma notificação. */
+  @Input() estagioSolicitado: number | null = null;
+
+  /** Aba pedida pelo destino de uma notificação. */
+  @Input() abaSolicitada: string | null = null;
+
+  private destinoAplicado: string | null = null;
 
 
   // ==========================================================
@@ -433,7 +444,11 @@ export class EstagioSupervisorComponent {
 
         if (estagios.length > 0) {
 
-          this.selecionarEstagio(estagios[0].id_estagio);
+          if (!this.aplicarDestinoNotificacao()) {
+
+            this.selecionarEstagio(estagios[0].id_estagio);
+
+          }
 
         }
 
@@ -461,8 +476,109 @@ export class EstagioSupervisorComponent {
   }
 
 
-  selecionarEstagio(id: number): void {
+  // ==========================================================
+  // DESTINO DE NOTIFICAÇÃO
+  // ==========================================================
 
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (
+      !changes['estagioSolicitado']
+      && !changes['abaSolicitada']
+    ) {
+
+      return;
+
+    }
+
+    if (this.estagioSolicitado === null) {
+
+      // O destino foi limpo pela navegação manual, por isso o mesmo
+      // link volta a poder ser aplicado mais tarde.
+      this.destinoAplicado = null;
+
+      return;
+
+    }
+
+    this.aplicarDestinoNotificacao();
+
+  }
+
+
+  /**
+   * Abre o estágio e a aba indicados pelo destino de uma notificação.
+   */
+  private aplicarDestinoNotificacao(): boolean {
+
+    const id = this.estagioSolicitado;
+
+    if (id === null) {
+
+      return false;
+
+    }
+
+    const aba = this.abaValida(this.abaSolicitada);
+
+    const chave = `${id}:${aba ?? 'plano'}`;
+
+    if (
+      chave === this.destinoAplicado
+      || !this.estagios().some(
+        estagio => estagio.id_estagio === id
+      )
+    ) {
+
+      return false;
+
+    }
+
+    this.destinoAplicado = chave;
+
+    if (aba !== null) {
+
+      this.aba.set(aba);
+
+    }
+
+    if (this.estagioSelecionadoId() === id) {
+
+      if (aba !== null) {
+
+        this.abasCarregadas.delete(aba);
+
+        this.definirAba(aba);
+
+      }
+
+      return true;
+
+    }
+
+    this.selecionarEstagio(id);
+
+    return true;
+
+  }
+
+
+  private abaValida(valor: string | null): AbaSupervisor | null {
+
+    if (!valor) {
+
+      return null;
+
+    }
+
+    return ABAS.some(aba => aba.id === valor)
+      ? valor as AbaSupervisor
+      : null;
+
+  }
+
+
+  selecionarEstagio(id: number): void {
     if (this.estagioSelecionadoId() === id) {
 
       return;

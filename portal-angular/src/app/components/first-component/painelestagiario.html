@@ -454,6 +454,126 @@
 
 
       <!-- =====================================================
+           ENTREVISTA
+           ===================================================== -->
+      @if (c.entrevista; as entrevista) {
+
+        <section
+          id="est-entrevista"
+          class="est-section"
+          aria-labelledby="titulo-entrevista"
+        >
+
+          <div class="est-section-head">
+
+            <div>
+              <span class="section-kicker">
+                ENTREVISTA
+              </span>
+
+              <h2 id="titulo-entrevista">
+                A minha entrevista
+              </h2>
+
+              <p>
+                Consulta a data, o supervisor e o resultado da entrevista.
+              </p>
+            </div>
+
+          </div>
+
+
+          <div class="est-grid">
+
+            <article class="est-card">
+
+              <div class="est-card-top">
+
+                <div
+                  class="est-card-icon"
+                  aria-hidden="true"
+                >
+                  <svg
+                    class="ic"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <rect
+                      x="4"
+                      y="5"
+                      width="16"
+                      height="15"
+                      rx="2"
+                    ></rect>
+
+                    <path d="M8 3v4"></path>
+                    <path d="M16 3v4"></path>
+                    <path d="M4 10h16"></path>
+                  </svg>
+                </div>
+
+                <div>
+                  <span class="card-label">
+                    AGENDAMENTO
+                  </span>
+
+                  <h3>Detalhes da entrevista</h3>
+                </div>
+
+              </div>
+
+
+              <div class="est-data">
+
+                <div class="est-data-row">
+                  <span>Data e hora</span>
+                  <strong>
+                    {{ entrevista.data_hora | date:'dd/MM/yyyy HH:mm' }}
+                  </strong>
+                </div>
+
+                <div class="est-data-row">
+                  <span>Supervisor representante</span>
+                  <strong>
+                    {{ entrevista.supervisor_representante?.nome || 'A definir' }}
+                  </strong>
+                </div>
+
+                <div class="est-data-row">
+                  <span>Resultado</span>
+                  <strong>
+                    <span
+                      class="entrevista-badge"
+                      [class]="classeResultadoEntrevista(entrevista.resultado)"
+                    >
+                      {{ nomeResultadoEntrevista(entrevista.resultado) }}
+                    </span>
+                  </strong>
+                </div>
+
+                @if (
+                  entrevista.resultado === 'reprovado' &&
+                  entrevista.motivo_reprovacao
+                ) {
+                  <div class="est-data-row est-data-full">
+                    <span>Motivo</span>
+                    <strong>{{ entrevista.motivo_reprovacao }}</strong>
+                  </div>
+                }
+
+              </div>
+
+            </article>
+
+          </div>
+
+        </section>
+
+      }
+
+
+      <!-- =====================================================
            PERFIL DO CANDIDATO
            ===================================================== -->
       <section

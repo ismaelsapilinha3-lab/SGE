@@ -16,7 +16,8 @@ class EnviarNotificacao implements ShouldQueue
                 $event->idCandidatura,
                 $event->idsUtilizadores[0] ?? null,
                 $event->titulo,
-                $event->mensagem
+                $event->mensagem,
+                $event->url
             );
 
             return;
@@ -26,7 +27,8 @@ class EnviarNotificacao implements ShouldQueue
             Notificacao::enviar(
                 (int) $idUtilizador,
                 $event->titulo,
-                $event->mensagem
+                $event->mensagem,
+                $event->url
             );
         }
 

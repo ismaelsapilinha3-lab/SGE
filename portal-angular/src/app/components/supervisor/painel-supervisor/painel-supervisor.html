@@ -75,6 +75,116 @@
 
         </article>
 
+        <article class="sup-stat">
+
+          <span class="sup-stat-label">
+            Entrevistas pendentes
+          </span>
+
+          <strong class="sup-stat-value">
+            @if (carregando()) {
+              ...
+            } @else {
+              {{ totalEntrevistasPendentes() }}
+            }
+          </strong>
+
+        </article>
+
+      </section>
+
+
+      <section
+        id="entrevistas"
+        class="sup-card"
+      >
+
+        <div class="sup-card-heading">
+
+          <div class="sup-icon" aria-hidden="true">
+            •
+          </div>
+
+          <div>
+            <span class="sup-kicker">
+              ENTREVISTAS
+            </span>
+
+            <h2>Entrevistas agendadas</h2>
+
+            <p>
+              Consulta as entrevistas em que representas a direção.
+              O resultado é registado pela administração.
+            </p>
+          </div>
+
+        </div>
+
+
+        @if (carregando()) {
+
+          <p class="sup-empty">
+            A carregar entrevistas...
+          </p>
+
+        } @else if (entrevistas().length === 0) {
+
+          <p class="sup-empty">
+            Não tens entrevistas agendadas de momento.
+          </p>
+
+        } @else {
+
+          <div class="sup-table-wrap">
+
+            <table class="sup-table">
+
+              <thead>
+                <tr>
+                  <th>Candidato</th>
+                  <th>Data e hora</th>
+                  <th>Resultado</th>
+                  <th>Motivo</th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                @for (
+                  entrevista of entrevistas();
+                  track entrevista.id_entrevista
+                ) {
+
+                  <tr>
+                    <td>
+                      {{ entrevista.nome_candidato || '—' }}
+                    </td>
+
+                    <td>
+                      {{ formatarDataHora(entrevista.data_hora) }}
+                    </td>
+
+                    <td>
+                      <span [class]="classeResultadoEntrevista(entrevista.resultado)">
+                        {{ nomeResultadoEntrevista(entrevista.resultado) }}
+                      </span>
+                    </td>
+
+                    <td>
+                      {{ entrevista.motivo_reprovacao || '—' }}
+                    </td>
+                  </tr>
+
+                }
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        }
+
       </section>
 
 
@@ -203,7 +313,10 @@
 
         </div>
 
-        <app-estagio-supervisor></app-estagio-supervisor>
+        <app-estagio-supervisor
+          [estagioSolicitado]="estagioSolicitado()"
+          [abaSolicitada]="abaSolicitada()"
+        ></app-estagio-supervisor>
 
       </section>
 

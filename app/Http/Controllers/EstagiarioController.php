@@ -15,6 +15,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -166,7 +167,8 @@ class EstagiarioController extends Controller
             $this->notificacoes->paraUtilizadores(
                 $estagio->supervisoresUtilizadores(),
                 'Contrato submetido',
-                "O estagiário {$utilizador->nome} submeteu o contrato (versão {$documento->versao}) para validação."
+                "O estagiário {$utilizador->nome} submeteu o contrato (versão {$documento->versao}) para validação.",
+                "/supervisor?estagio={$estagio->id_estagio}&aba=contrato"
             );
 
             return response()->json([
@@ -369,7 +371,8 @@ class EstagiarioController extends Controller
             'Relatório submetido',
             'O estagiário submeteu o relatório '.$relatorio->tipo
                 .' referente a '
-                .$relatorio->periodo_referencia->format('d/m/Y').'.'
+                .$relatorio->periodo_referencia->format('d/m/Y').'.',
+            "/supervisor?estagio={$estagio->id_estagio}&aba=relatorios"
         );
 
         return response()->json([
@@ -455,7 +458,8 @@ class EstagiarioController extends Controller
             $estagio->supervisoresUtilizadores(),
             'Falta justificada',
             'O estagiário submeteu uma justificação para a falta de '
-                .$assiduidade->data->format('d/m/Y').'.'
+                .$assiduidade->data->format('d/m/Y').'.',
+            "/supervisor?estagio={$estagio->id_estagio}&aba=assiduidade"
         );
 
         return response()->json([
@@ -640,7 +644,8 @@ class EstagiarioController extends Controller
         $this->notificacoes->paraUtilizadores(
             $estagio->supervisoresUtilizadores(),
             'Feedback do estagiário',
-            'O estagiário registou feedback sobre o estágio.'
+            'O estagiário registou feedback sobre o estágio.',
+            "/supervisor?estagio={$estagio->id_estagio}&aba=feedback"
         );
 
         return response()->json([
@@ -865,7 +870,10 @@ class EstagiarioController extends Controller
             ->latest('id_estagio')
             ->first();
 
-        if (! $estagio) {
+        if (
+            ! $estagio
+            || ! Gate::forUser($utilizador)->allows('view', $estagio)
+        ) {
             abort(response()->json([
                 'message' => 'Não foi encontrado nenhum estágio associado a este estagiário.',
             ], 404));

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\RecuperarPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -76,5 +77,34 @@ class User extends Authenticatable
             'id_utilizador',
             'id_utilizador'
         );
+    }
+
+    /**
+     * Envia o link de recuperação para o portal Angular.
+     *
+     * O Laravel usa este método no fluxo de `Password::sendResetLink()`.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        /*
+         * Contas desativadas não recebem o link. A resposta da API continua
+         * genérica, para não revelar o estado da conta.
+         */
+        if (! $this->ativo) {
+            return;
+        }
+
+        $url = rtrim((string) config('app.frontend_url'), '/')
+            .'/redefinir-password?'
+            .http_build_query([
+                'token' => $token,
+                'email' => $this->email,
+            ]);
+
+        $this->notify(new RecuperarPassword(
+            $url,
+            $this->nome,
+            (int) config('auth.passwords.users.expire', 60),
+        ));
     }
 }

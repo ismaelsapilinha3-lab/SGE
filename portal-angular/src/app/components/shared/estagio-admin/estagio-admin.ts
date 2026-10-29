@@ -669,6 +669,17 @@ export class EstagioAdminComponent {
   }
 
 
+  planoEmDestaque(
+    estagio: EstagioAdmin
+  ): PlanoEstagioAdmin | null {
+
+    return estagio.plano_atual_supervisor
+      ?? estagio.plano_aprovado
+      ?? null;
+
+  }
+
+
   rotuloEstadoPlano(plano: PlanoEstagioAdmin | null | undefined): string {
 
     switch (plano?.estado) {
@@ -683,7 +694,7 @@ export class EstagioAdminComponent {
         return 'Recusado';
 
       default:
-        return 'Sem plano aprovado';
+        return 'Sem plano';
 
     }
 

@@ -8,6 +8,7 @@ use App\Models\HistoricoEstado;
 use App\Services\AcessoFicheiroService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -45,37 +46,11 @@ class DocumentoController extends Controller
             ], 404);
         }
 
-        // O estagiário só pode consultar os próprios documentos.
-        if (
-            $user->tipo_utilizador === 'estagiario' &&
-            ! $candidatura->pertenceAo($user)
-        ) {
-            return response()->json([
-                'message' => 'Não tem autorização para consultar este documento.',
-            ], 403);
-        }
-
         /*
-         * O coordenador pode consultar os documentos das candidaturas da
-         * sua direção, incluindo as que ainda não têm coordenador ou cuja
-         * atribuição ficou presa a um coordenador inativo ou removido.
+         * A política centraliza a regra: o dono, o coordenador da direção
+         * e o administrador podem consultar o documento.
          */
-        if (
-            $user->tipo_utilizador === 'coordenador'
-            && ! $candidatura->podeSerCoordenadaPor($user)
-        ) {
-            return response()->json([
-                'message' => 'Não tem autorização para consultar este documento.',
-            ], 403);
-        }
-
-        // Estagiários, administradores e coordenadores (com candidatura
-        // atribuída) podem consultar o documento.
-        if (! in_array(
-            $user->tipo_utilizador,
-            ['estagiario', 'administrador', 'coordenador'],
-            true
-        )) {
+        if (! Gate::forUser($user)->allows('view', $documento)) {
             return response()->json([
                 'message' => 'Não tem autorização para consultar este documento.',
             ], 403);
@@ -115,8 +90,7 @@ class DocumentoController extends Controller
 
         if (
             ! $user ||
-            ! $user->ativo ||
-            $user->tipo_utilizador !== 'estagiario'
+            ! Gate::forUser($user)->allows('substituir', $documento)
         ) {
             return response()->json([
                 'message' => 'Apenas o estagiário pode substituir este documento.',

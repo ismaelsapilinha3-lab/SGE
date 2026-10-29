@@ -1,8 +1,14 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+  OnInit,
+  inject,
+  signal
+} from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
-import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription, finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth.service';
 import {
   AlertaEstagiario,
@@ -29,11 +35,14 @@ export interface Separador {
   styleUrl: './area-reservada.css',
   imports: []
 })
-export class AreaReservadaComponent implements OnInit {
+export class AreaReservadaComponent implements OnInit, OnDestroy {
   private readonly relatorioService = inject(RelatorioEstagiarioService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly platformId = inject(PLATFORM_ID);
+
+  private readonly subscriptions = new Subscription();
 
   carregando = signal(true);
   erro = signal('');
@@ -80,7 +89,36 @@ export class AreaReservadaComponent implements OnInit {
   mensagemDocumento = signal('');
 
   ngOnInit(): void {
+    this.subscriptions.add(
+      this.route.queryParamMap.subscribe(parametros => {
+        this.aplicarSeparadorSolicitado(
+          parametros.get('separador')
+        );
+      })
+    );
+
     this.carregarPainel();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  /**
+   * Abre o separador indicado pelo destino de uma notificação.
+   */
+  private aplicarSeparadorSolicitado(valor: string | null): void {
+    if (!valor) {
+      return;
+    }
+
+    const separador = this.separadores.find(
+      item => item.id === valor
+    );
+
+    if (separador) {
+      this.separadorAtivo.set(separador.id);
+    }
   }
 
   get plano(): PlanoEstagio | null {
@@ -106,6 +144,24 @@ export class AreaReservadaComponent implements OnInit {
 
   selecionarSeparador(id: SeparadorId): void {
     this.separadorAtivo.set(id);
+    this.limparSeparadorSolicitado();
+  }
+
+  /**
+   * Remove o separador pedido da URL para que o mesmo destino volte a
+   * funcionar depois de o utilizador navegar manualmente.
+   */
+  private limparSeparadorSolicitado(): void {
+    if (!this.route.snapshot.queryParamMap.has('separador')) {
+      return;
+    }
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { separador: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   /* =======================================================

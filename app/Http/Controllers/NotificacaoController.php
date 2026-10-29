@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Notificacao;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class NotificacaoController extends Controller
 {
@@ -123,10 +124,7 @@ class NotificacaoController extends Controller
         Request $request,
         Notificacao $notificacao
     ): void {
-        if (
-            (int) $notificacao->id_utilizador
-            !== (int) $request->user()->id_utilizador
-        ) {
+        if (! Gate::forUser($request->user())->allows('view', $notificacao)) {
             abort(response()->json([
                 'message' => 'Notificação não encontrada.',
             ], 404));

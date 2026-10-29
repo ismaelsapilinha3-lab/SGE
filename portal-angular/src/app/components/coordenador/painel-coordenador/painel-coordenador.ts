@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 
 import {
   Component,
+  OnDestroy,
   OnInit,
   inject,
   signal
@@ -14,7 +15,12 @@ import {
 
 import { FormsModule } from '@angular/forms';
 
-import { Router } from '@angular/router';
+import {
+  ActivatedRoute,
+  Router
+} from '@angular/router';
+
+import { Subscription } from 'rxjs';
 
 import {
   SupervisorService,
@@ -25,7 +31,8 @@ import {
 import {
   CoordenadorService,
   CandidaturaCoordenador,
-  DashboardCoordenador
+  DashboardCoordenador,
+  ResultadoEntrevistaCoordenador
 } from '../../../services/coordenador.service';
 
 import {
@@ -118,7 +125,7 @@ const GRUPOS_NAVEGACAO: GrupoNavegacaoPainel[] = [
   templateUrl: './painel-coordenador.html',
   styleUrls: ['./painel-coordenador.css']
 })
-export class PainelCoordenadorComponent implements OnInit {
+export class PainelCoordenadorComponent implements OnInit, OnDestroy {
 
   private readonly supervisorService =
     inject(SupervisorService);
@@ -141,12 +148,22 @@ export class PainelCoordenadorComponent implements OnInit {
   private readonly router =
     inject(Router);
 
+  private readonly route =
+    inject(ActivatedRoute);
+
+  private readonly subscriptions =
+    new Subscription();
+
 
   // ============================================================
   // MENU DE SECÇÕES
   // ============================================================
 
   secao = signal<SecaoCoordenador>('candidaturas');
+
+  readonly estagioSolicitado = signal<number | null>(null);
+
+  readonly abaSolicitada = signal<string | null>(null);
 
   readonly gruposNavegacao = GRUPOS_NAVEGACAO;
 
@@ -254,6 +271,35 @@ export class PainelCoordenadorComponent implements OnInit {
     this.carregarCandidaturas();
 
     this.carregarSupervisores();
+
+    this.subscriptions.add(
+      this.route.queryParamMap.subscribe(parametros => {
+
+        const idEstagio = Number(parametros.get('estagio'));
+
+        if (!Number.isInteger(idEstagio) || idEstagio <= 0) {
+
+          return;
+
+        }
+
+        this.estagioSolicitado.set(idEstagio);
+
+        this.abaSolicitada.set(parametros.get('aba'));
+
+        this.secao.set('estagios');
+
+        this.carregarEstagios();
+
+      })
+    );
+  }
+
+
+  ngOnDestroy(): void {
+
+    this.subscriptions.unsubscribe();
+
   }
 
 
@@ -276,6 +322,40 @@ export class PainelCoordenadorComponent implements OnInit {
       this.carregarSupervisores();
 
     }
+
+    this.limparDestinoNotificacao();
+
+  }
+
+
+  /**
+   * Remove o destino da notificação da URL para que o mesmo link volte
+   * a funcionar depois de o utilizador navegar manualmente.
+   */
+  private limparDestinoNotificacao(): void {
+
+    if (
+      !this.route.snapshot.queryParamMap.has('estagio')
+      && !this.route.snapshot.queryParamMap.has('aba')
+    ) {
+
+      return;
+
+    }
+
+    this.estagioSolicitado.set(null);
+
+    this.abaSolicitada.set(null);
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        estagio: null,
+        aba: null
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
 
   }
 
@@ -1085,6 +1165,26 @@ export class PainelCoordenadorComponent implements OnInit {
         }
 
       });
+  }
+
+
+  nomeResultadoEntrevista(
+    resultado: ResultadoEntrevistaCoordenador
+  ): string {
+
+    switch (resultado) {
+
+      case 'aprovado':
+        return 'Aprovada';
+
+      case 'reprovado':
+        return 'Reprovada';
+
+      default:
+        return 'Pendente';
+
+    }
+
   }
 
 

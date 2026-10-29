@@ -99,8 +99,8 @@
             <span>Estágio</span>
 
             <select
-              [value]="e.id_estagio"
-              (change)="aoMudarEstagio($event)"
+              [ngModel]="e.id_estagio"
+              (ngModelChange)="aoMudarEstagio($event)"
             >
               @for (estagio of estagios(); track estagio.id_estagio) {
 

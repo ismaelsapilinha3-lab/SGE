@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Candidatura extends Model
 {
@@ -77,6 +78,15 @@ class Candidatura extends Model
     {
         return $this->hasOne(
             Estagio::class,
+            'id_candidatura',
+            'id_candidatura'
+        );
+    }
+
+    public function entrevista(): HasOne
+    {
+        return $this->hasOne(
+            Entrevista::class,
             'id_candidatura',
             'id_candidatura'
         );

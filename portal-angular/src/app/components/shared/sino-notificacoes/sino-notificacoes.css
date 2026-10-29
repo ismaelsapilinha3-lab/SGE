@@ -163,6 +163,15 @@
 }
 
 
+.sino-item-corpo--acao {
+  cursor: pointer;
+}
+
+.sino-item-corpo--acao:hover strong {
+  color: #05649f;
+  text-decoration: underline;
+}
+
 .sino-item-corpo strong {
   display: block;
   color: #16375f;
@@ -209,6 +218,10 @@
 .sino-item-acoes button:hover {
   color: #16375f;
   text-decoration: underline;
+}
+
+.sino-item-acoes button.sino-abrir {
+  color: #05649f;
 }
 
 .sino-item-acoes button:disabled {

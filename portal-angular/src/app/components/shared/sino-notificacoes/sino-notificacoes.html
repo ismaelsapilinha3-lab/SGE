@@ -94,7 +94,11 @@
               [class.nao-lida]="!notificacao.lida_em"
             >
 
-              <div class="sino-item-corpo">
+              <div
+                class="sino-item-corpo"
+                [class.sino-item-corpo--acao]="notificacao.url"
+                (click)="abrirDestino(notificacao)"
+              >
 
                 <strong>{{ notificacao.titulo }}</strong>
 
@@ -107,6 +111,18 @@
               </div>
 
               <div class="sino-item-acoes">
+
+                @if (notificacao.url) {
+
+                  <button
+                    type="button"
+                    class="sino-abrir"
+                    (click)="abrirDestino(notificacao)"
+                  >
+                    Abrir
+                  </button>
+
+                }
 
                 @if (!notificacao.lida_em) {
 

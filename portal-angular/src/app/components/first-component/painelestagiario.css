@@ -2088,3 +2088,34 @@ button {
 }
 
 
+
+/* Estado da entrevista do candidato. */
+#pagina-estagiario .entrevista-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+#pagina-estagiario .entrevista-pendente {
+  color: #8a5a00;
+  background: #fff4d6;
+  border-color: #f2dfa4;
+}
+
+#pagina-estagiario .entrevista-aprovada {
+  color: #16703c;
+  background: #eaf8ef;
+  border-color: #b9e6c9;
+}
+
+#pagina-estagiario .entrevista-reprovada {
+  color: #b42318;
+  background: #fff0f1;
+  border-color: #f3b5bc;
+}

@@ -51,6 +51,25 @@ export const routes: Routes = [
     ).then(modulo => modulo.AcessoComponent)
   },
 
+  {
+    path: 'recuperar-password',
+    pathMatch: 'full',
+    loadComponent: () => import(
+      './components/first-component/recuperar-password'
+    ).then(modulo => modulo.RecuperarPasswordComponent)
+  },
+
+  {
+    path: 'redefinir-password',
+    pathMatch: 'full',
+    data: {
+      modo: 'redefinicao'
+    },
+    loadComponent: () => import(
+      './components/first-component/recuperar-password'
+    ).then(modulo => modulo.RecuperarPasswordComponent)
+  },
+
 
   // ============================================================
   // PAINEL DO ESTAGIÁRIO

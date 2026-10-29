@@ -1347,6 +1347,91 @@
   background: #fff;
 }
 
+/* ---------- Entrevista ---------- */
+
+.entrevista-resumo {
+  margin-top: 12px;
+}
+
+.entrevista-resumo .motivo-recusa-existente {
+  margin-top: 12px;
+}
+
+.area-entrevista {
+  margin-top: 14px;
+  padding: 18px;
+  border: 1px solid #b9d4f0;
+  border-radius: 10px;
+  background: #f4f9ff;
+}
+
+.area-entrevista h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0879bd;
+}
+
+.area-entrevista p {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--cinza);
+  line-height: 1.5;
+}
+
+.area-entrevista p.mensagem-erro {
+  margin-top: 10px;
+  color: #b42318;
+}
+
+.area-entrevista label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--azul);
+}
+
+.area-entrevista input,
+.area-entrevista select,
+.area-entrevista textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--texto);
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.area-entrevista input:focus,
+.area-entrevista select:focus,
+.area-entrevista textarea:focus {
+  outline: none;
+  border-color: var(--azul-medio);
+  box-shadow: 0 0 0 3px rgba(26, 61, 107, 0.14);
+}
+
+.area-entrevista input:disabled,
+.area-entrevista select:disabled,
+.area-entrevista textarea:disabled {
+  cursor: not-allowed;
+  background: #f1f5f9;
+}
+
+.acoes-entrevista {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 /* ---------- Pré-visualização de documento ---------- */
 
 .modal-documento-preview { background: rgba(7, 20, 38, 0.74); }
@@ -1476,6 +1561,7 @@ a:focus-visible { outline: 2px solid var(--laranja); outline-offset: 2px; }
   .acoes-formulario-departamento { flex-direction: column; }
   .acoes-encaminhamento,
   .acoes-encaminhar { flex-direction: column; }
+  .acoes-entrevista { flex-direction: column; }
   .acoes-modal { flex-direction: column-reverse; }
   .acoes-modal .btn { width: 100%; }
   .documento-preview-body { min-height: 320px; }

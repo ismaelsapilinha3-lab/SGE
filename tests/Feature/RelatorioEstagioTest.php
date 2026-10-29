@@ -4,6 +4,7 @@ use App\Models\AcessoFicheiro;
 use App\Models\Candidatura;
 use App\Models\Departamento;
 use App\Models\Estagio;
+use App\Models\Notificacao;
 use App\Models\Perfil;
 use App\Models\Relatorio;
 use App\Models\User;
@@ -196,7 +197,7 @@ it('deixa o estagiário atualizar um rascunho', function () {
 });
 
 it('deixa o estagiário submeter um relatório', function () {
-    [$estagio, $estagiario] = estagioComRelatorios();
+    [$estagio, $estagiario, $supervisor] = estagioComRelatorios();
 
     $relatorio = Relatorio::factory()->create([
         'id_estagio' => $estagio->id_estagio,
@@ -210,7 +211,14 @@ it('deixa o estagiário submeter um relatório', function () {
         ->assertJsonPath('message', 'Relatório submetido com sucesso.');
 
     expect($relatorio->fresh()->submetido_em)->not->toBeNull()
-        ->and($relatorio->fresh()->enviado_em)->not->toBeNull();
+        ->and($relatorio->fresh()->enviado_em)->not->toBeNull()
+        ->and(
+            Notificacao::query()
+                ->where('id_utilizador', $supervisor->id_utilizador)
+                ->where('titulo', 'Relatório submetido')
+                ->latest('id_notificacao')
+                ->value('url')
+        )->toBe("/supervisor?estagio={$estagio->id_estagio}&aba=relatorios");
 });
 
 it('não altera um relatório já submetido', function () {

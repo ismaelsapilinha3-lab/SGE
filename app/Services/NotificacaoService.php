@@ -12,20 +12,23 @@ class NotificacaoService
     public function paraUtilizador(
         User|int|null $utilizador,
         string $titulo,
-        string $mensagem
+        string $mensagem,
+        ?string $url = null
     ): void {
 
         $this->paraUtilizadores(
             $utilizador === null ? [] : [$utilizador],
             $titulo,
-            $mensagem
+            $mensagem,
+            $url
         );
     }
 
     public function paraUtilizadores(
         iterable $utilizadores,
         string $titulo,
-        string $mensagem
+        string $mensagem,
+        ?string $url = null
     ): void {
 
         $ids = collect($utilizadores)
@@ -46,13 +49,20 @@ class NotificacaoService
             return;
         }
 
-        NotificacaoSolicitada::dispatch($ids, $titulo, $mensagem);
+        NotificacaoSolicitada::dispatch(
+            $ids,
+            $titulo,
+            $mensagem,
+            null,
+            $url
+        );
     }
 
     public function paraCandidato(
         Candidatura $candidatura,
         string $titulo,
-        string $mensagem
+        string $mensagem,
+        ?string $url = null
     ): void {
 
         NotificacaoSolicitada::dispatch(
@@ -61,13 +71,15 @@ class NotificacaoService
                 : [],
             $titulo,
             $mensagem,
-            $candidatura->id_candidatura
+            $candidatura->id_candidatura,
+            $url
         );
     }
 
     public function paraAdministradores(
         string $titulo,
-        string $mensagem
+        string $mensagem,
+        ?string $url = null
     ): int {
 
         $ids = User::query()
@@ -80,7 +92,13 @@ class NotificacaoService
             return 0;
         }
 
-        NotificacaoSolicitada::dispatch($ids, $titulo, $mensagem);
+        NotificacaoSolicitada::dispatch(
+            $ids,
+            $titulo,
+            $mensagem,
+            null,
+            $url
+        );
 
         return count($ids);
     }

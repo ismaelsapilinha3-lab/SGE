@@ -4,7 +4,9 @@ import { vi } from 'vitest';
 
 import {
   AdminService,
-  EstagiosAdminResponse
+  EstagioAdmin,
+  EstagiosAdminResponse,
+  PlanoEstagioAdmin
 } from '../../../services/admin.service';
 
 import {
@@ -86,6 +88,32 @@ describe('EstagioAdminComponent', () => {
 
     expect(componente.rotuloTrimestre())
       .toBe('4.º trimestre de 2026');
+
+  });
+
+
+  it('mostra o plano submetido enquanto ainda não existe decisão', () => {
+
+    const fixture = TestBed.createComponent(EstagioAdminComponent);
+
+    const planoSubmetido = {
+      id_plano_estagio: 10,
+      estado: 'submetido'
+    } as PlanoEstagioAdmin;
+
+    const planoAprovado = {
+      id_plano_estagio: 9,
+      estado: 'aprovado'
+    } as PlanoEstagioAdmin;
+
+    const estagio = {
+      plano_atual_supervisor: planoSubmetido,
+      plano_aprovado: planoAprovado
+    } as EstagioAdmin;
+
+    expect(
+      fixture.componentInstance.planoEmDestaque(estagio)
+    ).toBe(planoSubmetido);
 
   });
 

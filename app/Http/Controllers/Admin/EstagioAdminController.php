@@ -166,6 +166,7 @@ class EstagioAdminController extends Controller
                 'candidatura.departamento',
                 'supervisoresAtivos.supervisor',
                 'planoAprovado',
+                'planoAtualSupervisor',
             ])
             ->where('id_estagio', $id)
             ->first();
@@ -379,7 +380,8 @@ class EstagioAdminController extends Controller
             'O teu estágio foi iniciado em '
                 .$estagio->data_inicio->format('d/m/Y')
                 .' e tem fim previsto para '
-                .$estagio->data_fim_prevista->format('d/m/Y').'.'
+                .$estagio->data_fim_prevista->format('d/m/Y').'.',
+            '/area-reservada?separador=geral'
         );
 
         return response()->json([
@@ -518,13 +520,15 @@ class EstagioAdminController extends Controller
             $this->notificacoes->paraUtilizador(
                 $estagio->id_estagiario,
                 'Estado do estágio atualizado',
-                $mensagemEstagiario
+                $mensagemEstagiario,
+                '/area-reservada?separador=geral'
             );
 
             $this->notificacoes->paraUtilizadores(
                 $estagio->supervisoresUtilizadores(),
                 'Estado do estágio atualizado',
-                "O estágio #{$estagio->id_estagio} passou de {$estadoAtual} para {$novoEstado}."
+                "O estágio #{$estagio->id_estagio} passou de {$estadoAtual} para {$novoEstado}.",
+                "/supervisor?estagio={$estagio->id_estagio}"
             );
         }
 

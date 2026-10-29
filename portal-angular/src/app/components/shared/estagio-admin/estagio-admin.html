@@ -345,7 +345,7 @@
 
           <h4>Plano de estágio</h4>
 
-          @if (e.plano_aprovado; as plano) {
+          @if (planoEmDestaque(e); as plano) {
 
             <span class="ea-etiqueta" [attr.data-estado]="plano.estado">
               {{ rotuloEstadoPlano(plano) }}
@@ -369,10 +369,19 @@
               a {{ formatarData(plano.data_fim) }}
             </span>
 
+            @if (plano.motivo_recusa) {
+
+              <p class="ea-texto">
+                <strong>Motivo da recusa:</strong>
+                {{ plano.motivo_recusa }}
+              </p>
+
+            }
+
           } @else {
 
             <p class="ea-meta">
-              Ainda não existe um plano de estágio aprovado.
+              Ainda não existe um plano de estágio submetido.
             </p>
 
           }

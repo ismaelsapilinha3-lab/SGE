@@ -21,6 +21,8 @@ export interface Notificacao {
 
   mensagem: string;
 
+  url: string | null;
+
   enviada_em: string | null;
 
   lida_em: string | null;

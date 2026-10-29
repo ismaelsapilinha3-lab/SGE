@@ -366,6 +366,46 @@
                     </div>
                   }
 
+                  @if (candidatura.entrevista; as entrevista) {
+
+                    <div class="coord-detalhe-campo">
+                      <strong>Entrevista:</strong>
+                      <span>
+                        {{ entrevista.data_hora | date:'dd/MM/yyyy HH:mm' }}
+                      </span>
+                    </div>
+
+                    <div class="coord-detalhe-campo">
+                      <strong>Supervisor da entrevista:</strong>
+                      <span>
+                        {{ entrevista.supervisor_representante?.nome || 'Não definido' }}
+                      </span>
+                    </div>
+
+                    <div class="coord-detalhe-campo">
+                      <strong>Resultado da entrevista:</strong>
+                      <span
+                        class="coord-badge"
+                        [class.coord-badge-analise]="entrevista.resultado === 'pendente'"
+                        [class.coord-badge-aprovada]="entrevista.resultado === 'aprovado'"
+                        [class.coord-badge-recusada]="entrevista.resultado === 'reprovado'"
+                      >
+                        {{ nomeResultadoEntrevista(entrevista.resultado) }}
+                      </span>
+                    </div>
+
+                    @if (
+                      entrevista.resultado === 'reprovado' &&
+                      entrevista.motivo_reprovacao
+                    ) {
+                      <div class="coord-detalhe-campo coord-detalhe-campo-completo">
+                        <strong>Motivo da reprovação na entrevista:</strong>
+                        <span>{{ entrevista.motivo_reprovacao }}</span>
+                      </div>
+                    }
+
+                  }
+
                   @if (candidatura.documentos && candidatura.documentos.length > 0) {
 
                     <div class="coord-detalhe-campo coord-detalhe-campo-completo">
@@ -421,7 +461,16 @@
 
                 @if (candidatura.estado === 'em_analise') {
 
-                  @if (mostrarRecusa()) {
+                  @if (candidatura.entrevista?.resultado === 'pendente') {
+
+                    <div class="coord-alert coord-alert-error" role="alert">
+                      <p>
+                        Existe uma entrevista pendente. O resultado tem de ser
+                        registado pela administração antes da decisão final.
+                      </p>
+                    </div>
+
+                  } @else if (mostrarRecusa()) {
 
                     <div class="coord-recusa-area">
 
@@ -676,7 +725,10 @@
           Plano, contrato e acompanhamento
         </h3>
 
-        <app-estagio-coordenador></app-estagio-coordenador>
+        <app-estagio-coordenador
+          [estagioSolicitado]="estagioSolicitado()"
+          [abaSolicitada]="abaSolicitada()"
+        ></app-estagio-coordenador>
 
       </section>
 

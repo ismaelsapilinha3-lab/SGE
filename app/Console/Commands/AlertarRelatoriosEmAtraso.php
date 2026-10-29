@@ -81,7 +81,8 @@ class AlertarRelatoriosEmAtraso extends Command
 
             $this->notificacoes->paraAdministradores(
                 'Relatório em atraso',
-                $mensagem
+                $mensagem,
+                '/admin?secao=relatorios'
             );
 
             $relatorio->forceFill([

@@ -29,6 +29,13 @@ class VerificarProducao extends Command
                 str_starts_with((string) config('app.url'), 'https://'),
                 'APP_URL com https://',
             ],
+            'URL do portal' => [
+                str_starts_with(
+                    (string) config('app.frontend_url'),
+                    'https://'
+                ),
+                'FRONTEND_URL com https://',
+            ],
             'Cookie de sessão seguro' => [
                 config('session.secure') === true,
                 'SESSION_SECURE_COOKIE=true',
@@ -81,6 +88,10 @@ class VerificarProducao extends Command
             'Backup' => [
                 (bool) config('backup.enabled'),
                 'BACKUP_ENABLED=true',
+            ],
+            'CSP' => [
+                (bool) config('security.csp.enabled'),
+                'CSP_ENABLED=true',
             ],
         ];
 

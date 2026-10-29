@@ -1748,6 +1748,269 @@
               </section>
 
 
+              <!-- =====================================================
+                   ENTREVISTA
+                   ===================================================== -->
+
+              <section class="detalhes-secao">
+
+                <div class="titulo-detalhes-secao">
+                  <div>
+                    <h3>Entrevista</h3>
+                    <p>Agendamento e resultado da entrevista.</p>
+                  </div>
+                </div>
+
+                @if (sucessoEntrevista()) {
+                  <div class="mensagem-sucesso" role="status">
+                    {{ sucessoEntrevista() }}
+                  </div>
+                }
+
+                @if (erroEntrevista()) {
+                  <div class="mensagem-erro" role="alert">
+                    {{ erroEntrevista() }}
+                  </div>
+                }
+
+                @if (entrevistaSelecionada(); as entrevista) {
+
+                  <div class="entrevista-resumo">
+
+                    <div class="detalhes-grid">
+
+                      <div class="detalhe-card">
+                        <span>Data e hora</span>
+                        <strong>
+                          {{ entrevista.data_hora | date:'dd/MM/yyyy HH:mm' }}
+                        </strong>
+                      </div>
+
+                      <div class="detalhe-card">
+                        <span>Supervisor representante</span>
+                        <strong>
+                          {{ entrevista.supervisor_representante?.nome || 'Não definido' }}
+                        </strong>
+                      </div>
+
+                      <div class="detalhe-card">
+                        <span>Resultado</span>
+                        <strong>
+                          <span
+                            class="estado-badge"
+                            [class]="classeResultadoEntrevista(entrevista.resultado)"
+                          >
+                            {{ nomeResultadoEntrevista(entrevista.resultado) }}
+                          </span>
+                        </strong>
+                      </div>
+
+                      <div class="detalhe-card">
+                        <span>Registada por</span>
+                        <strong>
+                          {{ entrevista.administrador?.nome || 'Não definido' }}
+                        </strong>
+                      </div>
+
+                    </div>
+
+                    @if (
+                      entrevista.resultado === 'reprovado' &&
+                      entrevista.motivo_reprovacao
+                    ) {
+                      <div class="motivo-recusa-existente">
+                        {{ entrevista.motivo_reprovacao }}
+                      </div>
+                    }
+
+                    @if (
+                      entrevista.resultado === 'pendente' &&
+                      !mostrarFormularioEntrevista() &&
+                      !mostrarFormularioResultado()
+                    ) {
+                      <div class="acoes-entrevista">
+                        <button
+                          type="button"
+                          class="btn btn--neutro"
+                          (click)="abrirFormularioEntrevista()"
+                          [disabled]="processandoEntrevista()"
+                        >
+                          Reagendar
+                        </button>
+
+                        <button
+                          type="button"
+                          class="btn btn--primario"
+                          (click)="abrirFormularioResultado()"
+                          [disabled]="processandoEntrevista()"
+                        >
+                          Registar resultado
+                        </button>
+                      </div>
+                    }
+
+                  </div>
+
+                } @else {
+
+                  @if (candidaturaSelecionada()!.estado === 'em_analise') {
+                    @if (!mostrarFormularioEntrevista()) {
+                      <div class="acoes-entrevista">
+                        <button
+                          type="button"
+                          class="btn btn--primario"
+                          (click)="abrirFormularioEntrevista()"
+                          [disabled]="processandoEntrevista()"
+                        >
+                          Agendar entrevista
+                        </button>
+                      </div>
+                    }
+                  } @else {
+                    <div class="documentos-vazios">
+                      Sem entrevista registada.
+                    </div>
+                  }
+
+                }
+
+                @if (mostrarFormularioEntrevista()) {
+
+                  <div class="area-entrevista">
+
+                    <h3>
+                      {{ entrevistaSelecionada() ? 'Reagendar entrevista' : 'Agendar entrevista' }}
+                    </h3>
+
+                    <p>
+                      Escolhe a data, a hora e o supervisor que vai representar
+                      a direção na entrevista.
+                    </p>
+
+                    <label>
+                      Data e hora
+                      <input
+                        type="datetime-local"
+                        [value]="dataHoraEntrevista()"
+                        (change)="alterarDataHoraEntrevista($event)"
+                        [disabled]="processandoEntrevista()"
+                      />
+                    </label>
+
+                    <label>
+                      Supervisor representante
+                      <select
+                        [value]="supervisorEntrevista() ?? ''"
+                        (change)="alterarSupervisorEntrevista($event)"
+                        [disabled]="processandoEntrevista() || carregandoSupervisores()"
+                      >
+                        <option value="">— Selecionar supervisor —</option>
+
+                        @for (supervisor of supervisores(); track supervisor.id_utilizador) {
+                          <option [value]="supervisor.id_utilizador">
+                            {{ supervisor.nome }}
+                          </option>
+                        }
+
+                      </select>
+                    </label>
+
+                    @if (carregandoSupervisores()) {
+                      <p>A carregar supervisores...</p>
+                    } @else if (supervisores().length === 0) {
+                      <p class="mensagem-erro">
+                        Não existem supervisores ativos. Cria um supervisor antes
+                        de agendar a entrevista.
+                      </p>
+                    }
+
+                    <div class="acoes-entrevista">
+                      <button
+                        type="button"
+                        class="btn btn--neutro"
+                        (click)="cancelarFormularioEntrevista()"
+                        [disabled]="processandoEntrevista()"
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        class="btn btn--primario"
+                        (click)="confirmarEntrevista()"
+                        [disabled]="processandoEntrevista() || carregandoSupervisores()"
+                      >
+                        {{ processandoEntrevista() ? 'A guardar...' : 'Guardar entrevista' }}
+                      </button>
+                    </div>
+
+                  </div>
+
+                }
+
+                @if (mostrarFormularioResultado()) {
+
+                  <div class="area-entrevista">
+
+                    <h3>Registar resultado</h3>
+
+                    <p>
+                      O resultado é consultivo. A decisão final da candidatura
+                      continua a pertencer ao coordenador.
+                    </p>
+
+                    <label>
+                      Resultado
+                      <select
+                        [value]="resultadoEntrevista()"
+                        (change)="alterarResultadoEntrevista($event)"
+                        [disabled]="processandoEntrevista()"
+                      >
+                        <option value="aprovado">Aprovada</option>
+                        <option value="reprovado">Reprovada</option>
+                      </select>
+                    </label>
+
+                    @if (resultadoEntrevista() === 'reprovado') {
+                      <label>
+                        Motivo da reprovação
+                        <textarea
+                          rows="3"
+                          [value]="motivoReprovacaoEntrevista()"
+                          (input)="alterarMotivoReprovacaoEntrevista($event)"
+                          [disabled]="processandoEntrevista()"
+                          placeholder="Indica o motivo da reprovação."
+                        ></textarea>
+                      </label>
+                    }
+
+                    <div class="acoes-entrevista">
+                      <button
+                        type="button"
+                        class="btn btn--neutro"
+                        (click)="cancelarFormularioResultado()"
+                        [disabled]="processandoEntrevista()"
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        class="btn btn--primario"
+                        (click)="confirmarResultadoEntrevista()"
+                        [disabled]="processandoEntrevista()"
+                      >
+                        {{ processandoEntrevista() ? 'A guardar...' : 'Registar resultado' }}
+                      </button>
+                    </div>
+
+                  </div>
+
+                }
+
+              </section>
+
+
               @if (sucessoEncaminhamento()) {
                 <div class="mensagem-sucesso" role="status">
                   {{ sucessoEncaminhamento() }}

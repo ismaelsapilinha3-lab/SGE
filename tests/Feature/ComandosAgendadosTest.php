@@ -165,6 +165,14 @@ it('regista os meses em falta e avisa o administrador uma única vez', function 
                 ->where('titulo', 'Relatório em atraso')
                 ->count()
         )->toBe(2);
+
+    expect(
+        Notificacao::query()
+            ->where('id_utilizador', $administrador->id_utilizador)
+            ->where('titulo', 'Relatório em atraso')
+            ->latest('id_notificacao')
+            ->value('url')
+    )->toBe('/admin?secao=relatorios');
 });
 
 it('marca em atraso um relatório existente que passou do prazo', function () {

@@ -27,7 +27,8 @@ import {
 import {
   CandidaturaEstagiario,
   CandidaturaEstagiarioService,
-  DocumentoEstagiario
+  DocumentoEstagiario,
+  ResultadoEntrevistaEstagiario
 } from '../../core/candidatura-estagiario.service';
 
 import {
@@ -415,6 +416,77 @@ export class PainelestagiarioComponent
       data: candidatura.data_submissao
 
     });
+
+
+    if (candidatura.entrevista) {
+
+      const entrevista = candidatura.entrevista;
+
+      const supervisor =
+        entrevista.supervisor_representante?.nome
+        || 'a equipa responsável';
+
+      const dataEntrevista = new Date(entrevista.data_hora)
+        .toLocaleString('pt-PT', {
+          dateStyle: 'short',
+          timeStyle: 'short'
+        });
+
+      if (entrevista.resultado === 'aprovado') {
+
+        historico.push({
+
+          classe: 'done',
+
+          icone: 'V',
+
+          titulo: 'Entrevista aprovada',
+
+          texto:
+            'A tua entrevista correu bem. A candidatura continua em análise para decisão final.',
+
+          data: entrevista.data_hora
+
+        });
+
+      } else if (entrevista.resultado === 'reprovado') {
+
+        historico.push({
+
+          classe: 'bad',
+
+          icone: '?',
+
+          titulo: 'Entrevista não aprovada',
+
+          texto: entrevista.motivo_reprovacao
+            ? `Motivo: ${entrevista.motivo_reprovacao}`
+            : 'A tua entrevista não foi aprovada.',
+
+          data: entrevista.data_hora
+
+        });
+
+      } else {
+
+        historico.push({
+
+          classe: 'done',
+
+          icone: '•',
+
+          titulo: 'Entrevista agendada',
+
+          texto:
+            `A tua entrevista com ${supervisor} está agendada para ${dataEntrevista}.`,
+
+          data: entrevista.data_hora
+
+        });
+
+      }
+
+    }
 
 
     if (
@@ -1245,6 +1317,50 @@ export class PainelestagiarioComponent
         }
 
       });
+
+  }
+
+
+  // ==========================================================
+  // RESULTADO DA ENTREVISTA
+  // ==========================================================
+
+  nomeResultadoEntrevista(
+    resultado: ResultadoEntrevistaEstagiario
+  ): string {
+
+    switch (resultado) {
+
+      case 'aprovado':
+        return 'Aprovada';
+
+      case 'reprovado':
+        return 'Não aprovada';
+
+      default:
+        return 'Pendente';
+
+    }
+
+  }
+
+
+  classeResultadoEntrevista(
+    resultado: ResultadoEntrevistaEstagiario
+  ): string {
+
+    switch (resultado) {
+
+      case 'aprovado':
+        return 'entrevista-aprovada';
+
+      case 'reprovado':
+        return 'entrevista-reprovada';
+
+      default:
+        return 'entrevista-pendente';
+
+    }
 
   }
 

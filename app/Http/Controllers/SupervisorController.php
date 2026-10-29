@@ -7,6 +7,7 @@ use App\Http\Resources\PlanoEstagioResource;
 use App\Models\Assiduidade;
 use App\Models\Avaliacao;
 use App\Models\DocumentoEstagio;
+use App\Models\Entrevista;
 use App\Models\Estagio;
 use App\Models\HistoricoEstado;
 use App\Services\NotificacaoService;
@@ -91,6 +92,27 @@ class SupervisorController extends Controller
             ->orderBy('e.data_inicio', 'desc')
             ->get();
 
+        $entrevistas = Entrevista::query()
+            ->with([
+                'candidatura:id_candidatura,nome,email',
+            ])
+            ->where(
+                'id_supervisor_representante',
+                $utilizador->id_utilizador
+            )
+            ->orderByDesc('data_hora')
+            ->limit(20)
+            ->get()
+            ->map(fn (Entrevista $entrevista) => [
+                'id_entrevista' => $entrevista->id_entrevista,
+                'id_candidatura' => $entrevista->id_candidatura,
+                'nome_candidato' => $entrevista->candidatura?->nome,
+                'email_candidato' => $entrevista->candidatura?->email,
+                'data_hora' => $entrevista->data_hora,
+                'resultado' => $entrevista->resultado,
+                'motivo_reprovacao' => $entrevista->motivo_reprovacao,
+            ]);
+
         return response()->json([
             'message' => 'Painel do supervisor carregado com sucesso.',
             'utilizador' => [
@@ -103,8 +125,12 @@ class SupervisorController extends Controller
                 'estagios_ativos' => $estagios
                     ->where('estado_estagio', 'ativo')
                     ->count(),
+                'entrevistas_pendentes' => $entrevistas
+                    ->where('resultado', 'pendente')
+                    ->count(),
             ],
             'estagios' => $estagios->values(),
+            'entrevistas' => $entrevistas->values(),
         ]);
     }
 
@@ -190,6 +216,8 @@ class SupervisorController extends Controller
                 'message' => 'Só é possível submeter o plano de um estágio ativo.',
             ], 422);
         }
+
+        Gate::authorize('submeterPlano', $estagio);
 
         $dados = $request->validate([
             'objetivos' => [
@@ -277,6 +305,8 @@ class SupervisorController extends Controller
 
         $this->garantirDocumentoDoEstagio($documento, $estagio);
 
+        Gate::authorize('validar', $documento);
+
         if ($estagio->estaTerminado()) {
             return response()->json([
                 'message' => 'Este estágio já terminou e não aceita alterações.',
@@ -325,7 +355,8 @@ class SupervisorController extends Controller
             $this->notificacoes->paraUtilizador(
                 $estagio->id_estagiario,
                 'Contrato validado',
-                "O contrato (versão {$documentoBloqueado->versao}) foi validado pelo supervisor."
+                "O contrato (versão {$documentoBloqueado->versao}) foi validado pelo supervisor.",
+                '/area-reservada?separador=documentos'
             );
 
             return response()->json([
@@ -365,6 +396,8 @@ class SupervisorController extends Controller
         $estagio = $this->estagioDoSupervisor($request, $id);
 
         $this->garantirDocumentoDoEstagio($documento, $estagio);
+
+        Gate::authorize('validar', $documento);
 
         if ($estagio->estaTerminado()) {
             return response()->json([
@@ -415,7 +448,8 @@ class SupervisorController extends Controller
             $this->notificacoes->paraUtilizador(
                 $estagio->id_estagiario,
                 'Contrato rejeitado',
-                "O contrato (versão {$documentoBloqueado->versao}) foi rejeitado. Motivo: {$dados['descricao']}."
+                "O contrato (versão {$documentoBloqueado->versao}) foi rejeitado. Motivo: {$dados['descricao']}.",
+                '/area-reservada?separador=documentos'
             );
 
             return response()->json([
@@ -796,7 +830,8 @@ class SupervisorController extends Controller
                 'Justificação aprovada',
                 'A tua justificação para a falta de '
                     .$bloqueada->data->format('d/m/Y')
-                    .' foi aprovada.'
+                    .' foi aprovada.',
+                '/area-reservada?separador=geral'
             );
 
             return response()->json([
@@ -877,7 +912,8 @@ class SupervisorController extends Controller
                 'Justificação recusada',
                 'A tua justificação para a falta de '
                     .$bloqueada->data->format('d/m/Y')
-                    ." foi recusada. Motivo: {$dados['motivo']}."
+                    ." foi recusada. Motivo: {$dados['motivo']}.",
+                '/area-reservada?separador=geral'
             );
 
             return response()->json([
@@ -1103,7 +1139,8 @@ class SupervisorController extends Controller
             'Foi registada uma avaliação '.$avaliacao->tipo
                 .' referente a '
                 .$avaliacao->periodo_referencia->format('d/m/Y')
-                .' com a nota '.$avaliacao->nota.'.'
+                .' com a nota '.$avaliacao->nota.'.',
+            '/area-reservada?separador=geral'
         );
 
         return response()->json([
@@ -1248,7 +1285,10 @@ class SupervisorController extends Controller
             ->where('id_estagio', $id)
             ->first();
 
-        if (! $estagio) {
+        if (
+            ! $estagio
+            || ! Gate::forUser($request->user())->allows('view', $estagio)
+        ) {
             abort(response()->json([
                 'message' => 'Estágio não encontrado ou não atribuído a este supervisor.',
             ], 404));

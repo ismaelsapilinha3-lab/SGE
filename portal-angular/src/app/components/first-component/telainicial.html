@@ -11,15 +11,59 @@
       Multitel
     </div>
 
-    <div class="public-links">
-      <a href="#sobre-multitel">A Multitel</a>
-      <a href="#departamentos">Departamentos &amp; Direções</a>
-      <a href="#como-funciona">Como funciona</a>
+    <div
+      class="public-links"
+      id="menu-publico"
+      [class.aberto]="menuAberto"
+    >
+      <a
+        href="#sobre-multitel"
+        (click)="irParaSeccao('sobre-multitel', $event)"
+      >
+        A Multitel
+      </a>
+      <a
+        href="#departamentos"
+        (click)="irParaSeccao('departamentos', $event)"
+      >
+        Departamentos &amp; Direções
+      </a>
+      <a
+        href="#como-funciona"
+        (click)="irParaSeccao('como-funciona', $event)"
+      >
+        Como funciona
+      </a>
+      <a
+        href="#galeria"
+        (click)="irParaSeccao('galeria', $event)"
+      >
+        Galeria
+      </a>
     </div>
 
-    <button (click)="abrirLogin()" class="public-login">
-      Entrar
-    </button>
+    <div class="public-actions">
+      <button
+        type="button"
+        class="public-menu-toggle"
+        aria-controls="menu-publico"
+        [attr.aria-expanded]="menuAberto"
+        aria-label="Abrir menu de navegação"
+        (click)="alternarMenu()"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <button
+        type="button"
+        (click)="abrirLogin()"
+        class="public-login"
+      >
+        Entrar
+      </button>
+    </div>
   </nav>
 
   <header class="public-hero" id="inicio">
@@ -225,6 +269,55 @@
       </div>
     </section>
 
+    <section id="galeria" class="public-gallery">
+      <div class="public-title">
+        <small>GALERIA</small>
+        <h2>O dia a dia na Multitel</h2>
+        <p>
+          Um olhar sobre os espaços, as equipas e o ambiente onde
+          os estágios acontecem.
+        </p>
+      </div>
+
+      <div class="gallery-grid">
+        <button
+          *ngFor="let foto of fotosGaleria; let i = index"
+          type="button"
+          class="gallery-card"
+          [class.gallery-card--destaque]="i === 0"
+          [class.sem-imagem]="foto.indisponivel"
+          [attr.aria-disabled]="foto.indisponivel || null"
+          [attr.aria-label]="'Ampliar fotografia: ' + foto.legenda"
+          (click)="abrirGaleria(i)"
+        >
+          <img
+            [src]="foto.src"
+            [alt]="foto.alt"
+            loading="lazy"
+            (error)="marcarFotoIndisponivel(foto)"
+          >
+
+          <span class="gallery-placeholder" aria-hidden="true">
+            <svg
+              width="30"
+              height="30"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+            >
+              <path
+                d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"
+              />
+              <circle cx="12" cy="13" r="3"/>
+            </svg>
+          </span>
+
+          <span class="gallery-caption">{{ foto.legenda }}</span>
+        </button>
+      </div>
+    </section>
+
     <section id="sobre" class="public-cta">
       <div>
         <small>COMECE A SUA JORNADA</small>
@@ -392,4 +485,66 @@
       Todos os direitos reservados.
     </div>
   </footer>
+
+  <div
+    *ngIf="fotoAmpliada"
+    class="gallery-lightbox"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="fotoAmpliada.legenda"
+    (click)="fecharGaleria()"
+  >
+    <button
+      type="button"
+      class="gallery-lightbox-close"
+      aria-label="Fechar galeria"
+      (click)="fecharGaleria()"
+    >
+      &times;
+    </button>
+
+    <button
+      type="button"
+      class="gallery-lightbox-nav gallery-lightbox-prev"
+      aria-label="Fotografia anterior"
+      (click)="fotoAnterior($event)"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.4"
+      >
+        <path d="M15 6l-6 6 6 6"/>
+      </svg>
+    </button>
+
+    <figure
+      class="gallery-lightbox-figure"
+      (click)="$event.stopPropagation()"
+    >
+      <img [src]="fotoAmpliada.src" [alt]="fotoAmpliada.alt">
+      <figcaption>{{ fotoAmpliada.legenda }}</figcaption>
+    </figure>
+
+    <button
+      type="button"
+      class="gallery-lightbox-nav gallery-lightbox-next"
+      aria-label="Fotografia seguinte"
+      (click)="fotoSeguinte($event)"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.4"
+      >
+        <path d="M9 6l6 6-6 6"/>
+      </svg>
+    </button>
+  </div>
 </section>

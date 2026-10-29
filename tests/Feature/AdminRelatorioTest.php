@@ -183,7 +183,14 @@ it('exige justificação para recusar e notifica o estagiário', function () {
                 ->where('id_utilizador', $estagiario->id_utilizador)
                 ->where('titulo', 'Relatório recusado')
                 ->exists()
-        )->toBeTrue();
+        )->toBeTrue()
+        ->and(
+            Notificacao::query()
+                ->where('id_utilizador', $estagiario->id_utilizador)
+                ->where('titulo', 'Relatório recusado')
+                ->latest('id_notificacao')
+                ->value('url')
+        )->toBe('/area-reservada?separador=relatorios');
 });
 
 it('não deixa um não administrador consultar os relatórios', function () {

@@ -63,7 +63,8 @@ it('avisa os administradores quando entra uma candidatura nova', function () {
 
     expect($notificacao)->not->toBeNull()
         ->and($notificacao->titulo)->toBe('Nova candidatura recebida')
-        ->and($notificacao->mensagem)->toContain('Candidato Exemplo');
+        ->and($notificacao->mensagem)->toContain('Candidato Exemplo')
+        ->and($notificacao->url)->toBe('/admin?secao=candidaturas');
 });
 
 it('não avisa administradores inativos', function () {

@@ -246,6 +246,7 @@ class CoordenadorController extends Controller
             ->with([
                 'departamento',
                 'documentos',
+                'entrevista.supervisorRepresentante:id_utilizador,nome,email',
             ])
             ->where('id_candidatura', $id)
             ->first();
@@ -255,6 +256,8 @@ class CoordenadorController extends Controller
                 'message' => 'Candidatura não encontrada ou não atribuída a este coordenador.',
             ], 404);
         }
+
+        Gate::authorize('view', $candidatura);
 
         return response()->json($candidatura);
     }
@@ -300,6 +303,16 @@ class CoordenadorController extends Controller
                 ], 422);
             }
 
+            if ($candidatura->entrevista()
+                ->where('resultado', 'pendente')
+                ->exists()) {
+                return response()->json([
+                    'message' => 'Existe uma entrevista pendente. Registe o resultado antes de decidir a candidatura.',
+                ], 422);
+            }
+
+            Gate::authorize('decidir', $candidatura);
+
             $candidatura->garantirCoordenador($request->user());
 
             $estadoAnterior = $candidatura->estado;
@@ -325,7 +338,8 @@ class CoordenadorController extends Controller
             $this->notificacoes->paraCandidato(
                 $candidatura,
                 'Candidatura aprovada',
-                'A tua candidatura foi aprovada.'
+                'A tua candidatura foi aprovada.',
+                '/estagiario'
             );
 
             $candidaturaAprovada = $candidatura
@@ -334,6 +348,7 @@ class CoordenadorController extends Controller
                     'departamento',
                     'documentos',
                     'utilizador',
+                    'entrevista.supervisorRepresentante:id_utilizador,nome,email',
                 ]);
 
             return response()->json([
@@ -428,6 +443,16 @@ class CoordenadorController extends Controller
                 ], 422);
             }
 
+            if ($candidatura->entrevista()
+                ->where('resultado', 'pendente')
+                ->exists()) {
+                return response()->json([
+                    'message' => 'Existe uma entrevista pendente. Registe o resultado antes de decidir a candidatura.',
+                ], 422);
+            }
+
+            Gate::authorize('decidir', $candidatura);
+
             $candidatura->garantirCoordenador($request->user());
 
             $estadoAnterior = $candidatura->estado;
@@ -453,7 +478,8 @@ class CoordenadorController extends Controller
             $this->notificacoes->paraCandidato(
                 $candidatura,
                 'Candidatura recusada',
-                "A tua candidatura foi recusada. Motivo: {$dados['motivo']}."
+                "A tua candidatura foi recusada. Motivo: {$dados['motivo']}.",
+                '/estagiario'
             );
 
             return response()->json([
@@ -464,6 +490,7 @@ class CoordenadorController extends Controller
                     ->load([
                         'departamento',
                         'documentos',
+                        'entrevista.supervisorRepresentante:id_utilizador,nome,email',
                     ]),
             ]);
         });
@@ -636,7 +663,10 @@ class CoordenadorController extends Controller
             })
             ->first();
 
-        if (! $estagio) {
+        if (
+            ! $estagio
+            || ! Gate::forUser($user)->allows('view', $estagio)
+        ) {
             abort(response()->json([
                 'message' => 'Estágio não encontrado ou não atribuído a este coordenador.',
             ], 404));
@@ -821,13 +851,15 @@ class CoordenadorController extends Controller
         $this->notificacoes->paraUtilizador(
             $supervisor,
             'Novo estágio atribuído',
-            "Foi-te atribuído o acompanhamento do estágio #{$estagio->id_estagio}."
+            "Foi-te atribuído o acompanhamento do estágio #{$estagio->id_estagio}.",
+            "/supervisor?estagio={$estagio->id_estagio}&aba=plano"
         );
 
         $this->notificacoes->paraUtilizador(
             $estagio->id_estagiario,
             'Supervisor atribuído',
-            "Foi-te atribuído o supervisor {$supervisor->nome}."
+            "Foi-te atribuído o supervisor {$supervisor->nome}.",
+            '/area-reservada?separador=geral'
         );
 
         return response()->json([
@@ -942,6 +974,8 @@ class CoordenadorController extends Controller
             ], 422);
         }
 
+        Gate::authorize('aprovarPlano', $estagio);
+
         return DB::transaction(function () use (
             $request,
             $estagio
@@ -988,7 +1022,8 @@ class CoordenadorController extends Controller
             $this->notificacoes->paraUtilizadores(
                 $estagio->supervisoresUtilizadores(),
                 'Plano de estágio aprovado',
-                "O plano de estágio #{$plano->id_plano_estagio} foi aprovado."
+                "O plano de estágio #{$plano->id_plano_estagio} foi aprovado.",
+                "/supervisor?estagio={$estagio->id_estagio}&aba=plano"
             );
 
             return response()->json([
@@ -1026,6 +1061,8 @@ class CoordenadorController extends Controller
                 'message' => 'Este estágio já terminou e não aceita alterações.',
             ], 422);
         }
+
+        Gate::authorize('aprovarPlano', $estagio);
 
         return DB::transaction(function () use (
             $request,
@@ -1074,7 +1111,8 @@ class CoordenadorController extends Controller
             $this->notificacoes->paraUtilizadores(
                 $estagio->supervisoresUtilizadores(),
                 'Plano de estágio recusado',
-                "O plano de estágio #{$plano->id_plano_estagio} foi recusado. Motivo: {$dados['motivo']}."
+                "O plano de estágio #{$plano->id_plano_estagio} foi recusado. Motivo: {$dados['motivo']}.",
+                "/supervisor?estagio={$estagio->id_estagio}&aba=plano"
             );
 
             return response()->json([

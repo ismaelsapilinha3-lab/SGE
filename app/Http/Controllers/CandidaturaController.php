@@ -318,7 +318,9 @@ class CandidaturaController extends Controller
 
                 'Nova candidatura recebida',
 
-                "Foi submetida uma nova candidatura de {$resultado['candidatura']->nome}."
+                "Foi submetida uma nova candidatura de {$resultado['candidatura']->nome}.",
+
+                '/admin?secao=candidaturas'
             );
 
         } catch (UniqueConstraintViolationException $e) {
@@ -494,6 +496,10 @@ class CandidaturaController extends Controller
             ->orderBy('tipo_documento')
             ->get();
 
+        $entrevista = $candidatura->entrevista()
+            ->with('supervisorRepresentante:id_utilizador,nome')
+            ->first();
+
         $estado = match ($candidatura->estado) {
             'aprovada' => 'aceite',
             'recusada' => 'recusado',
@@ -520,6 +526,18 @@ class CandidaturaController extends Controller
             'id_estagio' => $estagio?->id_estagio,
             'estado_estagio' => $estagio?->estado,
             'data_submissao' => $candidatura->created_at,
+
+            'entrevista' => $entrevista ? [
+                'id_entrevista' => $entrevista->id_entrevista,
+                'data_hora' => $entrevista->data_hora,
+                'resultado' => $entrevista->resultado,
+                'motivo_reprovacao' => $entrevista->motivo_reprovacao,
+                'supervisor_representante' => $entrevista->supervisorRepresentante
+                    ? [
+                        'nome' => $entrevista->supervisorRepresentante->nome,
+                    ]
+                    : null,
+            ] : null,
 
             'documentos' => $documentos->map(function ($documento) {
                 return [

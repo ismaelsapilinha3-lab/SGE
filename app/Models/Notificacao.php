@@ -22,6 +22,7 @@ class Notificacao extends Model
         'canal',
         'titulo',
         'mensagem',
+        'url',
         'enviada_em',
         'lida_em',
     ];
@@ -81,13 +82,15 @@ class Notificacao extends Model
     public static function enviar(
         int $idUtilizador,
         string $titulo,
-        string $mensagem
+        string $mensagem,
+        ?string $url = null
     ): self {
         return self::create([
             'id_utilizador' => $idUtilizador,
             'canal' => 'sistema',
             'titulo' => $titulo,
             'mensagem' => $mensagem,
+            'url' => $url,
             'enviada_em' => now(),
         ]);
     }
@@ -101,7 +104,8 @@ class Notificacao extends Model
     public static function paraUtilizador(
         User|int|null $utilizador,
         string $titulo,
-        string $mensagem
+        string $mensagem,
+        ?string $url = null
     ): ?self {
         if ($utilizador === null) {
             Log::warning(
@@ -123,6 +127,8 @@ class Notificacao extends Model
 
             'mensagem' => $mensagem,
 
+            'url' => $url,
+
             'enviada_em' => now(),
         ]);
     }
@@ -135,10 +141,11 @@ class Notificacao extends Model
     public static function paraUtilizadores(
         iterable $utilizadores,
         string $titulo,
-        string $mensagem
+        string $mensagem,
+        ?string $url = null
     ): void {
         foreach ($utilizadores as $utilizador) {
-            self::paraUtilizador($utilizador, $titulo, $mensagem);
+            self::paraUtilizador($utilizador, $titulo, $mensagem, $url);
         }
     }
 
@@ -152,14 +159,20 @@ class Notificacao extends Model
      */
     public static function paraAdministradores(
         string $titulo,
-        string $mensagem
+        string $mensagem,
+        ?string $url = null
     ): int {
         $administradores = User::query()
             ->where('tipo_utilizador', 'administrador')
             ->pluck('id_utilizador');
 
         foreach ($administradores as $idAdministrador) {
-            self::enviar((int) $idAdministrador, $titulo, $mensagem);
+            self::enviar(
+                (int) $idAdministrador,
+                $titulo,
+                $mensagem,
+                $url
+            );
         }
 
         return $administradores->count();
@@ -174,13 +187,15 @@ class Notificacao extends Model
     public static function paraCandidato(
         Candidatura $candidatura,
         string $titulo,
-        string $mensagem
+        string $mensagem,
+        ?string $url = null
     ): self {
         return self::paraCandidatoPorId(
             $candidatura->id_candidatura,
             $candidatura->id_utilizador,
             $titulo,
-            $mensagem
+            $mensagem,
+            $url
         );
     }
 
@@ -192,7 +207,8 @@ class Notificacao extends Model
         int $idCandidatura,
         ?int $idUtilizador,
         string $titulo,
-        string $mensagem
+        string $mensagem,
+        ?string $url = null
     ): self {
         return self::create([
             'id_utilizador' => $idUtilizador,
@@ -204,6 +220,8 @@ class Notificacao extends Model
             'titulo' => $titulo,
 
             'mensagem' => $mensagem,
+
+            'url' => $url,
 
             'enviada_em' => now(),
         ]);

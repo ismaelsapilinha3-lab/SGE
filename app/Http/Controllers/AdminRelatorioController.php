@@ -6,6 +6,7 @@ use App\Models\Relatorio;
 use App\Services\NotificacaoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class AdminRelatorioController extends Controller
@@ -153,6 +154,8 @@ class AdminRelatorioController extends Controller
             ->with('estagio')
             ->findOrFail($id);
 
+        Gate::authorize('avaliar', $relatorio);
+
         if (! $relatorio->entregue()) {
             return response()->json([
                 'message' => 'Só é possível avaliar relatórios já entregues pelo estagiário.',
@@ -182,7 +185,8 @@ class AdminRelatorioController extends Controller
                         $relatorio->tipo,
                         $relatorio->mes_referencia?->format('m/Y') ?? '-',
                         $dados['comentario_admin'] ?? 'Não indicado.'
-                    )
+                    ),
+                    '/area-reservada?separador=relatorios'
                 );
             }
         });

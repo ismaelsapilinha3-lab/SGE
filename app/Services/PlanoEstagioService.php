@@ -91,7 +91,8 @@ class PlanoEstagioService
                 $this->notificacoes->paraUtilizador(
                     $coordenador,
                     'Plano de estágio submetido',
-                    "O supervisor submeteu o plano do estágio #{$estagio->id_estagio} para a tua aprovação."
+                    "O supervisor submeteu o plano do estágio #{$estagio->id_estagio} para a tua aprovação.",
+                    "/coordenador?estagio={$estagio->id_estagio}&aba=plano"
                 );
             } else {
                 Log::warning(

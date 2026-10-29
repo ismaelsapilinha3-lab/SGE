@@ -15,6 +15,7 @@ use App\Services\NotificacaoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -351,7 +352,8 @@ class RelatorioController extends Controller
                 $utilizador->nome,
                 $relatorio->tipo,
                 $mes->format('m/Y')
-            )
+            ),
+            '/admin?secao=relatorios'
         );
 
         return response()->json([
@@ -510,7 +512,8 @@ class RelatorioController extends Controller
                 $utilizador->nome,
                 $relatorio->tipo,
                 $relatorio->mes_referencia?->format('m/Y') ?? '-'
-            )
+            ),
+            '/admin?secao=relatorios'
         );
 
         return response()->json([
@@ -536,7 +539,10 @@ class RelatorioController extends Controller
             ], 404);
         }
 
-        if (! $utilizador || $this->podeVerRelatorio($utilizador, $relatorio) === false) {
+        if (
+            ! $utilizador
+            || ! Gate::forUser($utilizador)->allows('view', $relatorio)
+        ) {
             return response()->json([
                 'message' => 'Não tem autorização para consultar este relatório.',
             ], 403);
@@ -640,7 +646,8 @@ class RelatorioController extends Controller
             $this->notificacoes->paraUtilizador(
                 $estagio->id_estagiario,
                 'Plano de estágio disponível',
-                'O teu plano de estágio foi carregado pela Multitel. Consulta-o na tua área reservada.'
+                'O teu plano de estágio foi carregado pela Multitel. Consulta-o na tua área reservada.',
+                '/area-reservada?separador=plano'
             );
         }
 
@@ -684,16 +691,10 @@ class RelatorioController extends Controller
             ], 404);
         }
 
-        $autorizado = $utilizador
-            && (
-                $utilizador->tipo_utilizador === 'administrador'
-                || (
-                    $utilizador->tipo_utilizador === 'estagiario'
-                    && $plano->estagio->id_estagiario === $utilizador->id_utilizador
-                )
-            );
-
-        if (! $autorizado) {
+        if (
+            ! $utilizador
+            || ! Gate::forUser($utilizador)->allows('view', $plano)
+        ) {
             return response()->json([
                 'message' => 'Não tem autorização para consultar este plano.',
             ], 403);
@@ -771,16 +772,6 @@ class RelatorioController extends Controller
         }
 
         return $estagio;
-    }
-
-    private function podeVerRelatorio(User $utilizador, Relatorio $relatorio): bool
-    {
-        if ($utilizador->tipo_utilizador === 'administrador') {
-            return true;
-        }
-
-        return $utilizador->tipo_utilizador === 'estagiario'
-            && $relatorio->estagio?->id_estagiario === $utilizador->id_utilizador;
     }
 
     private function servirFicheiro(
@@ -940,9 +931,12 @@ class RelatorioController extends Controller
      * A tabela de notificações exige sempre um destinatário, por isso o
      * aviso é entregue a cada conta de administrador.
      */
-    private function notificarAdmin(string $titulo, string $mensagem): void
-    {
-        $this->notificacoes->paraAdministradores($titulo, $mensagem);
+    private function notificarAdmin(
+        string $titulo,
+        string $mensagem,
+        ?string $url = null
+    ): void {
+        $this->notificacoes->paraAdministradores($titulo, $mensagem, $url);
     }
 
     private function rotuloEstado(?string $estado): string

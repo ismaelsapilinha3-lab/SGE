@@ -130,6 +130,22 @@ class Estagio extends Model
     }
 
     /**
+     * Plano de atividades mais recente submetido pelo supervisor,
+     * independentemente de estar submetido, aprovado ou recusado.
+     */
+    public function planoAtualSupervisor(): HasOne
+    {
+        return $this->hasOne(
+            PlanoEstagio::class,
+            'id_estagio',
+            'id_estagio'
+        )
+            ->doSupervisor()
+            ->where('estado', '!=', 'substituido')
+            ->latestOfMany('id_plano_estagio');
+    }
+
+    /**
      * Último documento oficial carregado pelo administrador.
      */
     public function planoAtual(): HasOne

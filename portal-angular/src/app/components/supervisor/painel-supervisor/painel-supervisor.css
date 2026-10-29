@@ -328,3 +328,25 @@ a:focus-visible {
     transition: none !important;
   }
 }
+
+/* =========================================================
+   ESTADO DAS ENTREVISTAS
+   ========================================================= */
+
+.sup-tag-pendente {
+  color: #8a5a00;
+  background: #fff4d6;
+  border-color: #f2dfa4;
+}
+
+.sup-tag-aprovada {
+  color: #16703c;
+  background: #eaf8ef;
+  border-color: #b9e6c9;
+}
+
+.sup-tag-reprovada {
+  color: #b42318;
+  background: #fff0f1;
+  border-color: #f3b5bc;
+}

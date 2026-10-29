@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class AdminController extends Controller
 {
@@ -134,6 +135,8 @@ class AdminController extends Controller
         $candidatura = Candidatura::with([
             'departamento',
             'documentos',
+            'entrevista.administrador:id_utilizador,nome,email',
+            'entrevista.supervisorRepresentante:id_utilizador,nome,email',
         ])
             ->where('id_candidatura', $id)
             ->first();
@@ -143,6 +146,8 @@ class AdminController extends Controller
                 'message' => 'Candidatura não encontrada.',
             ], 404);
         }
+
+        Gate::authorize('view', $candidatura);
 
         return response()->json($candidatura);
     }
@@ -184,6 +189,8 @@ class AdminController extends Controller
                     'message' => 'Só é possível encaminhar candidaturas em análise.',
                 ], 422);
             }
+
+            Gate::authorize('encaminhar', $candidatura);
 
             /*
             |--------------------------------------------------------------------------

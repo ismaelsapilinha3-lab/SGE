@@ -130,6 +130,51 @@ export interface Candidatura {
 
   departamento?: Departamento;
   documentos?: Documento[];
+  entrevista?: Entrevista | null;
+}
+
+
+/* =========================================================
+   ENTREVISTA
+   ========================================================= */
+
+export type ResultadoEntrevista =
+  | 'pendente'
+  | 'aprovado'
+  | 'reprovado';
+
+
+export interface Entrevista {
+  id_entrevista: number;
+  id_candidatura: number;
+
+  data_hora: string;
+  resultado: ResultadoEntrevista;
+  motivo_reprovacao?: string | null;
+
+  administrador?: {
+    id_utilizador: number;
+    nome: string;
+    email: string;
+  } | null;
+
+  supervisor_representante?: {
+    id_utilizador: number;
+    nome: string;
+    email: string;
+  } | null;
+}
+
+
+export interface DadosAgendamentoEntrevista {
+  data_hora: string;
+  id_supervisor_representante: number;
+}
+
+
+export interface RespostaEntrevista {
+  message: string;
+  entrevista: Entrevista;
 }
 
 
@@ -280,6 +325,8 @@ export interface SupervisorEstagio {
 
 export interface PlanoEstagioAdmin {
   id_plano_estagio: number;
+  origem?: 'supervisor' | 'administrador';
+  nome_arquivo?: string | null;
   objetivos: string;
   atividades_previstas: string;
   cronograma: string;
@@ -325,6 +372,8 @@ export interface EstagioAdmin {
   supervisores_ativos?: SupervisorEstagio[];
 
   plano_aprovado?: PlanoEstagioAdmin | null;
+
+  plano_atual_supervisor?: PlanoEstagioAdmin | null;
 }
 
 
@@ -499,6 +548,50 @@ export class AdminService {
     return this.http.patch<RespostaEncaminhamento>(
       `${this.apiUrl}/candidaturas/${id}/encaminhar`,
       dados
+    );
+  }
+
+
+  /* =======================================================
+     ENTREVISTAS
+     ======================================================= */
+
+  agendarEntrevista(
+    idCandidatura: number,
+    dados: DadosAgendamentoEntrevista
+  ): Observable<RespostaEntrevista> {
+
+    return this.http.post<RespostaEntrevista>(
+      `${this.apiUrl}/candidaturas/${idCandidatura}/entrevista`,
+      dados
+    );
+  }
+
+
+  reagendarEntrevista(
+    idEntrevista: number,
+    dados: DadosAgendamentoEntrevista
+  ): Observable<RespostaEntrevista> {
+
+    return this.http.put<RespostaEntrevista>(
+      `${this.apiUrl}/entrevistas/${idEntrevista}`,
+      dados
+    );
+  }
+
+
+  registarResultadoEntrevista(
+    idEntrevista: number,
+    resultado: 'aprovado' | 'reprovado',
+    motivoReprovacao?: string | null
+  ): Observable<RespostaEntrevista> {
+
+    return this.http.patch<RespostaEntrevista>(
+      `${this.apiUrl}/entrevistas/${idEntrevista}/resultado`,
+      {
+        resultado,
+        motivo_reprovacao: motivoReprovacao ?? null
+      }
     );
   }
 

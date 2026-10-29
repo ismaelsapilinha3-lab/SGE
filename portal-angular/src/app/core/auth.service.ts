@@ -51,6 +51,27 @@ export class AuthService {
       );
   }
 
+  /** Pede o envio do link de recuperação de palavra-passe. */
+  pedirRecuperacao(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${environment.apiUrl}/password/forgot`,
+      { email }
+    );
+  }
+
+  /** Redefine a palavra-passe com o token recebido por e-mail. */
+  redefinirPassword(dados: {
+    token: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+  }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${environment.apiUrl}/password/reset`,
+      dados
+    );
+  }
+
   /** Usado também depois do cadastro, que já devolve o token. */
   iniciarSessao(resposta: RespostaAuth): void {
     if (this.noBrowser()) {

@@ -5,7 +5,10 @@ import {
 
 import {
   Component,
+  Input,
+  OnChanges,
   PLATFORM_ID,
+  SimpleChanges,
   computed,
   inject,
   signal
@@ -113,7 +116,7 @@ const RESUMO_ASSIDUIDADE_VAZIO: ResumoAssiduidade = {
 
   styleUrl: './estagio-coordenador.css'
 })
-export class EstagioCoordenadorComponent {
+export class EstagioCoordenadorComponent implements OnChanges {
 
   private readonly estagioService =
     inject(EstagioCoordenadorService);
@@ -132,6 +135,12 @@ export class EstagioCoordenadorComponent {
   readonly estagios = signal<EstagioCoordenado[]>([]);
 
   readonly estagioSelecionadoId = signal<number | null>(null);
+
+  @Input() estagioSolicitado: number | null = null;
+
+  @Input() abaSolicitada: string | null = null;
+
+  private destinoAplicado: string | null = null;
 
   pesquisaEstagios = '';
 
@@ -272,6 +281,32 @@ export class EstagioCoordenadorComponent {
   }
 
 
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (
+      !changes['estagioSolicitado']
+      && !changes['abaSolicitada']
+    ) {
+
+      return;
+
+    }
+
+    if (this.estagioSolicitado === null) {
+
+      // O destino foi limpo pela navegação manual, por isso o mesmo
+      // link volta a poder ser aplicado mais tarde.
+      this.destinoAplicado = null;
+
+      return;
+
+    }
+
+    this.aplicarDestinoNotificacao();
+
+  }
+
+
   // ==========================================================
   // CARREGAR ESTÁGIOS
   // ==========================================================
@@ -306,17 +341,21 @@ export class EstagioCoordenadorComponent {
 
           if (estagios.length > 0) {
 
-            const atual = this.estagioSelecionadoId();
+            if (!this.aplicarDestinoNotificacao()) {
 
-            const existe = estagios.some(
-              estagio => estagio.id_estagio === atual
-            );
+              const atual = this.estagioSelecionadoId();
 
-            this.selecionarEstagio(
-              existe && atual !== null
-                ? atual
-                : estagios[0].id_estagio
-            );
+              const existeAtual = estagios.some(
+                estagio => estagio.id_estagio === atual
+              );
+
+              this.selecionarEstagio(
+                existeAtual && atual !== null
+                  ? atual
+                  : estagios[0].id_estagio
+              );
+
+            }
 
           } else {
 
@@ -344,6 +383,74 @@ export class EstagioCoordenadorComponent {
         }
 
       });
+
+  }
+
+
+  /**
+   * Abre o estágio e a aba indicados pela notificação.
+   */
+  private aplicarDestinoNotificacao(): boolean {
+
+    const id = this.estagioSolicitado;
+
+    if (id === null) {
+
+      return false;
+
+    }
+
+    const aba = this.abaValida(this.abaSolicitada);
+
+    const chave = `${id}:${aba ?? 'plano'}`;
+
+    if (
+      chave === this.destinoAplicado
+      || !this.estagios().some(
+        estagio => estagio.id_estagio === id
+      )
+    ) {
+
+      return false;
+
+    }
+
+    this.destinoAplicado = chave;
+
+    if (aba !== null) {
+
+      this.aba.set(aba);
+
+    }
+
+    if (this.estagioSelecionadoId() === id) {
+
+      this.definirAba(aba ?? 'plano');
+
+      return true;
+
+    }
+
+    this.aba.set(aba ?? 'plano');
+
+    this.selecionarEstagio(id);
+
+    return true;
+
+  }
+
+
+  private abaValida(valor: string | null): AbaCoordenador | null {
+
+    if (!valor) {
+
+      return null;
+
+    }
+
+    return ABAS.some(aba => aba.id === valor)
+      ? valor as AbaCoordenador
+      : null;
 
   }
 
@@ -412,13 +519,11 @@ export class EstagioCoordenadorComponent {
   }
 
 
-  aoMudarEstagio(event: Event): void {
+  aoMudarEstagio(valor: number | string): void {
 
-    const select = event.target as HTMLSelectElement;
+    const id = Number(valor);
 
-    const id = Number(select.value);
-
-    if (!Number.isNaN(id)) {
+    if (Number.isInteger(id) && id > 0) {
 
       this.selecionarEstagio(id);
 

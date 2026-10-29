@@ -81,13 +81,15 @@ class AtualizarEstagiosConcluidos extends Command
             $this->notificacoes->paraUtilizador(
                 $estagio->id_estagiario,
                 'Estágio concluído',
-                "O teu estágio #{$estagio->id_estagio} foi concluído por ter chegado ao fim previsto."
+                "O teu estágio #{$estagio->id_estagio} foi concluído por ter chegado ao fim previsto.",
+                '/area-reservada?separador=geral'
             );
 
             $this->notificacoes->paraUtilizadores(
                 $estagio->supervisoresUtilizadores(),
                 'Estágio concluído',
-                "O estágio #{$estagio->id_estagio} foi concluído por ter chegado ao fim previsto."
+                "O estágio #{$estagio->id_estagio} foi concluído por ter chegado ao fim previsto.",
+                "/supervisor?estagio={$estagio->id_estagio}"
             );
 
             return true;

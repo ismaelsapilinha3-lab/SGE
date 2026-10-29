@@ -407,7 +407,14 @@ it('mantém o plano do supervisor quando o administrador carrega o documento ofi
         ->toBe($planoSupervisor->id_plano_estagio)
         ->and($estagio->planoDocumentoVigente()?->origem)
         ->toBe(PlanoEstagio::ORIGEM_ADMINISTRADOR)
-        ->and($estagio->planos()->count())->toBe(2);
+        ->and($estagio->planos()->count())->toBe(2)
+        ->and(
+            Notificacao::query()
+                ->where('id_utilizador', $estagio->id_estagiario)
+                ->where('titulo', 'Plano de estágio disponível')
+                ->latest('id_notificacao')
+                ->value('url')
+        )->toBe('/area-reservada?separador=plano');
 });
 
 it('não substitui o documento oficial quando o supervisor submete o plano', function () {
@@ -450,6 +457,26 @@ it('mostra ao administrador o plano de atividades aprovado pelo coordenador', fu
             'plano_aprovado.id_plano_estagio',
             $plano->id_plano_estagio
         );
+});
+
+it('mostra ao administrador o plano submetido antes da decisão do coordenador', function () {
+    [$estagio] = planoEstagioDoSupervisor();
+
+    $plano = PlanoEstagio::factory()->create([
+        'id_estagio' => $estagio->id_estagio,
+        'estado' => 'submetido',
+    ]);
+
+    $administrador = User::factory()->administrador()->create();
+
+    $this->actingAs($administrador, 'sanctum')
+        ->getJson("/api/admin/estagios/{$estagio->id_estagio}")
+        ->assertOk()
+        ->assertJsonPath(
+            'plano_atual_supervisor.id_plano_estagio',
+            $plano->id_plano_estagio
+        )
+        ->assertJsonPath('plano_atual_supervisor.estado', 'submetido');
 });
 
 it('atribui e notifica o coordenador quando o plano é submetido sem coordenador', function () {

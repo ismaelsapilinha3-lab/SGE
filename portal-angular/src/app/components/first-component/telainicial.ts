@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 
 import {
   Component,
+  HostListener,
   OnDestroy,
   OnInit
 } from '@angular/core';
@@ -14,6 +15,13 @@ interface Departamento {
   sigla: string;
   nome: string;
   descricao: string;
+}
+
+interface FotoGaleria {
+  src: string;
+  alt: string;
+  legenda: string;
+  indisponivel: boolean;
 }
 
 @Component({
@@ -96,6 +104,73 @@ export class TelainicialComponent implements OnInit, OnDestroy {
 
 
   // ============================================================
+  // GALERIA
+  // ============================================================
+
+  /*
+  | As fotografias ficam em public/assets/img/galeria/. Enquanto um
+  | ficheiro não existir, o cartão mostra um marcador visual com a
+  | legenda em vez de uma imagem quebrada.
+  */
+  readonly fotosGaleria: FotoGaleria[] = [
+
+    {
+      src: 'assets/img/galeria/equipa.jpg',
+      alt: 'Equipa da Multitel em ambiente de trabalho',
+      legenda: 'A nossa equipa',
+      indisponivel: false
+    },
+
+    {
+      src: 'assets/img/galeria/formacao.jpg',
+      alt: 'Sessão de formação com estagiários',
+      legenda: 'Formação e aprendizagem',
+      indisponivel: false
+    },
+
+    {
+      src: 'assets/img/galeria/infraestruturas.jpg',
+      alt: 'Infraestruturas de redes e telecomunicações',
+      legenda: 'Infraestruturas e redes',
+      indisponivel: false
+    },
+
+    {
+      src: 'assets/img/galeria/data-center.jpg',
+      alt: 'Sala técnica do Data Center da Multitel',
+      legenda: 'Data Center',
+      indisponivel: false
+    },
+
+    {
+      src: 'assets/img/galeria/acompanhamento.jpg',
+      alt: 'Supervisor a acompanhar o trabalho de um estagiário',
+      legenda: 'Acompanhamento próximo',
+      indisponivel: false
+    },
+
+    {
+      src: 'assets/img/galeria/talento.jpg',
+      alt: 'Jovens profissionais em início de carreira',
+      legenda: 'Novos talentos',
+      indisponivel: false
+    }
+
+  ];
+
+  fotoAmpliada: FotoGaleria | null = null;
+
+  indiceAmpliado = 0;
+
+
+  // ============================================================
+  // MENU DE NAVEGAÇÃO
+  // ============================================================
+
+  menuAberto = false;
+
+
+  // ============================================================
   // CONSTRUTOR
   // ============================================================
 
@@ -163,9 +238,173 @@ export class TelainicialComponent implements OnInit, OnDestroy {
 
   abrirLogin(): void {
 
+    this.fecharMenu();
+
     this.router.navigate([
       '/acesso'
     ]);
+  }
+
+
+  // ============================================================
+  // MENU RESPONSIVO
+  // ============================================================
+
+  alternarMenu(): void {
+
+    this.menuAberto = !this.menuAberto;
+  }
+
+
+  fecharMenu(): void {
+
+    this.menuAberto = false;
+  }
+
+
+  // ============================================================
+  // NAVEGAÇÃO ENTRE SECÇÕES
+  // ============================================================
+
+  irParaSeccao(id: string, evento?: Event): void {
+
+    evento?.preventDefault();
+
+    this.fecharMenu();
+
+    if (typeof document === 'undefined') {
+
+      return;
+    }
+
+    const alvo = document.getElementById(id);
+
+    if (!alvo) {
+
+      return;
+    }
+
+    if (typeof alvo.scrollIntoView === 'function') {
+
+      alvo.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+
+    }
+
+    history.replaceState(null, '', `#${id}`);
+  }
+
+
+  // ============================================================
+  // GALERIA DE FOTOGRAFIAS
+  // ============================================================
+
+  abrirGaleria(indice: number): void {
+
+    const foto = this.fotosGaleria[indice];
+
+    if (!foto || foto.indisponivel) {
+      return;
+    }
+
+    this.indiceAmpliado = indice;
+
+    this.fotoAmpliada = foto;
+  }
+
+
+  fecharGaleria(): void {
+
+    this.fotoAmpliada = null;
+  }
+
+
+  fotoAnterior(evento?: Event): void {
+
+    evento?.stopPropagation();
+
+    this.moverGaleria(-1);
+  }
+
+
+  fotoSeguinte(evento?: Event): void {
+
+    evento?.stopPropagation();
+
+    this.moverGaleria(1);
+  }
+
+
+  marcarFotoIndisponivel(foto: FotoGaleria): void {
+
+    foto.indisponivel = true;
+
+    if (this.fotoAmpliada === foto) {
+
+      this.fotoAmpliada = null;
+
+    }
+  }
+
+
+  @HostListener('document:keydown', ['$event'])
+  aoTeclaGaleria(evento: KeyboardEvent): void {
+
+    if (!this.fotoAmpliada) {
+      return;
+    }
+
+    if (evento.key === 'Escape') {
+
+      this.fecharGaleria();
+
+      return;
+    }
+
+    if (evento.key === 'ArrowLeft') {
+
+      this.moverGaleria(-1);
+
+      return;
+    }
+
+    if (evento.key === 'ArrowRight') {
+
+      this.moverGaleria(1);
+    }
+  }
+
+
+  /**
+   * Percorre a galeria ignorando as fotografias ainda não disponíveis.
+   */
+  private moverGaleria(passo: number): void {
+
+    const total = this.fotosGaleria.length;
+
+    if (total === 0) {
+      return;
+    }
+
+    let indice = this.indiceAmpliado;
+
+    for (let tentativa = 0; tentativa < total; tentativa++) {
+
+      indice = (indice + passo + total) % total;
+
+      const foto = this.fotosGaleria[indice];
+
+      if (!foto.indisponivel) {
+
+        this.indiceAmpliado = indice;
+
+        this.fotoAmpliada = foto;
+
+        return;
+      }
+    }
   }
 
 

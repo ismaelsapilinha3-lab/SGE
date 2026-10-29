@@ -39,6 +39,18 @@ export interface EstagioSupervisionado {
 
 export interface ResumoSupervisor {
   estagios_ativos: number;
+  entrevistas_pendentes?: number;
+}
+
+
+export interface EntrevistaSupervisor {
+  id_entrevista: number;
+  id_candidatura: number;
+  nome_candidato: string | null;
+  email_candidato: string | null;
+  data_hora: string;
+  resultado: 'pendente' | 'aprovado' | 'reprovado';
+  motivo_reprovacao: string | null;
 }
 
 
@@ -50,6 +62,8 @@ export interface PainelSupervisor {
   resumo: ResumoSupervisor;
 
   estagios: EstagioSupervisionado[];
+
+  entrevistas?: EntrevistaSupervisor[];
 }
 
 

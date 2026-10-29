@@ -12,6 +12,8 @@ import {
   signal
 } from '@angular/core';
 
+import { Router } from '@angular/router';
+
 import {
   Notificacao,
   NotificacaoService
@@ -47,6 +49,9 @@ export class SinoNotificacoesComponent {
 
   private readonly platformId =
     inject(PLATFORM_ID);
+
+  private readonly router =
+    inject(Router);
 
 
   // ============================================================
@@ -133,6 +138,27 @@ export class SinoNotificacoesComponent {
   fechar(): void {
 
     this.aberto.set(false);
+
+  }
+
+
+  // ============================================================
+  // ABRIR DESTINO DA NOTIFICAÇÃO
+  // ============================================================
+
+  abrirDestino(notificacao: Notificacao): void {
+
+    if (!notificacao.url) {
+
+      return;
+
+    }
+
+    this.marcarComoLida(notificacao);
+
+    this.fechar();
+
+    this.router.navigateByUrl(notificacao.url);
 
   }
 

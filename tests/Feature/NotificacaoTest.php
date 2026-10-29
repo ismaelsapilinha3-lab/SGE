@@ -93,6 +93,22 @@ function temNotificacao(User|int $utilizador, string $titulo): bool
         ->exists();
 }
 
+/**
+ * Destino (URL) da notificação mais recente com o título indicado.
+ */
+function urlDaNotificacao(User|int $utilizador, string $titulo): ?string
+{
+    $id = $utilizador instanceof User
+        ? $utilizador->id_utilizador
+        : $utilizador;
+
+    return Notificacao::query()
+        ->where('id_utilizador', $id)
+        ->where('titulo', $titulo)
+        ->latest('id_notificacao')
+        ->value('url');
+}
+
 it('lista as notificações do utilizador com o resumo', function () {
     $utilizador = User::factory()->estagiario()->create();
 
@@ -211,7 +227,11 @@ it('notifica o supervisor e o estagiário quando um supervisor é atribuído', f
     expect(temNotificacao($novoSupervisor, 'Novo estágio atribuído'))
         ->toBeTrue()
         ->and(temNotificacao($estagio->id_estagiario, 'Supervisor atribuído'))
-        ->toBeTrue();
+        ->toBeTrue()
+        ->and(urlDaNotificacao($novoSupervisor, 'Novo estágio atribuído'))
+        ->toBe("/supervisor?estagio={$estagio->id_estagio}&aba=plano")
+        ->and(urlDaNotificacao($estagio->id_estagiario, 'Supervisor atribuído'))
+        ->toBe('/area-reservada?separador=geral');
 });
 
 it('notifica o estagiário quando o estágio é iniciado', function () {
@@ -234,7 +254,9 @@ it('notifica o estagiário quando o estágio é iniciado', function () {
         )
         ->assertCreated();
 
-    expect(temNotificacao($estagiario, 'Estágio iniciado'))->toBeTrue();
+    expect(temNotificacao($estagiario, 'Estágio iniciado'))->toBeTrue()
+        ->and(urlDaNotificacao($estagiario, 'Estágio iniciado'))
+        ->toBe('/area-reservada?separador=geral');
 });
 
 it('notifica o estagiário e o supervisor quando o estado do estágio muda', function () {
@@ -255,7 +277,11 @@ it('notifica o estagiário e o supervisor quando o estado do estágio muda', fun
     expect(temNotificacao($estagio->id_estagiario, 'Estado do estágio atualizado'))
         ->toBeTrue()
         ->and(temNotificacao($supervisor, 'Estado do estágio atualizado'))
-        ->toBeTrue();
+        ->toBeTrue()
+        ->and(urlDaNotificacao($estagio->id_estagiario, 'Estado do estágio atualizado'))
+        ->toBe('/area-reservada?separador=geral')
+        ->and(urlDaNotificacao($supervisor, 'Estado do estágio atualizado'))
+        ->toBe("/supervisor?estagio={$estagio->id_estagio}");
 });
 
 it('notifica o coordenador quando o plano é submetido', function () {
@@ -275,8 +301,51 @@ it('notifica o coordenador quando o plano é submetido', function () {
         )
         ->assertCreated();
 
-    expect(temNotificacao($coordenador, 'Plano de estágio submetido'))
-        ->toBeTrue();
+    $notificacao = Notificacao::query()
+        ->where('id_utilizador', $coordenador->id_utilizador)
+        ->where('titulo', 'Plano de estágio submetido')
+        ->latest('id_notificacao')
+        ->first();
+
+    expect($notificacao)->not->toBeNull()
+        ->and($notificacao->url)->toBe(
+            "/coordenador?estagio={$estagio->id_estagio}&aba=plano"
+        );
+
+    $this->actingAs($coordenador, 'sanctum')
+        ->getJson('/api/notificacoes')
+        ->assertOk()
+        ->assertJsonPath(
+            'notificacoes.0.url',
+            "/coordenador?estagio={$estagio->id_estagio}&aba=plano"
+        );
+});
+
+it('notifica os supervisores quando o plano é aprovado', function () {
+    [$estagio, $coordenador] = estagioNotificacaoDosCoordenadores();
+
+    $supervisor = User::factory()->supervisor()->create();
+
+    $estagio->supervisores()->create([
+        'id_supervisor' => $supervisor->id_utilizador,
+        'atribuido_em' => now(),
+    ]);
+
+    PlanoEstagio::factory()->create([
+        'id_estagio' => $estagio->id_estagio,
+        'estado' => 'submetido',
+    ]);
+
+    $this->actingAs($coordenador, 'sanctum')
+        ->patchJson(
+            "/api/coordenador/estagios/{$estagio->id_estagio}/plano/aprovar"
+        )
+        ->assertOk();
+
+    expect(temNotificacao($supervisor, 'Plano de estágio aprovado'))
+        ->toBeTrue()
+        ->and(urlDaNotificacao($supervisor, 'Plano de estágio aprovado'))
+        ->toBe("/supervisor?estagio={$estagio->id_estagio}&aba=plano");
 });
 
 it('notifica os supervisores quando o plano é recusado', function () {
@@ -301,13 +370,15 @@ it('notifica os supervisores quando o plano é recusado', function () {
         )
         ->assertOk();
 
-    expect(temNotificacao($supervisor, 'Plano de estágio recusado'))->toBeTrue();
+    expect(temNotificacao($supervisor, 'Plano de estágio recusado'))->toBeTrue()
+        ->and(urlDaNotificacao($supervisor, 'Plano de estágio recusado'))
+        ->toBe("/supervisor?estagio={$estagio->id_estagio}&aba=plano");
 });
 
 it('notifica os supervisores quando o estagiário submete o contrato', function () {
     Storage::fake('local');
 
-    [, $estagiario, $supervisor] = estagioAlvoDeNotificacoes();
+    [$estagio, $estagiario, $supervisor] = estagioAlvoDeNotificacoes();
 
     $this->actingAs($estagiario, 'sanctum')
         ->postJson('/api/estagiario/estagio/contrato', [
@@ -316,7 +387,9 @@ it('notifica os supervisores quando o estagiário submete o contrato', function 
         ])
         ->assertCreated();
 
-    expect(temNotificacao($supervisor, 'Contrato submetido'))->toBeTrue();
+    expect(temNotificacao($supervisor, 'Contrato submetido'))->toBeTrue()
+        ->and(urlDaNotificacao($supervisor, 'Contrato submetido'))
+        ->toBe("/supervisor?estagio={$estagio->id_estagio}&aba=contrato");
 });
 
 it('notifica o estagiário quando o contrato é rejeitado', function () {
@@ -334,7 +407,9 @@ it('notifica o estagiário quando o contrato é rejeitado', function () {
         ->assertOk();
 
     expect(temNotificacao($estagio->id_estagiario, 'Contrato rejeitado'))
-        ->toBeTrue();
+        ->toBeTrue()
+        ->and(urlDaNotificacao($estagio->id_estagiario, 'Contrato rejeitado'))
+        ->toBe('/area-reservada?separador=documentos');
 });
 
 it('notifica os supervisores quando o estagiário justifica uma falta', function () {
@@ -351,7 +426,9 @@ it('notifica os supervisores quando o estagiário justifica uma falta', function
         )
         ->assertOk();
 
-    expect(temNotificacao($supervisor, 'Falta justificada'))->toBeTrue();
+    expect(temNotificacao($supervisor, 'Falta justificada'))->toBeTrue()
+        ->and(urlDaNotificacao($supervisor, 'Falta justificada'))
+        ->toBe("/supervisor?estagio={$estagio->id_estagio}&aba=assiduidade");
 });
 
 it('notifica o estagiário quando a justificação é aprovada', function () {
@@ -370,7 +447,9 @@ it('notifica o estagiário quando a justificação é aprovada', function () {
         ->assertOk();
 
     expect(temNotificacao($estagio->id_estagiario, 'Justificação aprovada'))
-        ->toBeTrue();
+        ->toBeTrue()
+        ->and(urlDaNotificacao($estagio->id_estagiario, 'Justificação aprovada'))
+        ->toBe('/area-reservada?separador=geral');
 });
 
 it('notifica o estagiário quando é registada uma avaliação', function () {
@@ -387,11 +466,13 @@ it('notifica o estagiário quando é registada uma avaliação', function () {
         )
         ->assertCreated();
 
-    expect(temNotificacao($estagio->id_estagiario, 'Nova avaliação'))->toBeTrue();
+    expect(temNotificacao($estagio->id_estagiario, 'Nova avaliação'))->toBeTrue()
+        ->and(urlDaNotificacao($estagio->id_estagiario, 'Nova avaliação'))
+        ->toBe('/area-reservada?separador=geral');
 });
 
 it('notifica os supervisores quando o estagiário dá feedback', function () {
-    [, $estagiario, $supervisor] = estagioAlvoDeNotificacoes();
+    [$estagio, $estagiario, $supervisor] = estagioAlvoDeNotificacoes();
 
     $this->actingAs($estagiario, 'sanctum')
         ->postJson('/api/estagiario/estagio/feedback', [
@@ -399,7 +480,45 @@ it('notifica os supervisores quando o estagiário dá feedback', function () {
         ])
         ->assertCreated();
 
-    expect(temNotificacao($supervisor, 'Feedback do estagiário'))->toBeTrue();
+    expect(temNotificacao($supervisor, 'Feedback do estagiário'))->toBeTrue()
+        ->and(urlDaNotificacao($supervisor, 'Feedback do estagiário'))
+        ->toBe("/supervisor?estagio={$estagio->id_estagio}&aba=feedback");
+});
+
+it('notifica o candidato quando a candidatura é aprovada', function () {
+    $departamento = Departamento::factory()->create();
+
+    $coordenador = User::factory()->coordenador()->create();
+
+    Perfil::create([
+        'id_utilizador' => $coordenador->id_utilizador,
+        'id_departamento' => $departamento->id_departamento,
+    ]);
+
+    $candidato = User::factory()->estagiario()->create();
+
+    $candidatura = Candidatura::factory()->create([
+        'estado' => 'em_analise',
+        'id_utilizador' => $candidato->id_utilizador,
+        'id_coordenador' => $coordenador->id_utilizador,
+        'id_departamento_selecionado' => $departamento->id_departamento,
+    ]);
+
+    $this->actingAs($coordenador, 'sanctum')
+        ->patchJson(
+            "/api/coordenador/candidaturas/{$candidatura->id_candidatura}/aprovar"
+        )
+        ->assertOk();
+
+    $notificacao = Notificacao::query()
+        ->where('id_candidatura', $candidatura->id_candidatura)
+        ->where('titulo', 'Candidatura aprovada')
+        ->first();
+
+    expect($notificacao)->not->toBeNull()
+        ->and((int) $notificacao->id_utilizador)
+        ->toBe((int) $candidato->id_utilizador)
+        ->and($notificacao->url)->toBe('/estagiario');
 });
 
 it('notifica o candidato quando a candidatura é recusada', function () {
@@ -435,7 +554,8 @@ it('notifica o candidato quando a candidatura é recusada', function () {
 
     expect($notificacao)->not->toBeNull()
         ->and((int) $notificacao->id_utilizador)
-        ->toBe((int) $candidato->id_utilizador);
+        ->toBe((int) $candidato->id_utilizador)
+        ->and($notificacao->url)->toBe('/estagiario');
 });
 
 it('notifica o estagiário e os supervisores quando o comando conclui o estágio', function () {
@@ -456,7 +576,11 @@ it('notifica o estagiário e os supervisores quando o comando conclui o estágio
         ->and(temNotificacao($estagio->id_estagiario, 'Estágio concluído'))
         ->toBeTrue()
         ->and(temNotificacao($supervisor, 'Estágio concluído'))
-        ->toBeTrue();
+        ->toBeTrue()
+        ->and(urlDaNotificacao($estagio->id_estagiario, 'Estágio concluído'))
+        ->toBe('/area-reservada?separador=geral')
+        ->and(urlDaNotificacao($supervisor, 'Estágio concluído'))
+        ->toBe("/supervisor?estagio={$estagio->id_estagio}");
 
     expect(
         HistoricoEstado::where('id_estagio', $estagio->id_estagio)

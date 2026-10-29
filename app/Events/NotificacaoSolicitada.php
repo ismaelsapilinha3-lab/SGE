@@ -26,5 +26,6 @@ class NotificacaoSolicitada implements ShouldDispatchAfterCommit
         public readonly string $titulo,
         public readonly string $mensagem,
         public readonly ?int $idCandidatura = null,
+        public readonly ?string $url = null,
     ) {}
 }

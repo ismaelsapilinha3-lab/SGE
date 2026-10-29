@@ -50,6 +50,25 @@ class DocumentoEstagioPolicy
     }
 
     /**
+     * O supervisor atribuído pode validar ou rejeitar o documento.
+     */
+    public function validar(
+        User $user,
+        DocumentoEstagio $documentoEstagio
+    ): bool {
+        if (! $user->ativo || $user->tipo_utilizador !== 'supervisor') {
+            return false;
+        }
+
+        $estagio = $documentoEstagio->estagio;
+
+        return $estagio !== null
+            && $estagio->supervisoresAtivos()
+                ->where('id_supervisor', $user->id_utilizador)
+                ->exists();
+    }
+
+    /**
      * O coordenador vê os estágios da sua direção, incluindo as
      * candidaturas que ainda não têm coordenador atribuído.
      */

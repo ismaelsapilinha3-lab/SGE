@@ -807,4 +807,15 @@ export class AcessoComponent implements OnInit {
     ]);
   }
 
+  // ============================================================
+  // RECUPERAÇÃO DE PALAVRA-PASSE
+  // ============================================================
+
+  irParaRecuperarPassword(): void {
+
+    this.router.navigate([
+      '/recuperar-password'
+    ]);
+  }
+
 }

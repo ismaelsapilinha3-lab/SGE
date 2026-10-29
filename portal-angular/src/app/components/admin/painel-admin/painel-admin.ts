@@ -15,7 +15,7 @@ import {
   SafeResourceUrl
 } from '@angular/platform-browser';
 
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { Subscription } from 'rxjs';
 
@@ -27,12 +27,19 @@ import {
   Departamento,
   DepartamentoDados,
   Documento,
+  Entrevista,
   Estagiario,
   EstagiariosPorDepartamentoItem,
   EstagiariosResponse,
   RelatorioAdmin,
-  RelatoriosAdminResponse
+  RelatoriosAdminResponse,
+  ResultadoEntrevista
 } from '../../../services/admin.service';
+
+import {
+  UtilizadorAdmin,
+  UtilizadorAdminService
+} from '../../../services/utilizador-admin.service';
 
 import { AuthService } from '../../../core/auth.service';
 
@@ -149,11 +156,15 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
   private readonly adminService = inject(AdminService);
 
+  private readonly utilizadorAdminService = inject(UtilizadorAdminService);
+
   private readonly authService = inject(AuthService);
 
   private readonly perfilService = inject(PerfilService);
 
   private readonly router = inject(Router);
+
+  private readonly route = inject(ActivatedRoute);
 
   private readonly sanitizer = inject(DomSanitizer);
 
@@ -409,6 +420,37 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
 
   // ============================================================
+  // ENTREVISTA
+  // ============================================================
+
+  supervisores = signal<UtilizadorAdmin[]>([]);
+
+  carregandoSupervisores = signal(false);
+
+  mostrarFormularioEntrevista = signal(false);
+
+  dataHoraEntrevista = signal('');
+
+  supervisorEntrevista = signal<number | null>(null);
+
+  processandoEntrevista = signal(false);
+
+  erroEntrevista = signal('');
+
+  sucessoEntrevista = signal('');
+
+  mostrarFormularioResultado = signal(false);
+
+  resultadoEntrevista = signal<'aprovado' | 'reprovado'>('aprovado');
+
+  motivoReprovacaoEntrevista = signal('');
+
+  readonly entrevistaSelecionada = computed(
+    () => this.candidaturaSelecionada()?.entrevista ?? null
+  );
+
+
+  // ============================================================
   // PREVIEW DE DOCUMENTO
   // ============================================================
 
@@ -535,6 +577,20 @@ export class PainelAdmin implements OnInit, OnDestroy {
     this.carregarDepartamentos();
 
     this.carregarCandidaturas();
+
+    this.subscriptions.add(
+      this.route.queryParamMap.subscribe(parametros => {
+
+        const secao = parametros.get('secao');
+
+        if (secao && this.secaoValida(secao)) {
+
+          this.irParaSecao(secao);
+
+        }
+
+      })
+    );
   }
 
 
@@ -891,6 +947,14 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   private mensagemErroDepartamento(
+    erro: unknown,
+    mensagemPadrao: string
+  ): string {
+    return this.mensagemErroApi(erro, mensagemPadrao);
+  }
+
+
+  private mensagemErroApi(
     erro: unknown,
     mensagemPadrao: string
   ): string {
@@ -1425,6 +1489,20 @@ export class PainelAdmin implements OnInit, OnDestroy {
     this.sucessoEncaminhamento.set('');
 
     this.departamentoEncaminhamento.set(null);
+
+    this.mostrarFormularioEntrevista.set(false);
+
+    this.mostrarFormularioResultado.set(false);
+
+    this.erroEntrevista.set('');
+
+    this.sucessoEntrevista.set('');
+
+    this.dataHoraEntrevista.set('');
+
+    this.supervisorEntrevista.set(null);
+
+    this.motivoReprovacaoEntrevista.set('');
   }
 
 
@@ -1534,6 +1612,356 @@ export class PainelAdmin implements OnInit, OnDestroy {
       });
 
     this.subscriptions.add(sub);
+  }
+
+
+  // ============================================================
+  // ENTREVISTA
+  // ============================================================
+
+  carregarSupervisores(): void {
+    if (
+      this.carregandoSupervisores() ||
+      this.supervisores().length > 0
+    ) {
+      return;
+    }
+
+    this.carregandoSupervisores.set(true);
+
+    const sub = this.utilizadorAdminService
+      .listar('', 'supervisor', true, 1, 50)
+      .subscribe({
+        next: (resposta) => {
+          this.supervisores.set(resposta.data ?? []);
+
+          this.carregandoSupervisores.set(false);
+        },
+
+        error: (erro: unknown) => {
+          console.error('Erro ao carregar supervisores:', erro);
+
+          this.carregandoSupervisores.set(false);
+
+          this.erroEntrevista.set(
+            this.mensagemErroApi(
+              erro,
+              'Não foi possível carregar os supervisores.'
+            )
+          );
+        }
+      });
+
+    this.subscriptions.add(sub);
+  }
+
+
+  abrirFormularioEntrevista(): void {
+    this.erroEntrevista.set('');
+
+    this.sucessoEntrevista.set('');
+
+    this.mostrarFormularioResultado.set(false);
+
+    const entrevista = this.entrevistaSelecionada();
+
+    this.dataHoraEntrevista.set(
+      entrevista
+        ? this.dataHoraParaInput(entrevista.data_hora)
+        : ''
+    );
+
+    this.supervisorEntrevista.set(
+      entrevista?.supervisor_representante?.id_utilizador ?? null
+    );
+
+    this.mostrarFormularioEntrevista.set(true);
+
+    this.carregarSupervisores();
+  }
+
+
+  cancelarFormularioEntrevista(): void {
+    this.mostrarFormularioEntrevista.set(false);
+
+    this.erroEntrevista.set('');
+
+    this.dataHoraEntrevista.set('');
+
+    this.supervisorEntrevista.set(null);
+  }
+
+
+  alterarDataHoraEntrevista(event: Event): void {
+    this.dataHoraEntrevista.set(
+      (event.target as HTMLInputElement).value
+    );
+  }
+
+
+  alterarSupervisorEntrevista(event: Event): void {
+    const valor = (event.target as HTMLSelectElement).value;
+
+    this.supervisorEntrevista.set(
+      valor ? Number(valor) : null
+    );
+  }
+
+
+  confirmarEntrevista(): void {
+    const candidatura = this.candidaturaSelecionada();
+
+    if (!candidatura) {
+      return;
+    }
+
+    if (candidatura.estado !== 'em_analise') {
+      this.erroEntrevista.set(
+        'Só é possível agendar entrevistas para candidaturas em análise.'
+      );
+
+      return;
+    }
+
+    const dataHora = this.dataHoraEntrevista();
+
+    if (!dataHora) {
+      this.erroEntrevista.set(
+        'Indica a data e a hora da entrevista.'
+      );
+
+      return;
+    }
+
+    const idSupervisor = this.supervisorEntrevista();
+
+    if (!idSupervisor) {
+      this.erroEntrevista.set(
+        'Seleciona o supervisor representante.'
+      );
+
+      return;
+    }
+
+    this.processandoEntrevista.set(true);
+
+    this.erroEntrevista.set('');
+
+    this.sucessoEntrevista.set('');
+
+    const entrevista = this.entrevistaSelecionada();
+
+    const pedido = entrevista
+      ? this.adminService.reagendarEntrevista(
+          entrevista.id_entrevista,
+          {
+            data_hora: dataHora,
+            id_supervisor_representante: idSupervisor
+          }
+        )
+      : this.adminService.agendarEntrevista(
+          candidatura.id_candidatura,
+          {
+            data_hora: dataHora,
+            id_supervisor_representante: idSupervisor
+          }
+        );
+
+    const sub = pedido.subscribe({
+      next: (resposta) => {
+        this.processandoEntrevista.set(false);
+
+        this.sucessoEntrevista.set(resposta.message);
+
+        this.atualizarEntrevistaNaCandidatura(resposta.entrevista);
+
+        this.mostrarFormularioEntrevista.set(false);
+
+        this.carregarCandidaturas();
+      },
+
+      error: (erro: unknown) => {
+        console.error('Erro ao guardar entrevista:', erro);
+
+        this.processandoEntrevista.set(false);
+
+        this.erroEntrevista.set(
+          this.mensagemErroApi(
+            erro,
+            'Não foi possível guardar a entrevista.'
+          )
+        );
+      }
+    });
+
+    this.subscriptions.add(sub);
+  }
+
+
+  abrirFormularioResultado(): void {
+    this.erroEntrevista.set('');
+
+    this.sucessoEntrevista.set('');
+
+    this.mostrarFormularioEntrevista.set(false);
+
+    this.resultadoEntrevista.set('aprovado');
+
+    this.motivoReprovacaoEntrevista.set('');
+
+    this.mostrarFormularioResultado.set(true);
+  }
+
+
+  cancelarFormularioResultado(): void {
+    this.mostrarFormularioResultado.set(false);
+
+    this.erroEntrevista.set('');
+
+    this.resultadoEntrevista.set('aprovado');
+
+    this.motivoReprovacaoEntrevista.set('');
+  }
+
+
+  alterarResultadoEntrevista(event: Event): void {
+    const valor = (event.target as HTMLSelectElement).value;
+
+    if (valor === 'aprovado' || valor === 'reprovado') {
+      this.resultadoEntrevista.set(valor);
+    }
+  }
+
+
+  alterarMotivoReprovacaoEntrevista(event: Event): void {
+    this.motivoReprovacaoEntrevista.set(
+      (event.target as HTMLTextAreaElement).value
+    );
+  }
+
+
+  confirmarResultadoEntrevista(): void {
+    const entrevista = this.entrevistaSelecionada();
+
+    if (!entrevista) {
+      return;
+    }
+
+    const resultado = this.resultadoEntrevista();
+
+    const motivo = this.motivoReprovacaoEntrevista().trim();
+
+    if (resultado === 'reprovado' && motivo.length < 5) {
+      this.erroEntrevista.set(
+        'Indica o motivo da reprovação (mínimo 5 caracteres).'
+      );
+
+      return;
+    }
+
+    this.processandoEntrevista.set(true);
+
+    this.erroEntrevista.set('');
+
+    this.sucessoEntrevista.set('');
+
+    const sub = this.adminService
+      .registarResultadoEntrevista(
+        entrevista.id_entrevista,
+        resultado,
+        resultado === 'reprovado' ? motivo : null
+      )
+      .subscribe({
+        next: (resposta) => {
+          this.processandoEntrevista.set(false);
+
+          this.sucessoEntrevista.set(resposta.message);
+
+          this.atualizarEntrevistaNaCandidatura(resposta.entrevista);
+
+          this.mostrarFormularioResultado.set(false);
+
+          this.carregarCandidaturas();
+        },
+
+        error: (erro: unknown) => {
+          console.error('Erro ao registar resultado:', erro);
+
+          this.processandoEntrevista.set(false);
+
+          this.erroEntrevista.set(
+            this.mensagemErroApi(
+              erro,
+              'Não foi possível registar o resultado da entrevista.'
+            )
+          );
+        }
+      });
+
+    this.subscriptions.add(sub);
+  }
+
+
+  nomeResultadoEntrevista(
+    resultado: ResultadoEntrevista
+  ): string {
+    switch (resultado) {
+      case 'aprovado':
+        return 'Aprovada';
+
+      case 'reprovado':
+        return 'Reprovada';
+
+      default:
+        return 'Pendente';
+    }
+  }
+
+
+  classeResultadoEntrevista(
+    resultado: ResultadoEntrevista
+  ): string {
+    switch (resultado) {
+      case 'aprovado':
+        return 'estado-aprovada';
+
+      case 'reprovado':
+        return 'estado-recusada';
+
+      default:
+        return 'estado-em-analise';
+    }
+  }
+
+
+  private dataHoraParaInput(valor: string): string {
+    const data = new Date(valor);
+
+    if (Number.isNaN(data.getTime())) {
+      return '';
+    }
+
+    const local = new Date(
+      data.getTime() - data.getTimezoneOffset() * 60000
+    );
+
+    return local.toISOString().slice(0, 16);
+  }
+
+
+  private atualizarEntrevistaNaCandidatura(
+    entrevista: Entrevista
+  ): void {
+    const candidatura = this.candidaturaSelecionada();
+
+    if (!candidatura) {
+      return;
+    }
+
+    this.candidaturaSelecionada.set({
+      ...candidatura,
+      entrevista
+    });
   }
 
 
@@ -1852,6 +2280,46 @@ export class PainelAdmin implements OnInit, OnDestroy {
       behavior: 'smooth',
       block: 'start'
     });
+
+    this.limparSecaoSolicitada();
+  }
+
+
+  /**
+   * Remove a secção pedida da URL para que o mesmo destino volte a
+   * funcionar depois de o utilizador navegar manualmente.
+   */
+  private limparSecaoSolicitada(): void {
+
+    if (!this.route.snapshot.queryParamMap.has('secao')) {
+
+      return;
+
+    }
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        secao: null
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+
+  }
+
+
+  /**
+   * Confirma que a secção pedida existe e está disponível no menu.
+   */
+  private secaoValida(valor: string): valor is SecaoAdmin {
+
+    return this.gruposNavegacao.some(
+      grupo => grupo.itens.some(
+        item => item.id === valor && !item.desativado
+      )
+    );
+
   }
 
 
