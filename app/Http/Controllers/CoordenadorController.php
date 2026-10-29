@@ -323,6 +323,8 @@ class CoordenadorController extends Controller
                 'data_decisao' => now(),
             ]);
 
+            $candidatura->sincronizarPerfilDoEstagiario();
+
             HistoricoEstado::create([
                 'id_candidatura' => $candidatura->id_candidatura,
 

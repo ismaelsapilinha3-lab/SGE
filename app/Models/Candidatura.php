@@ -149,6 +149,34 @@ class Candidatura extends Model
         return $coordenador;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Sincronizar a direção no perfil do estagiário
+    |--------------------------------------------------------------------------
+    |
+    | O candidato criado pelo formulário público ainda não tem perfil, por
+    | isso a direção escolhida na candidatura só passa a estar visível na
+    | gestão de utilizadores se for copiada para o perfil após a aprovação.
+    | Candidaturas sem utilizador associado (importações ou registos
+    | antigos) são ignoradas. Os restantes dados do perfil são preservados.
+    |
+    */
+
+    public function sincronizarPerfilDoEstagiario(): void
+    {
+        if (
+            $this->id_utilizador === null
+            || $this->id_departamento_selecionado === null
+        ) {
+            return;
+        }
+
+        Perfil::updateOrCreate(
+            ['id_utilizador' => $this->id_utilizador],
+            ['id_departamento' => $this->id_departamento_selecionado]
+        );
+    }
+
     /**
      * Indica se a candidatura pode ser gerida pelo coordenador indicado.
      *
