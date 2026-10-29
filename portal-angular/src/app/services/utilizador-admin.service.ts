@@ -92,7 +92,8 @@ export class UtilizadorAdminService {
     tipoUtilizador = '',
     ativo: boolean | null = null,
     pagina = 1,
-    porPagina = 15
+    porPagina = 15,
+    idDepartamento: number | null = null
   ): Observable<UtilizadoresPaginados> {
 
     let params = new HttpParams()
@@ -109,6 +110,10 @@ export class UtilizadorAdminService {
 
     if (ativo !== null) {
       params = params.set('ativo', ativo ? '1' : '0');
+    }
+
+    if (idDepartamento !== null) {
+      params = params.set('id_departamento', idDepartamento);
     }
 
     return this.http.get<UtilizadoresPaginados>(

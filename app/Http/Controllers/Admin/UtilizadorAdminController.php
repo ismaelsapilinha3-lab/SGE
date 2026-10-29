@@ -31,6 +31,11 @@ class UtilizadorAdminController extends Controller
                 ]),
             ],
             'ativo' => ['nullable', 'boolean'],
+            'id_departamento' => [
+                'nullable',
+                'integer',
+                'exists:departamentos,id_departamento',
+            ],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
@@ -68,6 +73,15 @@ class UtilizadorAdminController extends Controller
 
         if (array_key_exists('ativo', $dados)) {
             $query->where('ativo', $dados['ativo']);
+        }
+
+        if (! empty($dados['id_departamento'])) {
+            $query->whereHas('perfil', function ($q) use ($dados) {
+                $q->where(
+                    'id_departamento',
+                    $dados['id_departamento']
+                );
+            });
         }
 
         $pagina = $query->orderBy('nome')

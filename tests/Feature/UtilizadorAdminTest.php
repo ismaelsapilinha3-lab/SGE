@@ -214,6 +214,51 @@ it('atribui uma direcao a um estagiario existente', function () {
     ]);
 });
 
+it('filtra os utilizadores pela direcao', function () {
+    $admin = adminDeUtilizadores();
+    $departamento = Departamento::factory()->create();
+    $outroDepartamento = Departamento::factory()->create();
+
+    $esperado = User::factory()->estagiario()->create([
+        'nome' => 'Estagiario da Direcao',
+    ]);
+
+    Perfil::create([
+        'id_utilizador' => $esperado->id_utilizador,
+        'id_departamento' => $departamento->id_departamento,
+    ]);
+
+    $excluido = User::factory()->estagiario()->create([
+        'nome' => 'Estagiario de Outra Direcao',
+    ]);
+
+    Perfil::create([
+        'id_utilizador' => $excluido->id_utilizador,
+        'id_departamento' => $outroDepartamento->id_departamento,
+    ]);
+
+    $this->actingAs($admin, 'sanctum')
+        ->getJson(
+            '/api/admin/utilizadores?id_departamento='
+            .$departamento->id_departamento
+        )
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath(
+            'data.0.id_utilizador',
+            $esperado->id_utilizador
+        );
+});
+
+it('rejeita o filtro por uma direcao inexistente', function () {
+    $admin = adminDeUtilizadores();
+
+    $this->actingAs($admin, 'sanctum')
+        ->getJson('/api/admin/utilizadores?id_departamento=999999')
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('id_departamento');
+});
+
 it('lista a direcao associada ao estagiario', function () {
     $admin = adminDeUtilizadores();
     $departamento = Departamento::factory()->create();

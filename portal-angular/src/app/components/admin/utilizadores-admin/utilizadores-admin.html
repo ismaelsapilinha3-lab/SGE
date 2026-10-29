@@ -96,6 +96,23 @@
         </select>
       </div>
 
+      <div class="campo">
+        <label for="filtroDepartamento">Direção/departamento</label>
+        <select
+          id="filtroDepartamento"
+          name="filtroDepartamento"
+          [(ngModel)]="filtroDepartamento"
+        >
+          <option [ngValue]="null">Todas as direções</option>
+
+          @for (d of departamentos(); track d.id_departamento) {
+            <option [ngValue]="d.id_departamento">
+              {{ d.nome }}
+            </option>
+          }
+        </select>
+      </div>
+
       <div class="acoes-filtros">
         <button type="submit" class="btn btn-primary">
           Pesquisar

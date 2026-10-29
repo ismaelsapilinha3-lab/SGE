@@ -46,6 +46,7 @@ export class UtilizadoresAdminComponent implements OnInit {
   pesquisa = '';
   filtroTipo = '';
   filtroEstado = '';
+  filtroDepartamento: number | null = null;
 
   // Formulário
   mostrarFormulario = signal(false);
@@ -93,7 +94,8 @@ export class UtilizadoresAdminComponent implements OnInit {
       this.filtroTipo,
       ativo,
       this.paginaAtual(),
-      this.porPagina
+      this.porPagina,
+      this.filtroDepartamento
     ).subscribe({
       next: resposta => {
         this.utilizadores.set(resposta.data ?? []);
@@ -123,6 +125,7 @@ export class UtilizadoresAdminComponent implements OnInit {
     this.pesquisa = '';
     this.filtroTipo = '';
     this.filtroEstado = '';
+    this.filtroDepartamento = null;
     this.paginaAtual.set(1);
     this.carregarUtilizadores();
   }
