@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,7 @@ class Estagio extends Model
 
     protected $fillable = [
         'id_candidatura',
+        'id_grupo_estagio',
         'id_estagiario',
         'data_inicio',
         'duracao_meses',
@@ -65,6 +67,15 @@ class Estagio extends Model
         );
     }
 
+    public function grupoEstagio(): BelongsTo
+    {
+        return $this->belongsTo(
+            GrupoEstagio::class,
+            'id_grupo_estagio',
+            'id_grupo_estagio'
+        );
+    }
+
     public function supervisores(): HasMany
     {
         return $this->hasMany(
@@ -102,6 +113,88 @@ class Estagio extends Model
         return $idCoordenador ? User::find($idCoordenador) : null;
     }
 
+    /**
+     * Diretor responsável pela candidatura de origem do estágio.
+     */
+    public function diretorResponsavel(): ?User
+    {
+        $idDiretor = $this->candidatura?->id_diretor;
+
+        return $idDiretor ? User::find($idDiretor) : null;
+    }
+
+    /**
+     * Utilizadores que devem receber as comunicações do estágio.
+     *
+     * Inclui os supervisores atribuídos, o coordenador e o diretor
+     * responsáveis. Quando a candidatura ainda não tem responsáveis
+     * definidos, recorre aos coordenadores e diretores ativos da direção.
+     *
+     * @return Collection<int, User>
+     */
+    public function responsaveisNotificacao(): Collection
+    {
+        $candidatura = $this->candidatura;
+
+        $ids = collect([
+            ...$this->supervisoresAtivos()->pluck('id_supervisor')->all(),
+            $candidatura?->id_coordenador,
+            $candidatura?->id_diretor,
+        ])->filter();
+
+        $idDepartamento = $candidatura?->id_departamento_selecionado;
+
+        if ($idDepartamento) {
+            $ids = $ids->merge(
+                User::query()
+                    ->where('ativo', true)
+                    ->whereIn('tipo_utilizador', ['coordenador', 'diretor'])
+                    ->whereHas(
+                        'perfil',
+                        fn (Builder $perfil) => $perfil->where(
+                            'id_departamento',
+                            $idDepartamento
+                        )
+                    )
+                    ->pluck('id_utilizador')
+            );
+        }
+
+        return User::query()
+            ->where('ativo', true)
+            ->whereIn(
+                'id_utilizador',
+                $ids->map(fn ($id) => (int) $id)->unique()->values()
+            )
+            ->get();
+    }
+
+    /**
+     * Prorrogações autorizadas para este estágio.
+     */
+    public function prorrogacoes(): HasMany
+    {
+        return $this->hasMany(
+            ProrrogacaoEstagio::class,
+            'id_estagio',
+            'id_estagio'
+        );
+    }
+
+    /**
+     * Histórico mais recente do cancelamento deste estágio.
+     */
+    public function historicoCancelamento(): HasOne
+    {
+        return $this->hasOne(
+            HistoricoEstado::class,
+            'id_estagio',
+            'id_estagio'
+        )
+            ->where('estado_novo', 'cancelado')
+            ->latestOfMany('id_historico');
+    }
+
     public function documentos(): HasMany
     {
         return $this->hasMany(
@@ -126,7 +219,7 @@ class Estagio extends Model
             PlanoEstagio::class,
             'id_estagio',
             'id_estagio'
-        )->doSupervisor()->where('estado', 'aprovado');
+        )->doFluxoAtividades()->where('estado', 'aprovado');
     }
 
     /**
@@ -148,7 +241,7 @@ class Estagio extends Model
     public function planoVigente(): ?PlanoEstagio
     {
         return $this->planos()
-            ->doSupervisor()
+            ->doFluxoAtividades()
             ->where('estado', '!=', 'substituido')
             ->latest('id_plano_estagio')
             ->first();

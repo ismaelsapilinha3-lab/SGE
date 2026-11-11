@@ -14,11 +14,59 @@ import { environment } from '../../environments/environment';
    DASHBOARD
    ========================================================= */
 
+export interface SemanaCandidaturas {
+  semana: number;
+  ano: number;
+  inicio: string;
+  fim: string;
+  total: number;
+}
+
+export interface CandidaturasPorSemana {
+  trimestre: {
+    numero: number;
+    ano: number;
+    inicio: string;
+    fim: string;
+  } | null;
+  semanas: SemanaCandidaturas[];
+}
+
+export interface FunilCandidaturaItem {
+  chave: string;
+  etapa: string;
+  total: number;
+}
+
+export interface VagaDepartamentoItem {
+  id_departamento: number;
+  nome: string;
+  vagas: number | null;
+  ocupadas: number;
+  disponiveis: number | null;
+  taxa_ocupacao: number | null;
+}
+
+export interface VagasPorDepartamento {
+  total_vagas: number;
+  total_ocupadas: number;
+  total_disponiveis: number;
+  departamentos: VagaDepartamentoItem[];
+}
+
 export interface DashboardAdmin {
   total_candidaturas: number;
   em_analise: number;
+  aguarda_diretor: number;
+  aguarda_decisao: number;
   aprovadas: number;
   recusadas: number;
+  encerradas: number;
+  estagiarios_ativos: number;
+  relatorios_atraso: number;
+  candidaturas_por_semana: CandidaturasPorSemana;
+  funil_candidaturas: FunilCandidaturaItem[];
+  vagas_por_departamento: VagasPorDepartamento;
 }
 
 
@@ -51,6 +99,7 @@ export interface Departamento {
   nome: string;
   descricao?: string | null;
   ativo?: boolean;
+  vagas?: number | null;
   estagiarios_ativos?: number;
 }
 
@@ -59,6 +108,7 @@ export interface DepartamentoDados {
   nome: string;
   descricao?: string | null;
   ativo?: boolean;
+  vagas?: number | null;
 }
 
 
@@ -95,6 +145,7 @@ export interface Documento {
 
 export type EstadoCandidatura =
   | 'em_analise'
+  | 'aguarda_diretor'
   | 'aprovada'
   | 'recusada'
   | 'encerrada';
@@ -115,13 +166,24 @@ export interface Candidatura {
 
   id_departamento_selecionado: number;
 
+  duracao_meses?: number | null;
+
   estado: EstadoCandidatura;
 
   motivo_recusa?: string | null;
   data_decisao?: string | null;
 
   id_coordenador?: number | null;
+  id_diretor?: number | null;
   encaminhada_em?: string | null;
+
+  parecer_coordenador?: string | null;
+  parecer_coordenador_motivo?: string | null;
+  parecer_coordenador_em?: string | null;
+
+  decisao_diretor?: string | null;
+  decisao_diretor_motivo?: string | null;
+  decisao_diretor_em?: string | null;
 
   bi_ativo?: boolean | null;
 
@@ -130,6 +192,18 @@ export interface Candidatura {
 
   departamento?: Departamento;
   documentos?: Documento[];
+}
+
+
+export interface RespostaDecisaoCandidatura {
+  message: string;
+  candidatura: Candidatura;
+}
+
+
+export interface DadosAtualizacaoCandidatura {
+  id_departamento?: number;
+  duracao_meses?: number;
 }
 
 
@@ -214,6 +288,11 @@ export type EstadoRelatorioAdmin =
   | 'rejeitado'
   | 'em_atraso';
 
+export interface ConfiguracaoRelatoriosAdmin {
+  dia_semana: number | null;
+  dia_semana_legivel: string | null;
+}
+
 export interface RelatorioAdmin {
   id_relatorio: number;
   id_estagio: number;
@@ -297,11 +376,15 @@ export interface EstagioAdmin {
   id_estagiario: number | null;
 
   data_inicio: string | null;
+  duracao_meses?: number | null;
   data_fim_prevista: string | null;
   data_fim_real: string | null;
+  dia_limite_relatorio?: number | null;
 
   estado: 'ativo' | 'suspenso' | 'concluido' | 'cancelado';
   motivo_suspensao: string | null;
+
+  prorrogacoes?: ProrrogacaoEstagio[];
 
   estagiario?: {
     id_utilizador: number;
@@ -328,6 +411,25 @@ export interface EstagioAdmin {
 }
 
 
+export interface ProrrogacaoEstagio {
+  id_prorrogacao: number;
+  id_estagio: number;
+
+  meses: number;
+  duracao_anterior?: number | null;
+  duracao_nova: number;
+
+  data_fim_anterior?: string | null;
+  data_fim_nova: string;
+
+  motivo: string;
+  id_utilizador?: number | null;
+
+  created_at?: string;
+  updated_at?: string;
+}
+
+
 export interface TrimestreEstagio {
   ano: number;
   numero: number;
@@ -344,6 +446,201 @@ export interface EstagiosAdminResponse {
   last_page: number;
   per_page: number;
   trimestre?: TrimestreEstagio | null;
+}
+
+
+/* =========================================================
+   GRUPOS DE ESTÁGIO
+   ========================================================= */
+
+export type EstadoGrupoEstagio =
+  | 'agendado'
+  | 'candidaturas'
+  | 'candidaturas_encerradas'
+  | 'em_curso'
+  | 'concluido'
+  | 'cancelado';
+
+
+export interface GrupoEstagio {
+  id_grupo_estagio: number;
+
+  nome: string;
+
+  data_inicio_candidaturas: string | null;
+  data_fim_candidaturas: string | null;
+
+  data_inicio_estagio: string;
+  data_fim_estagio: string;
+
+  duracao_meses: number;
+
+  estado: EstadoGrupoEstagio;
+  estado_rotulo?: string;
+
+  historico: boolean;
+
+  observacoes: string | null;
+
+  criado_por?: number | null;
+
+  ano?: number;
+  trimestre?: number;
+  trimestre_rotulo?: string;
+  total_estagiarios?: number;
+
+  candidaturas_count?: number;
+  estagios_count?: number;
+  estagiarios_historicos_count?: number;
+
+  created_at?: string;
+  updated_at?: string;
+}
+
+
+export interface ResumoTrimestreGrupos {
+  numero: number;
+  ano: number;
+  total_grupos: number;
+  total_estagiarios: number;
+}
+
+
+export interface GrupoEstagioDados {
+  nome: string;
+  data_inicio_candidaturas: string;
+  data_fim_candidaturas: string;
+  data_inicio_estagio: string;
+  duracao_meses?: number | null;
+  observacoes?: string | null;
+}
+
+
+export interface EstagiarioHistoricoDados {
+  nome_completo: string;
+  email?: string | null;
+  curso?: string | null;
+  universidade?: string | null;
+  id_departamento?: number | null;
+  supervisor?: string | null;
+  data_inicio?: string | null;
+  data_fim?: string | null;
+  estado?: 'ativo' | 'suspenso' | 'concluido' | 'cancelado' | null;
+  observacoes?: string | null;
+}
+
+
+export interface GrupoEstagioHistoricoDados {
+  nome: string;
+  data_inicio_candidaturas?: string | null;
+  data_fim_candidaturas?: string | null;
+  data_inicio_estagio: string;
+  data_fim_estagio?: string | null;
+  duracao_meses?: number | null;
+  observacoes?: string | null;
+  estagiarios?: EstagiarioHistoricoDados[];
+}
+
+
+export interface GrupoEstagioAtualizacao {
+  nome?: string;
+  data_inicio_candidaturas?: string | null;
+  data_fim_candidaturas?: string | null;
+  data_inicio_estagio?: string;
+  data_fim_estagio?: string | null;
+  duracao_meses?: number | null;
+  observacoes?: string | null;
+}
+
+
+export interface GruposEstagioResponse {
+  data: GrupoEstagio[];
+
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+
+  trimestre: TrimestreEstagio | null;
+
+  resumo_trimestres: ResumoTrimestreGrupos[];
+
+  anos: number[];
+
+  duracao_padrao: number;
+}
+
+
+export interface DistribuicaoDepartamentoGrupo {
+  id_departamento: number | null;
+  nome: string;
+  total_estagiarios: number;
+  por_estado: Record<string, number>;
+}
+
+
+export interface TotaisGrupoEstagio {
+  estagiarios: number;
+  estagios: number;
+  historicos: number;
+  candidaturas: number;
+  departamentos: number;
+  por_estado: Record<string, number>;
+}
+
+
+export interface GrupoEstagioDetalhe {
+  grupo: GrupoEstagio;
+  distribuicao: DistribuicaoDepartamentoGrupo[];
+  totais: TotaisGrupoEstagio;
+}
+
+
+export interface EstagiarioGrupo {
+  chave: string;
+
+  origem: 'estagio' | 'historico';
+
+  id_estagio: number | null;
+  id_estagiario: number | null;
+  id_candidatura: number | null;
+  id_estagiario_historico: number | null;
+
+  nome_completo: string;
+  email: string | null;
+
+  curso: string | null;
+  universidade: string | null;
+
+  id_departamento: number | null;
+  departamento: string | null;
+
+  data_inicio: string | null;
+  data_fim: string | null;
+
+  estado: 'ativo' | 'suspenso' | 'concluido' | 'cancelado';
+
+  supervisor: string | null;
+  coordenador: string | null;
+}
+
+
+export interface EstagiariosGrupoResponse {
+  data: EstagiarioGrupo[];
+  total: number;
+  current_page: number;
+  last_page: number;
+  per_page: number;
+}
+
+
+export interface FiltrosEstagiariosGrupo {
+  pesquisa?: string;
+  id_departamento?: number | null;
+  estado?: string;
+  origem?: string;
+  pagina?: number;
+  por_pagina?: number;
 }
 
 
@@ -407,7 +704,8 @@ export class AdminService {
       `${this.apiUrl}/departamentos`,
       {
         nome: dados.nome,
-        descricao: dados.descricao ?? null
+        descricao: dados.descricao ?? null,
+        vagas: dados.vagas ?? null
       }
     );
   }
@@ -504,6 +802,38 @@ export class AdminService {
 
 
   /* =======================================================
+     ATUALIZAR CANDIDATURA
+     ======================================================= */
+
+  atualizarCandidatura(
+    id: number,
+    dados: DadosAtualizacaoCandidatura
+  ): Observable<RespostaDecisaoCandidatura> {
+
+    return this.http.patch<RespostaDecisaoCandidatura>(
+      `${this.apiUrl}/candidaturas/${id}`,
+      dados
+    );
+  }
+
+
+  /* =======================================================
+     RECUSAR CANDIDATURA
+     ======================================================= */
+
+  recusarCandidatura(
+    id: number,
+    motivo: string
+  ): Observable<RespostaDecisaoCandidatura> {
+
+    return this.http.patch<RespostaDecisaoCandidatura>(
+      `${this.apiUrl}/candidaturas/${id}/recusar`,
+      { motivo }
+    );
+  }
+
+
+  /* =======================================================
      LISTAR ESTAGIÁRIOS
      ======================================================= */
 
@@ -524,6 +854,31 @@ export class AdminService {
     return this.http.get(
       `${this.apiUrl}/relatorios/${id}/ficheiro`,
       { responseType: 'blob' }
+    );
+  }
+
+  obterConfiguracaoRelatorios(): Observable<{
+    data: ConfiguracaoRelatoriosAdmin;
+    opcoes: Record<string, string>;
+  }> {
+    return this.http.get<{
+      data: ConfiguracaoRelatoriosAdmin;
+      opcoes: Record<string, string>;
+    }>(`${this.apiUrl}/relatorios/configuracao`);
+  }
+
+  guardarConfiguracaoRelatorios(
+    diaSemana: number | null
+  ): Observable<{
+    message: string;
+    data: ConfiguracaoRelatoriosAdmin;
+  }> {
+    return this.http.put<{
+      message: string;
+      data: ConfiguracaoRelatoriosAdmin;
+    }>(
+      `${this.apiUrl}/relatorios/configuracao`,
+      { dia_semana: diaSemana }
     );
   }
 
@@ -712,11 +1067,38 @@ export class AdminService {
       duracao_meses?: number;
       data_fim_prevista?: string;
       motivo_suspensao?: string;
+      motivo_cancelamento?: string;
       dia_limite_relatorio?: number;
     }
   ): Observable<{ message: string; data: unknown }> {
     return this.http.patch<{ message: string; data: unknown }>(
       `${this.apiUrl}/estagiarios/${idCandidatura}/estado`,
+      dados
+    );
+  }
+
+
+  /* =======================================================
+     PRORROGAR ESTÁGIO
+     ======================================================= */
+
+  prorrogarEstagio(
+    idCandidatura: number,
+    dados: {
+      meses: number;
+      motivo: string;
+    }
+  ): Observable<{
+    message: string;
+    data: EstagioAdmin;
+    prorrogacao: ProrrogacaoEstagio;
+  }> {
+    return this.http.patch<{
+      message: string;
+      data: EstagioAdmin;
+      prorrogacao: ProrrogacaoEstagio;
+    }>(
+      `${this.apiUrl}/estagiarios/${idCandidatura}/prorrogar`,
       dados
     );
   }
@@ -729,6 +1111,141 @@ export class AdminService {
   obterEstagio(id: number): Observable<EstagioAdmin> {
     return this.http.get<EstagioAdmin>(
       `${this.apiUrl}/estagios/${id}`
+    );
+  }
+
+
+  /* =======================================================
+     GRUPOS DE ESTÁGIO
+     ======================================================= */
+
+  listarGruposEstagio(
+    ano: number,
+    trimestre: number | null = null,
+    pesquisa: string = '',
+    estado: string = '',
+    historico: boolean | null = null,
+    pagina: number = 1,
+    porPagina: number = 12
+  ): Observable<GruposEstagioResponse> {
+
+    let params = new HttpParams()
+      .set('ano', ano)
+      .set('page', pagina)
+      .set('por_pagina', porPagina);
+
+    if (trimestre !== null) {
+      params = params.set('trimestre', trimestre);
+    }
+
+    if (pesquisa.trim()) {
+      params = params.set('pesquisa', pesquisa.trim());
+    }
+
+    if (estado) {
+      params = params.set('estado', estado);
+    }
+
+    if (historico !== null) {
+      params = params.set('historico', historico ? 1 : 0);
+    }
+
+    return this.http.get<GruposEstagioResponse>(
+      `${this.apiUrl}/grupos-estagio`,
+      { params }
+    );
+  }
+
+
+  obterGrupoEstagio(id: number): Observable<GrupoEstagioDetalhe> {
+    return this.http.get<GrupoEstagioDetalhe>(
+      `${this.apiUrl}/grupos-estagio/${id}`
+    );
+  }
+
+
+  criarGrupoEstagio(
+    dados: GrupoEstagioDados
+  ): Observable<{ message: string; data: GrupoEstagio }> {
+
+    return this.http.post<{ message: string; data: GrupoEstagio }>(
+      `${this.apiUrl}/grupos-estagio`,
+      dados
+    );
+  }
+
+
+  criarGrupoEstagioHistorico(
+    dados: GrupoEstagioHistoricoDados
+  ): Observable<{ message: string; data: GrupoEstagio }> {
+
+    return this.http.post<{ message: string; data: GrupoEstagio }>(
+      `${this.apiUrl}/grupos-estagio/historico`,
+      dados
+    );
+  }
+
+
+  atualizarGrupoEstagio(
+    id: number,
+    dados: GrupoEstagioAtualizacao
+  ): Observable<{ message: string; data: GrupoEstagio }> {
+
+    return this.http.patch<{ message: string; data: GrupoEstagio }>(
+      `${this.apiUrl}/grupos-estagio/${id}`,
+      dados
+    );
+  }
+
+
+  listarEstagiariosGrupo(
+    id: number,
+    filtros: FiltrosEstagiariosGrupo = {}
+  ): Observable<EstagiariosGrupoResponse> {
+
+    let params = new HttpParams()
+      .set('pagina', filtros.pagina ?? 1)
+      .set('por_pagina', filtros.por_pagina ?? 50);
+
+    if (filtros.pesquisa?.trim()) {
+      params = params.set('pesquisa', filtros.pesquisa.trim());
+    }
+
+    if (filtros.id_departamento) {
+      params = params.set('id_departamento', filtros.id_departamento);
+    }
+
+    if (filtros.estado) {
+      params = params.set('estado', filtros.estado);
+    }
+
+    if (filtros.origem) {
+      params = params.set('origem', filtros.origem);
+    }
+
+    return this.http.get<EstagiariosGrupoResponse>(
+      `${this.apiUrl}/grupos-estagio/${id}/estagiarios`,
+      { params }
+    );
+  }
+
+
+  adicionarEstagiarioHistorico(
+    idGrupo: number,
+    dados: EstagiarioHistoricoDados
+  ): Observable<{ message: string; data: unknown }> {
+
+    return this.http.post<{ message: string; data: unknown }>(
+      `${this.apiUrl}/grupos-estagio/${idGrupo}/estagiarios-historicos`,
+      dados
+    );
+  }
+
+
+  exportarGrupoEstagio(id: number): Observable<Blob> {
+    return this.http.get(
+      `${this.apiUrl}/grupos-estagio/${id}/exportar`,
+      { responseType: 'blob' }
     );
   }
 

@@ -54,158 +54,302 @@
       }
 
       <!-- =====================================================
-           GRÁFICOS DE ACOMPANHAMENTO
+           INDICADORES PRINCIPAIS
            ===================================================== -->
       <section
-        class="graficos-acompanhamento"
-        aria-label="Gráficos de acompanhamento das candidaturas"
+        class="dashboard-bloco"
+        aria-labelledby="dashboard-resumo-titulo"
+      >
+
+        <header class="dashboard-bloco-cabecalho">
+          <div>
+            <h2 id="dashboard-resumo-titulo">Resumo geral</h2>
+            <p>
+              Indicadores globais de candidaturas, estágios, relatórios e
+              capacidade.
+            </p>
+          </div>
+        </header>
+
+        <section class="dashboard-kpis" aria-label="Indicadores do dashboard">
+
+        <article class="kpi-card kpi-card--total">
+          <span class="kpi-rotulo">Candidaturas recebidas</span>
+          <strong class="kpi-valor">{{ dashboard().total_candidaturas }}</strong>
+          <span class="kpi-nota">
+            {{ dashboard().encerradas }} encerrada(s)
+          </span>
+        </article>
+
+        <article class="kpi-card kpi-card--analise">
+          <span class="kpi-rotulo">À espera de decisão</span>
+          <strong class="kpi-valor">{{ dashboard().aguarda_decisao }}</strong>
+          <span class="kpi-nota">
+            {{ dashboard().em_analise }} em análise ·
+            {{ dashboard().aguarda_diretor }} aguarda diretor
+          </span>
+        </article>
+
+        <article class="kpi-card kpi-card--aprovadas">
+          <span class="kpi-rotulo">Aprovadas</span>
+          <strong class="kpi-valor">{{ dashboard().aprovadas }}</strong>
+          <span class="kpi-nota">{{ percentAprovadas() }}% do total</span>
+        </article>
+
+        <article class="kpi-card kpi-card--recusadas">
+          <span class="kpi-rotulo">Recusadas</span>
+          <strong class="kpi-valor">{{ dashboard().recusadas }}</strong>
+          <span class="kpi-nota">{{ percentRecusadas() }}% do total</span>
+        </article>
+
+        <article class="kpi-card kpi-card--ativos">
+          <span class="kpi-rotulo">Estagiários ativos</span>
+          <strong class="kpi-valor">{{ dashboard().estagiarios_ativos }}</strong>
+          <span class="kpi-nota">Estágios com estado ativo</span>
+        </article>
+
+        <article class="kpi-card kpi-card--relatorios">
+          <span class="kpi-rotulo">Relatórios por entregar</span>
+          <strong class="kpi-valor">{{ dashboard().relatorios_atraso }}</strong>
+          <span class="kpi-nota">Prazo de entrega ultrapassado</span>
+        </article>
+
+        <article class="kpi-card kpi-card--vagas">
+          <span class="kpi-rotulo">Vagas disponíveis</span>
+          <strong class="kpi-valor">
+            {{ dashboard().vagas_por_departamento.total_disponiveis }}
+          </strong>
+          <span class="kpi-nota">
+            {{ dashboard().vagas_por_departamento.total_ocupadas }}
+            ocupada(s) de
+            {{ dashboard().vagas_por_departamento.total_vagas }}
+            definida(s)
+          </span>
+        </article>
+
+      </section>
+
+      </section>
+
+      <!-- =====================================================
+           FLUXO DE CANDIDATURAS
+           ===================================================== -->
+      <section
+        class="dashboard-bloco"
+        aria-labelledby="dashboard-fluxo-titulo"
+      >
+
+        <header class="dashboard-bloco-cabecalho">
+          <div>
+            <h2 id="dashboard-fluxo-titulo">Fluxo de candidaturas</h2>
+            <p>
+              Evolução semanal e distribuição das candidaturas pelas
+              etapas do processo.
+            </p>
+          </div>
+        </header>
+
+      <!-- =====================================================
+           CANDIDATURAS POR SEMANA E FUNIL
+           ===================================================== -->
+      <section
+        class="graficos-acompanhamento graficos-acompanhamento--duplo"
+        aria-label="Candidaturas por semana e funil de candidaturas"
       >
 
         <div class="grafico-card">
 
           <header class="grafico-cabecalho">
             <div>
-              <h2>Distribuição por estado</h2>
-              <p>Visualização global do estado das candidaturas</p>
+              <h2>Candidaturas por semana</h2>
+
+              <p>
+                @if (dashboard().candidaturas_por_semana.trimestre; as trimestre) {
+                  Trimestre {{ trimestre.numero }} de {{ trimestre.ano }}
+                  ({{ dataCurta(trimestre.inicio) }}–{{ dataCurta(trimestre.fim) }})
+                } @else {
+                  Trimestre corrente
+                }
+              </p>
             </div>
           </header>
 
-          <div class="grafico-corpo">
+          <div class="grafico-corpo grafico-corpo--coluna">
 
-            <div
-              class="grafico-donut-wrapper"
-              role="img"
-              aria-label="Gráfico circular com a distribuição das candidaturas por estado"
-            >
-              <svg viewBox="0 0 42 42" class="grafico-donut">
-                <circle
-                  cx="21"
-                  cy="21"
-                  r="15.91549430918954"
-                  fill="transparent"
-                  stroke="#E3E8EE"
-                  stroke-width="3"
-                ></circle>
+            @if (semanasDashboard().length === 0) {
+              <p class="grafico-vazio">
+                Ainda não existem candidaturas registadas neste trimestre.
+              </p>
+            } @else {
 
-                @if (dashboard().em_analise > 0) {
-                  <circle
-                    cx="21"
-                    cy="21"
-                    r="15.91549430918954"
-                    fill="transparent"
-                    stroke="#FF6B00"
-                    stroke-width="3"
-                    [attr.stroke-dasharray]="percentEmAnalise() + ' ' + (100 - percentEmAnalise())"
-                    stroke-dashoffset="25"
-                    class="grafico-arco"
-                  ></circle>
+              <div
+                class="barras-semana"
+                role="img"
+                aria-label="Candidaturas recebidas em cada semana do trimestre"
+              >
+                @for (
+                  semana of semanasDashboard();
+                  track semana.ano + '-' + semana.semana
+                ) {
+                  <div class="barra-semana" [attr.title]="rotuloSemana(semana)">
+                    <span class="barra-semana-valor">{{ semana.total }}</span>
+
+                    <div class="barra-semana-pista">
+                      <span
+                        class="barra-semana-preenchida"
+                        [style.height.%]="alturaSemana(semana.total)"
+                      ></span>
+                    </div>
+
+                    <span class="barra-semana-rotulo">S{{ semana.semana }}</span>
+
+                    <span class="barra-semana-periodo">
+                      {{ dataCurta(semana.inicio) }}
+                    </span>
+                  </div>
                 }
-
-                @if (dashboard().aprovadas > 0) {
-                  <circle
-                    cx="21"
-                    cy="21"
-                    r="15.91549430918954"
-                    fill="transparent"
-                    stroke="#137A47"
-                    stroke-width="3"
-                    [attr.stroke-dasharray]="percentAprovadas() + ' ' + (100 - percentAprovadas())"
-                    [attr.stroke-dashoffset]="25 - percentEmAnalise()"
-                    class="grafico-arco"
-                  ></circle>
-                }
-
-                @if (dashboard().recusadas > 0) {
-                  <circle
-                    cx="21"
-                    cy="21"
-                    r="15.91549430918954"
-                    fill="transparent"
-                    stroke="#C4323F"
-                    stroke-width="3"
-                    [attr.stroke-dasharray]="percentRecusadas() + ' ' + (100 - percentRecusadas())"
-                    [attr.stroke-dashoffset]="25 - percentEmAnalise() - percentAprovadas()"
-                    class="grafico-arco"
-                  ></circle>
-                }
-              </svg>
-
-              <div class="grafico-centro">
-                <strong>{{ dashboard().total_candidaturas }}</strong>
-                <span>Total</span>
-              </div>
-            </div>
-
-            <div class="grafico-legenda">
-
-              <div class="legenda-item legenda-item--analise">
-                <span class="legenda-cor"></span>
-
-                <span class="legenda-rotulo">Em análise</span>
-
-                <strong class="legenda-valor">
-                  {{ dashboard().em_analise }}
-                </strong>
-
-                <span class="legenda-percentual">
-                  {{ percentEmAnalise() }}%
-                </span>
-
-                <span class="legenda-barra">
-                  <span
-                    class="legenda-barra-valor"
-                    [style.width.%]="percentEmAnalise()"
-                  ></span>
-                </span>
               </div>
 
-              <div class="legenda-item legenda-item--aprovadas">
-                <span class="legenda-cor"></span>
-
-                <span class="legenda-rotulo">Aprovadas</span>
-
-                <strong class="legenda-valor">
-                  {{ dashboard().aprovadas }}
-                </strong>
-
-                <span class="legenda-percentual">
-                  {{ percentAprovadas() }}%
-                </span>
-
-                <span class="legenda-barra">
-                  <span
-                    class="legenda-barra-valor"
-                    [style.width.%]="percentAprovadas()"
-                  ></span>
-                </span>
-              </div>
-
-              <div class="legenda-item legenda-item--recusadas">
-                <span class="legenda-cor"></span>
-
-                <span class="legenda-rotulo">Recusadas</span>
-
-                <strong class="legenda-valor">
-                  {{ dashboard().recusadas }}
-                </strong>
-
-                <span class="legenda-percentual">
-                  {{ percentRecusadas() }}%
-                </span>
-
-                <span class="legenda-barra">
-                  <span
-                    class="legenda-barra-valor"
-                    [style.width.%]="percentRecusadas()"
-                  ></span>
-                </span>
-              </div>
-
-            </div>
+            }
 
           </div>
 
         </div>
+
+        <div class="grafico-card">
+
+          <header class="grafico-cabecalho">
+            <div>
+              <h2>Funil de candidaturas</h2>
+              <p>Distribuição das candidaturas pelas etapas do processo</p>
+            </div>
+          </header>
+
+          <div class="grafico-corpo grafico-corpo--coluna">
+
+            @if (funilDashboard().length === 0) {
+              <p class="grafico-vazio">Sem candidaturas registadas.</p>
+            } @else {
+
+              <div class="funil">
+                @for (etapa of funilDashboard(); track etapa.chave) {
+                  <div class="funil-linha">
+                    <span class="funil-rotulo">{{ etapa.etapa }}</span>
+
+                    <div class="funil-pista">
+                      <span
+                        class="funil-barra"
+                        [class]="'funil-barra funil-barra--' + etapa.chave"
+                        [style.width.%]="larguraFunil(etapa.total)"
+                      ></span>
+                    </div>
+
+                    <strong class="funil-valor">{{ etapa.total }}</strong>
+
+                    <span class="funil-percentual">
+                      {{ calcularPercentagem(etapa.total) }}%
+                    </span>
+                  </div>
+                }
+              </div>
+
+            }
+
+          </div>
+
+        </div>
+
+      </section>
+
+      </section>
+
+      <!-- =====================================================
+           CAPACIDADE E EQUIPA
+           ===================================================== -->
+      <section
+        class="dashboard-bloco"
+        aria-labelledby="dashboard-capacidade-titulo"
+      >
+
+        <header class="dashboard-bloco-cabecalho">
+          <div>
+            <h2 id="dashboard-capacidade-titulo">Capacidade e equipa</h2>
+            <p>
+              Vagas por departamento e distribuição dos estagiários por
+              direção.
+            </p>
+          </div>
+        </header>
+
+        <div class="dashboard-grelha">
+
+      <!-- =====================================================
+           VAGAS POR DEPARTAMENTO
+           ===================================================== -->
+      <section class="vagas-painel" aria-label="Vagas por departamento">
+
+        <header class="escada-cabecalho">
+
+          <div>
+            <h2>Vagas por departamento</h2>
+
+            <p>
+              Capacidade definida para cada direção ou departamento e
+              estágios ativos que a estão a ocupar.
+            </p>
+          </div>
+
+          <div class="escada-total">
+            <span>Vagas disponíveis</span>
+            <strong>
+              {{ dashboard().vagas_por_departamento.total_disponiveis }}
+            </strong>
+          </div>
+
+        </header>
+
+        @if (vagasPorDepartamentoDashboard().length === 0) {
+
+          <p class="escada-vazio">
+            Ainda não existem departamentos registados.
+          </p>
+
+        } @else {
+
+          <div class="vagas-lista">
+            @for (
+              item of vagasPorDepartamentoDashboard();
+              track item.id_departamento
+            ) {
+              <div
+                [class]="'vagas-linha ' + classeOcupacao(item)"
+              >
+
+                <div class="vagas-linha-cabecalho">
+                  <span class="vagas-nome">{{ item.nome }}</span>
+
+                  <span class="vagas-numeros">
+                    @if (item.vagas === null) {
+                      {{ item.ocupadas }} ativo(s) · sem vagas definidas
+                    } @else {
+                      {{ item.ocupadas }} / {{ item.vagas }}
+                      · {{ item.disponiveis }} livre(s)
+                    }
+                  </span>
+                </div>
+
+                <div class="vagas-pista">
+                  <span
+                    class="vagas-barra"
+                    [style.width.%]="percentagemOcupacao(item)"
+                  ></span>
+                </div>
+
+              </div>
+            }
+          </div>
+
+        }
 
       </section>
 
@@ -346,6 +490,10 @@
         [ngTemplateOutlet]="escadaEstagiarios"
       ></ng-container>
 
+        </div>
+
+      </section>
+
     </section>
 
 
@@ -362,7 +510,10 @@
 
         <div>
           <h2>Candidaturas</h2>
-          <p>Consulte, filtre e acompanhe as candidaturas recebidas.</p>
+          <p>
+            Candidaturas em análise e já decididas. As candidaturas aceites
+            passam para a área de Estagiários.
+          </p>
         </div>
 
         <span class="contador-candidaturas">
@@ -414,7 +565,6 @@
           >
             <option value="">Todos os estados</option>
             <option value="em_analise">Em análise</option>
-            <option value="aprovada">Aprovadas</option>
             <option value="recusada">Recusadas</option>
             <option value="encerrada">Encerradas</option>
           </select>
@@ -744,6 +894,25 @@
               ></textarea>
             </div>
 
+            <div class="campo-departamento">
+              <label for="vagasDepartamento">Vagas de estágio</label>
+
+              <input
+                id="vagasDepartamento"
+                type="number"
+                min="0"
+                max="1000"
+                step="1"
+                placeholder="Deixa vazio se ainda não estiver definido"
+                [value]="vagasDepartamento() ?? ''"
+                (input)="alterarVagasDepartamento($event)"
+              />
+
+              <p class="texto-ajuda">
+                Número máximo de estagiários em simultâneo nesta direção.
+              </p>
+            </div>
+
           </div>
 
           <footer class="acoes-formulario-departamento">
@@ -830,6 +999,11 @@
               <div class="cartao-departamento-estatistica">
                 <span>Estagiários com estágio ativo</span>
                 <strong>{{ departamento.estagiarios_ativos ?? 0 }}</strong>
+              </div>
+
+              <div class="cartao-departamento-estatistica">
+                <span>Vagas definidas</span>
+                <strong>{{ departamento.vagas ?? '—' }}</strong>
               </div>
 
               <footer class="cartao-departamento-acoes">
@@ -1236,6 +1410,87 @@
 
             </form>
 
+            @if (
+              estagioSelecionado.id_estagio &&
+              estagioSelecionado.estado_estagio !== 'concluido' &&
+              estagioSelecionado.estado_estagio !== 'cancelado'
+            ) {
+
+              <form
+                class="area-prorrogacao"
+                (submit)="$event.preventDefault(); prorrogarEstagio()"
+              >
+
+                <h4>Prorrogar estágio</h4>
+
+                <p class="texto-ajuda">
+                  Data prevista de fim actual:
+                  <strong>
+                    {{ estagioSelecionado.data_fim_prevista
+                      ? (estagioSelecionado.data_fim_prevista | date:'dd/MM/yyyy')
+                      : 'por definir' }}
+                  </strong>
+                </p>
+
+                <label for="meses-prorrogacao">
+                  Meses a acrescentar
+                </label>
+
+                <input
+                  id="meses-prorrogacao"
+                  type="number"
+                  min="1"
+                  max="24"
+                  step="1"
+                  required
+                  [value]="mesesProrrogacao()"
+                  (input)="alterarMesesProrrogacao($event)"
+                  [disabled]="processandoProrrogacao()"
+                />
+
+                <label for="motivo-prorrogacao">
+                  Motivo da prorrogação
+                </label>
+
+                <textarea
+                  id="motivo-prorrogacao"
+                  rows="3"
+                  minlength="5"
+                  maxlength="1000"
+                  required
+                  [value]="motivoProrrogacao()"
+                  (input)="motivoProrrogacao.set($any($event.target).value)"
+                  [disabled]="processandoProrrogacao()"
+                ></textarea>
+
+                @if (erroProrrogacao()) {
+                  <p role="alert" class="mensagem-erro">
+                    {{ erroProrrogacao() }}
+                  </p>
+                }
+
+                @if (sucessoProrrogacao()) {
+                  <p role="status" class="mensagem-sucesso">
+                    {{ sucessoProrrogacao() }}
+                  </p>
+                }
+
+                <div class="acoes-modal">
+
+                  <button
+                    type="submit"
+                    class="btn btn--primario"
+                    [disabled]="processandoProrrogacao()"
+                  >
+                    {{ processandoProrrogacao() ? 'A prorrogar...' : 'Prorrogar estágio' }}
+                  </button>
+
+                </div>
+
+              </form>
+
+            }
+
           </div>
 
         </div>
@@ -1258,6 +1513,50 @@
           Atualizar
         </button>
       </header>
+
+      <section class="relatorios-configuracao">
+        <div class="relatorios-configuracao-texto">
+          <h3>Dia de envio dos relatórios semanais</h3>
+          <p>
+            Escolhe o dia da semana em que todos os estagiários devem entregar
+            o relatório semanal. Esse dia passa a ser o prazo semanal de todos
+            os estágios.
+          </p>
+        </div>
+
+        <div class="relatorios-configuracao-form">
+          <label for="dia-semana-relatorio">Dia da semana</label>
+
+          <select
+            id="dia-semana-relatorio"
+            [value]="diaSemanaRelatorio() ?? ''"
+            (change)="alterarDiaSemanaRelatorio($any($event.target).value)"
+          >
+            <option value="">Sem dia definido</option>
+            @for (dia of diasSemanaRelatorio; track dia.valor) {
+              <option [value]="dia.valor">{{ dia.rotulo }}</option>
+            }
+          </select>
+
+          <button type="button" class="relatorios-botao"
+            [disabled]="aGuardarConfiguracaoRelatorios()"
+            (click)="guardarDiaSemanaRelatorio()">
+            {{ aGuardarConfiguracaoRelatorios() ? 'A guardar...' : 'Guardar' }}
+          </button>
+        </div>
+
+        @if (erroConfiguracaoRelatorios()) {
+          <p class="relatorios-erro" role="alert">
+            {{ erroConfiguracaoRelatorios() }}
+          </p>
+        }
+
+        @if (sucessoConfiguracaoRelatorios()) {
+          <p class="relatorios-sucesso" role="status">
+            {{ sucessoConfiguracaoRelatorios() }}
+          </p>
+        }
+      </section>
 
       @if (relatoriosEmAtraso().length > 0) {
         <div class="relatorios-alerta-atraso" role="alert">
@@ -1501,8 +1800,8 @@
           <span class="subtitulo">Ciclo de vida</span>
           <h2>Estágios</h2>
           <p>
-            Acompanhe os estágios em curso, altere datas e o estado
-            de cada estágio.
+            Organize os grupos de estágio por trimestre e ano,
+            acompanhe candidaturas, estagiários e o estado de cada grupo.
           </p>
         </div>
 
@@ -1658,6 +1957,15 @@
                   </div>
 
                   <div class="detalhe-card">
+                    <span>Duração prevista</span>
+                    <strong>
+                      {{ candidaturaSelecionada()!.duracao_meses
+                        ? candidaturaSelecionada()!.duracao_meses + ' meses'
+                        : 'Por definir' }}
+                    </strong>
+                  </div>
+
+                  <div class="detalhe-card">
                     <span>Data da candidatura</span>
                     <strong>
                       {{ (candidaturaSelecionada()!.created_at | date:'dd/MM/yyyy HH:mm') || '—' }}
@@ -1758,6 +2066,195 @@
                 <div class="mensagem-erro" role="alert">
                   {{ erroEncaminhamento() }}
                 </div>
+              }
+
+
+              @if (
+                candidaturaSelecionada()!.estado === 'em_analise' ||
+                candidaturaSelecionada()!.estado === 'aguarda_diretor'
+              ) {
+
+                @if (sucessoEdicaoCandidatura()) {
+                  <div class="mensagem-sucesso" role="status">
+                    {{ sucessoEdicaoCandidatura() }}
+                  </div>
+                }
+
+                @if (erroEdicaoCandidatura() && !mostrarEdicaoCandidatura()) {
+                  <div class="mensagem-erro" role="alert">
+                    {{ erroEdicaoCandidatura() }}
+                  </div>
+                }
+
+                @if (sucessoRecusaCandidatura()) {
+                  <div class="mensagem-sucesso" role="status">
+                    {{ sucessoRecusaCandidatura() }}
+                  </div>
+                }
+
+                @if (erroRecusaCandidatura() && !mostrarRecusaCandidatura()) {
+                  <div class="mensagem-erro" role="alert">
+                    {{ erroRecusaCandidatura() }}
+                  </div>
+                }
+
+                @if (mostrarEdicaoCandidatura()) {
+
+                  <section class="area-encaminhamento">
+
+                    <h3>Alterar direção ou duração</h3>
+
+                    <p>
+                      Corrige a direção e a duração prevista do estágio.
+                      Se mudares a direção, a candidatura volta a
+                      “Em análise” para ser reencaminhada.
+                    </p>
+
+                    <label for="departamento-edicao-candidatura">
+                      Direção
+                    </label>
+
+                    <select
+                      id="departamento-edicao-candidatura"
+                      [value]="departamentoEdicaoCandidatura() ?? ''"
+                      (change)="alterarDepartamentoEdicao($event)"
+                      [disabled]="processandoEdicaoCandidatura()"
+                    >
+                      <option value="">— Seleccionar direção —</option>
+
+                      @for (dep of departamentos(); track dep.id_departamento) {
+                        <option [value]="dep.id_departamento">
+                          {{ dep.nome }}
+                        </option>
+                      }
+
+                    </select>
+
+                    <label for="duracao-edicao-candidatura">
+                      Duração prevista (meses)
+                    </label>
+
+                    <input
+                      id="duracao-edicao-candidatura"
+                      type="number"
+                      min="1"
+                      max="60"
+                      step="1"
+                      [value]="duracaoEdicaoCandidatura() ?? ''"
+                      (input)="alterarDuracaoEdicao($event)"
+                      [disabled]="processandoEdicaoCandidatura()"
+                    />
+
+                    @if (erroEdicaoCandidatura()) {
+                      <div class="mensagem-erro" role="alert">
+                        {{ erroEdicaoCandidatura() }}
+                      </div>
+                    }
+
+                    <div class="acoes-encaminhamento">
+
+                      <button
+                        type="button"
+                        class="btn btn--neutro"
+                        (click)="cancelarEdicaoCandidatura()"
+                        [disabled]="processandoEdicaoCandidatura()"
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        class="btn btn--primario"
+                        (click)="confirmarEdicaoCandidatura()"
+                        [disabled]="processandoEdicaoCandidatura()"
+                      >
+                        {{ processandoEdicaoCandidatura() ? 'A guardar...' : 'Guardar alterações' }}
+                      </button>
+
+                    </div>
+
+                  </section>
+
+                } @else if (mostrarRecusaCandidatura()) {
+
+                  <section class="area-encaminhamento area-recusa">
+
+                    <h3>Recusar candidatura</h3>
+
+                    <p>
+                      A justificação é obrigatória e fica registada no
+                      histórico da candidatura.
+                    </p>
+
+                    <label for="motivo-recusa-candidatura">
+                      Justificação da recusa
+                    </label>
+
+                    <textarea
+                      id="motivo-recusa-candidatura"
+                      rows="4"
+                      minlength="5"
+                      maxlength="1000"
+                      required
+                      [value]="motivoRecusaCandidatura()"
+                      (input)="motivoRecusaCandidatura.set($any($event.target).value)"
+                      [disabled]="processandoRecusaCandidatura()"
+                    ></textarea>
+
+                    @if (erroRecusaCandidatura()) {
+                      <div class="mensagem-erro" role="alert">
+                        {{ erroRecusaCandidatura() }}
+                      </div>
+                    }
+
+                    <div class="acoes-encaminhamento">
+
+                      <button
+                        type="button"
+                        class="btn btn--neutro"
+                        (click)="cancelarRecusaCandidatura()"
+                        [disabled]="processandoRecusaCandidatura()"
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="button"
+                        class="btn btn--perigo"
+                        (click)="confirmarRecusaCandidatura()"
+                        [disabled]="processandoRecusaCandidatura()"
+                      >
+                        {{ processandoRecusaCandidatura() ? 'A recusar...' : 'Confirmar recusa' }}
+                      </button>
+
+                    </div>
+
+                  </section>
+
+                } @else {
+
+                  <div class="acoes-candidatura">
+
+                    <button
+                      type="button"
+                      class="btn btn--secundario"
+                      (click)="abrirEdicaoCandidatura()"
+                    >
+                      Alterar direção/duração
+                    </button>
+
+                    <button
+                      type="button"
+                      class="btn btn--perigo"
+                      (click)="abrirRecusaCandidatura()"
+                    >
+                      Recusar candidatura
+                    </button>
+
+                  </div>
+
+                }
+
               }
 
 

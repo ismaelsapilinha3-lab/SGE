@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Candidatura;
 use App\Models\Estagio;
 use App\Models\HistoricoEstado;
+use App\Models\ProrrogacaoEstagio;
 use App\Models\User;
 use App\Services\NotificacaoService;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -317,7 +318,7 @@ class EstagioAdminController extends Controller
 
         $duracaoMeses = isset($dados['duracao_meses'])
             ? (int) $dados['duracao_meses']
-            : null;
+            : $candidatura->duracao_meses;
 
         if (! $inicio) {
             return response()->json([
@@ -348,6 +349,7 @@ class EstagioAdminController extends Controller
         try {
             $estagio = Estagio::create([
                 'id_candidatura' => $candidatura->id_candidatura,
+                'id_grupo_estagio' => $candidatura->id_grupo_estagio,
                 'id_estagiario' => $utilizador->id_utilizador,
                 'data_inicio' => $inicio,
                 'duracao_meses' => $duracaoMeses,
@@ -535,6 +537,123 @@ class EstagioAdminController extends Controller
                 ->fresh()
                 ->load('estagiario'),
         ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Prorrogar um estágio
+    |--------------------------------------------------------------------------
+    |
+    | Acrescenta meses ao fim previsto, mantendo o histórico de cada
+    | prorrogação autorizada. Só se aplica a estágios ainda em curso.
+    |
+    */
+
+    public function prorrogar(Request $request, int $idCandidatura)
+    {
+        $dados = $request->validate([
+            'meses' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:24',
+            ],
+
+            'motivo' => [
+                'required',
+                'string',
+                'min:5',
+                'max:1000',
+            ],
+        ]);
+
+        return DB::transaction(function () use (
+            $request,
+            $idCandidatura,
+            $dados
+        ) {
+            $estagio = Estagio::query()
+                ->where('id_candidatura', $idCandidatura)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $estagio) {
+                return response()->json([
+                    'message' => 'Estágio não encontrado.',
+                ], 404);
+            }
+
+            if ($estagio->estaTerminado()) {
+                return response()->json([
+                    'message' => 'Este estágio já terminou e não pode ser prorrogado.',
+                ], 422);
+            }
+
+            $dataFimAnterior = $estagio->data_fim_prevista;
+
+            if (! $dataFimAnterior) {
+                return response()->json([
+                    'message' => 'Define primeiro a data prevista de fim do estágio.',
+                ], 422);
+            }
+
+            $meses = (int) $dados['meses'];
+
+            $novaDataFim = $dataFimAnterior
+                ->copy()
+                ->addMonthsNoOverflow($meses);
+
+            $duracaoAnterior = $estagio->duracao_meses;
+
+            $duracaoNova = $estagio->data_inicio
+                ? $this->calcularDuracaoMeses(
+                    $estagio->data_inicio->toDateString(),
+                    $novaDataFim->toDateString()
+                )
+                : (int) ($duracaoAnterior ?? 0) + $meses;
+
+            $estagio->update([
+                'data_fim_prevista' => $novaDataFim->toDateString(),
+                'duracao_meses' => $duracaoNova,
+            ]);
+
+            $prorrogacao = ProrrogacaoEstagio::create([
+                'id_estagio' => $estagio->id_estagio,
+                'meses' => $meses,
+                'duracao_anterior' => $duracaoAnterior,
+                'duracao_nova' => $duracaoNova,
+                'data_fim_anterior' => $dataFimAnterior->toDateString(),
+                'data_fim_nova' => $novaDataFim->toDateString(),
+                'motivo' => $dados['motivo'],
+                'id_utilizador' => $request->user()->id_utilizador,
+            ]);
+
+            $periodo = $meses === 1 ? '1 mês' : "{$meses} meses";
+
+            $this->notificacoes->paraUtilizador(
+                $estagio->id_estagiario,
+                'Estágio prorrogado',
+                "O teu estágio foi prorrogado por {$periodo}. Nova data prevista de fim: "
+                    .$novaDataFim->format('d/m/Y').'.'
+            );
+
+            $this->notificacoes->paraUtilizadores(
+                $estagio->responsaveisNotificacao(),
+                'Estágio prorrogado',
+                "O estágio #{$estagio->id_estagio} foi prorrogado por {$periodo}. Nova data prevista de fim: "
+                    .$novaDataFim->format('d/m/Y').'.'
+            );
+
+            return response()->json([
+                'message' => 'Estágio prorrogado com sucesso.',
+
+                'data' => $estagio
+                    ->fresh()
+                    ->load(['estagiario', 'prorrogacoes']),
+
+                'prorrogacao' => $prorrogacao,
+            ]);
+        });
     }
 
     /*

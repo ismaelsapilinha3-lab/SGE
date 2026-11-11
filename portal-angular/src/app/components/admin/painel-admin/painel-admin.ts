@@ -21,9 +21,10 @@ import { Subscription } from 'rxjs';
 
 import {
   AdminService,
-  DashboardAdmin,
   Candidatura,
   CandidaturasResponse,
+  ConfiguracaoRelatoriosAdmin,
+  DashboardAdmin,
   Departamento,
   DepartamentoDados,
   Documento,
@@ -31,7 +32,9 @@ import {
   EstagiariosPorDepartamentoItem,
   EstagiariosResponse,
   RelatorioAdmin,
-  RelatoriosAdminResponse
+  RelatoriosAdminResponse,
+  SemanaCandidaturas,
+  VagaDepartamentoItem
 } from '../../../services/admin.service';
 
 import { AuthService } from '../../../core/auth.service';
@@ -169,8 +172,24 @@ export class PainelAdmin implements OnInit, OnDestroy {
   dashboard = signal<DashboardAdmin>({
     total_candidaturas: 0,
     em_analise: 0,
+    aguarda_diretor: 0,
+    aguarda_decisao: 0,
     aprovadas: 0,
-    recusadas: 0
+    recusadas: 0,
+    encerradas: 0,
+    estagiarios_ativos: 0,
+    relatorios_atraso: 0,
+    candidaturas_por_semana: {
+      trimestre: null,
+      semanas: []
+    },
+    funil_candidaturas: [],
+    vagas_por_departamento: {
+      total_vagas: 0,
+      total_ocupadas: 0,
+      total_disponiveis: 0,
+      departamentos: []
+    }
   });
 
 
@@ -195,7 +214,7 @@ export class PainelAdmin implements OnInit, OnDestroy {
     string,
     { etiqueta: string; cor: string }
   > = {
-    sem_estagio: { etiqueta: 'Aprovados por iniciar', cor: '#7A8AA8' },
+    sem_estagio: { etiqueta: 'Aprovados por iniciar', cor: '#8792A2' },
     ativo: { etiqueta: 'Estágio ativo', cor: '#137A47' },
     suspenso: { etiqueta: 'Estágio suspenso', cor: '#FF6B00' },
     concluido: { etiqueta: 'Concluído', cor: '#1A3D6B' },
@@ -288,7 +307,7 @@ export class PainelAdmin implements OnInit, OnDestroy {
   }
 
   private corEstado(estado: string): string {
-    return this.configuracaoEstados[estado]?.cor ?? '#7A8AA8';
+    return this.configuracaoEstados[estado]?.cor ?? '#8792A2';
   }
 
 
@@ -329,6 +348,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
   nomeDepartamento = signal('');
 
   descricaoDepartamento = signal('');
+
+  vagasDepartamento = signal<number | null>(null);
 
   ativoDepartamento = signal(true);
 
@@ -409,6 +430,38 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
 
   // ============================================================
+  // EDIÇÃO DA CANDIDATURA
+  // ============================================================
+
+  mostrarEdicaoCandidatura = signal(false);
+
+  departamentoEdicaoCandidatura = signal<number | null>(null);
+
+  duracaoEdicaoCandidatura = signal<number | null>(null);
+
+  processandoEdicaoCandidatura = signal(false);
+
+  erroEdicaoCandidatura = signal('');
+
+  sucessoEdicaoCandidatura = signal('');
+
+
+  // ============================================================
+  // RECUSA DA CANDIDATURA
+  // ============================================================
+
+  mostrarRecusaCandidatura = signal(false);
+
+  motivoRecusaCandidatura = signal('');
+
+  processandoRecusaCandidatura = signal(false);
+
+  erroRecusaCandidatura = signal('');
+
+  sucessoRecusaCandidatura = signal('');
+
+
+  // ============================================================
   // PREVIEW DE DOCUMENTO
   // ============================================================
 
@@ -447,14 +500,19 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
   duracaoMesesFormulario = signal(2);
 
+  mesesProrrogacao = signal(6);
+
+  motivoProrrogacao = signal('');
+
+  processandoProrrogacao = signal(false);
+
+  erroProrrogacao = signal('');
+
+  sucessoProrrogacao = signal('');
+
   // ============================================================
   // GRÁFICOS DE ACOMPANHAMENTO
   // ============================================================
-
-  /** Percentagem de candidaturas em análise. */
-  readonly percentEmAnalise = computed(() =>
-    this.calcularPercentagem(this.dashboard().em_analise)
-  );
 
   /** Percentagem de candidaturas aprovadas. */
   readonly percentAprovadas = computed(() =>
@@ -470,7 +528,7 @@ export class PainelAdmin implements OnInit, OnDestroy {
    * Converte um valor absoluto numa percentagem do total de
    * candidaturas, arredondada e protegida contra divisão por zero.
    */
-  private calcularPercentagem(valor: number): number {
+  calcularPercentagem(valor: number): number {
     const total = this.dashboard().total_candidaturas || 0;
 
     if (total === 0) {
@@ -478,6 +536,98 @@ export class PainelAdmin implements OnInit, OnDestroy {
     }
 
     return Math.round(((valor || 0) / total) * 100);
+  }
+
+  /** Semanas do trimestre corrente, tal como vêm da API. */
+  readonly semanasDashboard = computed(
+    () => this.dashboard().candidaturas_por_semana?.semanas ?? []
+  );
+
+  /** Maior valor semanal, para escalar as barras do gráfico. */
+  readonly maximoSemanal = computed(() =>
+    Math.max(0, ...this.semanasDashboard().map(semana => semana.total))
+  );
+
+  /** Etapas do funil de candidaturas. */
+  readonly funilDashboard = computed(
+    () => this.dashboard().funil_candidaturas ?? []
+  );
+
+  /** Maior etapa do funil, para escalar as barras. */
+  readonly maximoFunil = computed(() =>
+    Math.max(0, ...this.funilDashboard().map(etapa => etapa.total))
+  );
+
+  /** Ocupação de vagas por departamento. */
+  readonly vagasPorDepartamentoDashboard = computed(
+    () =>
+      this.dashboard().vagas_por_departamento?.departamentos ?? []
+  );
+
+  /** Altura (0-100) da barra de uma semana. */
+  alturaSemana(total: number): number {
+    const maior = this.maximoSemanal();
+
+    if (maior === 0) {
+      return 0;
+    }
+
+    return total === 0
+      ? 0
+      : Math.max(6, Math.round((total / maior) * 100));
+  }
+
+  /** Largura (0-100) da barra de uma etapa do funil. */
+  larguraFunil(total: number): number {
+    const maior = this.maximoFunil();
+
+    if (maior === 0) {
+      return 0;
+    }
+
+    return total === 0
+      ? 0
+      : Math.max(4, Math.round((total / maior) * 100));
+  }
+
+  /** Etiqueta acessível de uma semana (ex.: "Semana 40 · 01/10–04/10"). */
+  rotuloSemana(semana: SemanaCandidaturas): string {
+    return `Semana ${semana.semana} · ${this.dataCurta(semana.inicio)}–${this.dataCurta(semana.fim)}`;
+  }
+
+  /** Data curta DD/MM a partir de YYYY-MM-DD. */
+  dataCurta(data?: string | null): string {
+    if (!data || data.length < 10) {
+      return '—';
+    }
+
+    return `${data.substring(8, 10)}/${data.substring(5, 7)}`;
+  }
+
+  /** Percentagem de ocupação de um departamento (máximo visual 100). */
+  percentagemOcupacao(item: VagaDepartamentoItem): number {
+    if (item.taxa_ocupacao === null || item.taxa_ocupacao === undefined) {
+      return 0;
+    }
+
+    return Math.min(item.taxa_ocupacao, 100);
+  }
+
+  /** Classifica visualmente a ocupação de um departamento. */
+  classeOcupacao(item: VagaDepartamentoItem): string {
+    if (item.vagas === null) {
+      return 'vagas--sem-limite';
+    }
+
+    if (item.ocupadas > item.vagas) {
+      return 'vagas--excedida';
+    }
+
+    if ((item.taxa_ocupacao ?? 0) >= 80) {
+      return 'vagas--cheia';
+    }
+
+    return 'vagas--livre';
   }
 
 
@@ -493,6 +643,21 @@ export class PainelAdmin implements OnInit, OnDestroy {
   carregandoRelatorios = signal(false);
   erroRelatorios = signal('');
   sucessoRelatorio = signal('');
+
+  readonly diasSemanaRelatorio = [
+    { valor: 1, rotulo: 'Segunda-feira' },
+    { valor: 2, rotulo: 'Terça-feira' },
+    { valor: 3, rotulo: 'Quarta-feira' },
+    { valor: 4, rotulo: 'Quinta-feira' },
+    { valor: 5, rotulo: 'Sexta-feira' },
+    { valor: 6, rotulo: 'Sábado' },
+    { valor: 7, rotulo: 'Domingo' }
+  ];
+
+  diaSemanaRelatorio = signal<number | null>(null);
+  aGuardarConfiguracaoRelatorios = signal(false);
+  erroConfiguracaoRelatorios = signal('');
+  sucessoConfiguracaoRelatorios = signal('');
   pesquisaRelatorios = signal('');
   estadoRelatorios = signal('');
   tipoRelatorios = signal('');
@@ -556,7 +721,20 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
     const sub = this.adminService.dashboard().subscribe({
       next: (dados) => {
-        this.dashboard.set(dados);
+        /*
+         * Mescla com os valores actuais para que um campo em falta na
+         * resposta não apague os dados já apresentados.
+         */
+        this.dashboard.set({
+          ...this.dashboard(),
+          ...dados,
+          candidaturas_por_semana:
+            dados.candidaturas_por_semana ??
+            this.dashboard().candidaturas_por_semana,
+          vagas_por_departamento:
+            dados.vagas_por_departamento ??
+            this.dashboard().vagas_por_departamento
+        });
 
         this.carregandoDashboard.set(false);
       },
@@ -673,6 +851,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
     this.descricaoDepartamento.set('');
 
+    this.vagasDepartamento.set(null);
+
     this.ativoDepartamento.set(true);
 
     this.erroFormularioDepartamento.set('');
@@ -694,6 +874,10 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
     this.descricaoDepartamento.set(
       departamento.descricao ?? ''
+    );
+
+    this.vagasDepartamento.set(
+      departamento.vagas ?? null
     );
 
     this.ativoDepartamento.set(
@@ -742,6 +926,33 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
 
   // ============================================================
+  // ALTERAR VAGAS DO DEPARTAMENTO
+  // ============================================================
+
+  alterarVagasDepartamento(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    if (input.value.trim() === '') {
+      this.vagasDepartamento.set(null);
+
+      return;
+    }
+
+    const numero = Number(input.value);
+
+    if (!Number.isFinite(numero)) {
+      this.vagasDepartamento.set(null);
+
+      return;
+    }
+
+    this.vagasDepartamento.set(
+      Math.min(1000, Math.max(0, Math.trunc(numero)))
+    );
+  }
+
+
+  // ============================================================
   // CANCELAR FORMULÁRIO DE DEPARTAMENTO
   // ============================================================
 
@@ -753,6 +964,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
     this.nomeDepartamento.set('');
 
     this.descricaoDepartamento.set('');
+
+    this.vagasDepartamento.set(null);
 
     this.ativoDepartamento.set(true);
 
@@ -795,7 +1008,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
     const dados: DepartamentoDados = {
       nome,
-      descricao: descricao || null
+      descricao: descricao || null,
+      vagas: this.vagasDepartamento()
     };
 
     const departamento = this.departamentoEmEdicao();
@@ -826,6 +1040,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
             this.carregarDepartamentos();
 
             this.carregarEstagiariosPorDepartamento();
+
+            this.carregarDashboard();
           },
 
           error: (erro: unknown) => {
@@ -866,6 +1082,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
         this.carregarDepartamentos();
 
         this.carregarEstagiariosPorDepartamento();
+
+        this.carregarDashboard();
       },
 
       error: (erro: unknown) => {
@@ -1383,6 +1601,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
     this.erroDocumento.set('');
 
+    this.reiniciarAcoesCandidatura();
+
     const sub = this.adminService.obterCandidatura(id).subscribe({
       next: (dados) => {
         this.candidaturaSelecionada.set(dados);
@@ -1425,6 +1645,29 @@ export class PainelAdmin implements OnInit, OnDestroy {
     this.sucessoEncaminhamento.set('');
 
     this.departamentoEncaminhamento.set(null);
+
+    this.reiniciarAcoesCandidatura();
+  }
+
+
+  private reiniciarAcoesCandidatura(): void {
+    this.mostrarEdicaoCandidatura.set(false);
+
+    this.departamentoEdicaoCandidatura.set(null);
+
+    this.duracaoEdicaoCandidatura.set(null);
+
+    this.erroEdicaoCandidatura.set('');
+
+    this.sucessoEdicaoCandidatura.set('');
+
+    this.mostrarRecusaCandidatura.set(false);
+
+    this.motivoRecusaCandidatura.set('');
+
+    this.erroRecusaCandidatura.set('');
+
+    this.sucessoRecusaCandidatura.set('');
   }
 
 
@@ -1538,6 +1781,218 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
 
   // ============================================================
+  // EDITAR CANDIDATURA
+  // ============================================================
+
+  abrirEdicaoCandidatura(): void {
+    const candidatura = this.candidaturaSelecionada();
+
+    if (!candidatura) {
+      return;
+    }
+
+    this.erroEdicaoCandidatura.set('');
+
+    this.sucessoEdicaoCandidatura.set('');
+
+    this.departamentoEdicaoCandidatura.set(
+      candidatura.id_departamento_selecionado ?? null
+    );
+
+    this.duracaoEdicaoCandidatura.set(
+      candidatura.duracao_meses ?? null
+    );
+
+    this.mostrarEdicaoCandidatura.set(true);
+  }
+
+
+  cancelarEdicaoCandidatura(): void {
+    this.mostrarEdicaoCandidatura.set(false);
+
+    this.erroEdicaoCandidatura.set('');
+  }
+
+
+  alterarDepartamentoEdicao(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+
+    this.departamentoEdicaoCandidatura.set(
+      select.value ? Number(select.value) : null
+    );
+  }
+
+
+  alterarDuracaoEdicao(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    this.duracaoEdicaoCandidatura.set(
+      input.value ? Number(input.value) : null
+    );
+  }
+
+
+  confirmarEdicaoCandidatura(): void {
+    const candidatura = this.candidaturaSelecionada();
+
+    if (!candidatura || this.processandoEdicaoCandidatura()) {
+      return;
+    }
+
+    const idDepartamento = this.departamentoEdicaoCandidatura();
+
+    const duracaoMeses = this.duracaoEdicaoCandidatura();
+
+    if (!idDepartamento) {
+      this.erroEdicaoCandidatura.set(
+        'Selecciona a direção da candidatura.'
+      );
+
+      return;
+    }
+
+    if (
+      duracaoMeses !== null &&
+      (!Number.isInteger(duracaoMeses) || duracaoMeses < 1)
+    ) {
+      this.erroEdicaoCandidatura.set(
+        'A duração deve ser um número inteiro de meses.'
+      );
+
+      return;
+    }
+
+    this.processandoEdicaoCandidatura.set(true);
+
+    this.erroEdicaoCandidatura.set('');
+
+    this.sucessoEdicaoCandidatura.set('');
+
+    const sub = this.adminService
+      .atualizarCandidatura(candidatura.id_candidatura, {
+        id_departamento: idDepartamento,
+        duracao_meses: duracaoMeses ?? undefined
+      })
+      .subscribe({
+        next: (resposta) => {
+          this.processandoEdicaoCandidatura.set(false);
+
+          this.sucessoEdicaoCandidatura.set(resposta.message);
+
+          this.candidaturaSelecionada.set(resposta.candidatura);
+
+          this.mostrarEdicaoCandidatura.set(false);
+
+          this.carregarCandidaturas();
+
+          this.carregarDashboard();
+        },
+
+        error: (erro: unknown) => {
+          console.error('Erro ao atualizar candidatura:', erro);
+
+          this.processandoEdicaoCandidatura.set(false);
+
+          const resposta = erro as {
+            error?: { message?: string };
+          };
+
+          this.erroEdicaoCandidatura.set(
+            resposta.error?.message ||
+              'Não foi possível atualizar a candidatura.'
+          );
+        }
+      });
+
+    this.subscriptions.add(sub);
+  }
+
+
+  // ============================================================
+  // RECUSAR CANDIDATURA
+  // ============================================================
+
+  abrirRecusaCandidatura(): void {
+    this.erroRecusaCandidatura.set('');
+
+    this.sucessoRecusaCandidatura.set('');
+
+    this.motivoRecusaCandidatura.set('');
+
+    this.mostrarRecusaCandidatura.set(true);
+  }
+
+
+  cancelarRecusaCandidatura(): void {
+    this.mostrarRecusaCandidatura.set(false);
+
+    this.erroRecusaCandidatura.set('');
+
+    this.motivoRecusaCandidatura.set('');
+  }
+
+
+  confirmarRecusaCandidatura(): void {
+    const candidatura = this.candidaturaSelecionada();
+
+    if (!candidatura || this.processandoRecusaCandidatura()) {
+      return;
+    }
+
+    const motivo = this.motivoRecusaCandidatura().trim();
+
+    if (motivo.length < 5) {
+      this.erroRecusaCandidatura.set(
+        'Indica a justificação da recusa (mínimo 5 caracteres).'
+      );
+
+      return;
+    }
+
+    this.processandoRecusaCandidatura.set(true);
+
+    this.erroRecusaCandidatura.set('');
+
+    this.sucessoRecusaCandidatura.set('');
+
+    const sub = this.adminService
+      .recusarCandidatura(candidatura.id_candidatura, motivo)
+      .subscribe({
+        next: (resposta) => {
+          this.processandoRecusaCandidatura.set(false);
+
+          this.sucessoRecusaCandidatura.set(resposta.message);
+
+          this.mostrarRecusaCandidatura.set(false);
+
+          this.candidaturaSelecionada.set(resposta.candidatura);
+
+          this.carregarCandidaturas();
+
+          this.carregarDashboard();
+        },
+
+        error: (erro: unknown) => {
+          console.error('Erro ao recusar candidatura:', erro);
+
+          this.processandoRecusaCandidatura.set(false);
+
+          const resposta = erro as {
+            error?: { message?: string };
+          };
+
+          this.erroRecusaCandidatura.set(
+            resposta.error?.message ||
+              'Não foi possível recusar a candidatura.'
+          );
+        }
+      });
+
+    this.subscriptions.add(sub);
+  }
+
+
+  // ============================================================
   // VISUALIZAR DOCUMENTO
   // ============================================================
 
@@ -1617,7 +2072,7 @@ export class PainelAdmin implements OnInit, OnDestroy {
   // ============================================================
 
   private inferirMimeType(
-    documento: Documento,
+    documento: { nome_arquivo: string },
     blob: Blob
   ): string {
     if (
@@ -1696,6 +2151,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
     this.erroRelatorios.set('');
     this.sucessoRelatorio.set('');
 
+    this.carregarConfiguracaoRelatorios();
+
     const sub = this.adminService.listarRelatoriosAdmin(
       this.pesquisaRelatorios(),
       this.estadoRelatorios(),
@@ -1732,6 +2189,62 @@ export class PainelAdmin implements OnInit, OnDestroy {
 
   pesquisarRelatorios(): void {
     this.carregarRelatorios();
+  }
+
+  carregarConfiguracaoRelatorios(): void {
+    this.erroConfiguracaoRelatorios.set('');
+
+    const sub = this.adminService.obterConfiguracaoRelatorios().subscribe({
+      next: (resposta: {
+        data: ConfiguracaoRelatoriosAdmin;
+        opcoes: Record<string, string>;
+      }) => {
+        this.diaSemanaRelatorio.set(resposta.data.dia_semana);
+      },
+      error: (erro: unknown) => {
+        console.error('Erro ao carregar o dia de envio dos relatórios:', erro);
+        this.erroConfiguracaoRelatorios.set(
+          'Não foi possível carregar o dia de envio dos relatórios.'
+        );
+      }
+    });
+
+    this.subscriptions.add(sub);
+  }
+
+  alterarDiaSemanaRelatorio(valor: string): void {
+    this.diaSemanaRelatorio.set(valor ? Number(valor) : null);
+    this.sucessoConfiguracaoRelatorios.set('');
+    this.erroConfiguracaoRelatorios.set('');
+  }
+
+  guardarDiaSemanaRelatorio(): void {
+    if (this.aGuardarConfiguracaoRelatorios()) {
+      return;
+    }
+
+    this.aGuardarConfiguracaoRelatorios.set(true);
+    this.erroConfiguracaoRelatorios.set('');
+    this.sucessoConfiguracaoRelatorios.set('');
+
+    const sub = this.adminService
+      .guardarConfiguracaoRelatorios(this.diaSemanaRelatorio())
+      .subscribe({
+        next: (resposta) => {
+          this.diaSemanaRelatorio.set(resposta.data.dia_semana);
+          this.sucessoConfiguracaoRelatorios.set(resposta.message);
+          this.aGuardarConfiguracaoRelatorios.set(false);
+        },
+        error: (erro: unknown) => {
+          console.error('Erro ao guardar o dia de envio dos relatórios:', erro);
+          this.erroConfiguracaoRelatorios.set(
+            'Não foi possível guardar o dia de envio dos relatórios.'
+          );
+          this.aGuardarConfiguracaoRelatorios.set(false);
+        }
+      });
+
+    this.subscriptions.add(sub);
   }
 
   // ==========================================================
@@ -1882,13 +2395,13 @@ export class PainelAdmin implements OnInit, OnDestroy {
   sair(): void {
     const sub = this.authService.logout().subscribe({
       next: () => {
-        this.router.navigate(['/acesso']);
+        this.router.navigate(['/acesso'], { replaceUrl: true });
       },
 
       error: (erro: unknown) => {
         console.error('Erro ao encerrar sessão:', erro);
 
-        this.router.navigate(['/acesso']);
+        this.router.navigate(['/acesso'], { replaceUrl: true });
       }
     });
 
@@ -2033,6 +2546,14 @@ export class PainelAdmin implements OnInit, OnDestroy {
     this.erroGestaoEstagio.set('');
 
     this.sucessoGestaoEstagio.set('');
+
+    this.mesesProrrogacao.set(6);
+
+    this.motivoProrrogacao.set('');
+
+    this.erroProrrogacao.set('');
+
+    this.sucessoProrrogacao.set('');
   }
 
 
@@ -2172,34 +2693,50 @@ export class PainelAdmin implements OnInit, OnDestroy {
       return;
     }
 
-    const janela = window.open('', '_blank');
-
-    if (!janela) {
-      this.erroAvaliacaoRelatorio.set(
-        'O navegador bloqueou a abertura do ficheiro.'
-      );
-
-      return;
-    }
-
     this.aCarregarFicheiroRelatorio.set(relatorio.id_relatorio);
+
+    this.erroAvaliacaoRelatorio.set('');
+
+    this.limparPreviewDocumento();
+
+    const nome = relatorio.ficheiro_nome
+      || `Relatório ${relatorio.id_relatorio}`;
 
     const sub = this.adminService
       .visualizarFicheiroRelatorio(relatorio.id_relatorio)
       .subscribe({
         next: (blob) => {
+          const tipo = this.inferirMimeType(
+            { nome_arquivo: nome },
+            blob
+          );
+
           const url = URL.createObjectURL(blob);
 
-          janela.location.href = url;
+          this.documentoPreviewBlobUrl = url;
 
-          window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+          this.documentoPreviewTipo.set(tipo);
+
+          this.documentoPreviewNome.set(nome);
+
+          if (tipo === 'application/pdf') {
+            this.documentoPreviewPdfUrl.set(
+              this.sanitizer.bypassSecurityTrustResourceUrl(url)
+            );
+
+            this.documentoPreviewUrl.set(null);
+          } else {
+            this.documentoPreviewUrl.set(url);
+
+            this.documentoPreviewPdfUrl.set(null);
+          }
+
+          this.documentoPreviewAberto.set(true);
 
           this.aCarregarFicheiroRelatorio.set(null);
         },
         error: (erro: unknown) => {
           console.error('Erro ao abrir o ficheiro do relatório:', erro);
-
-          janela.close();
 
           this.aCarregarFicheiroRelatorio.set(null);
 
@@ -2222,6 +2759,14 @@ export class PainelAdmin implements OnInit, OnDestroy {
       this.estagioEmGestao.set(null);
 
       this.erroGestaoEstagio.set('');
+
+      this.mesesProrrogacao.set(6);
+
+      this.motivoProrrogacao.set('');
+
+      this.erroProrrogacao.set('');
+
+      this.sucessoProrrogacao.set('');
     }
   }
 
@@ -2313,6 +2858,8 @@ export class PainelAdmin implements OnInit, OnDestroy {
           this.carregarEstagiariosPorDepartamento();
 
           this.carregarDepartamentos();
+
+          this.carregarDashboard();
         },
 
         error: (erro: unknown) => {
@@ -2328,6 +2875,109 @@ export class PainelAdmin implements OnInit, OnDestroy {
           );
 
           this.aGuardarEstadoEstagio.set(false);
+        }
+      });
+
+    this.subscriptions.add(sub);
+  }
+
+
+  // ============================================================
+  // PRORROGAR ESTÁGIO
+  // ============================================================
+
+  alterarMesesProrrogacao(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    const valor = Number(input.value);
+
+    this.mesesProrrogacao.set(
+      Number.isFinite(valor) ? valor : 0
+    );
+  }
+
+
+  prorrogarEstagio(): void {    const estagiario = this.estagioEmGestao();
+
+    if (
+      !estagiario ||
+      !estagiario.id_estagio ||
+      this.processandoProrrogacao()
+    ) {
+      return;
+    }
+
+    const meses = this.mesesProrrogacao();
+
+    const motivo = this.motivoProrrogacao().trim();
+
+    if (!Number.isInteger(meses) || meses < 1 || meses > 24) {
+      this.erroProrrogacao.set(
+        'Indica entre 1 e 24 meses de prorrogação.'
+      );
+
+      return;
+    }
+
+    if (motivo.length < 5) {
+      this.erroProrrogacao.set(
+        'Indica o motivo da prorrogação (mínimo 5 caracteres).'
+      );
+
+      return;
+    }
+
+    this.processandoProrrogacao.set(true);
+
+    this.erroProrrogacao.set('');
+
+    this.sucessoProrrogacao.set('');
+
+    const sub = this.adminService
+      .prorrogarEstagio(estagiario.id_candidatura, {
+        meses,
+        motivo
+      })
+      .subscribe({
+        next: (resposta) => {
+          this.processandoProrrogacao.set(false);
+
+          this.sucessoProrrogacao.set(resposta.message);
+
+          this.motivoProrrogacao.set('');
+
+          const estagio = resposta.data;
+
+          this.estagioEmGestao.set({
+            ...estagiario,
+            duracao_meses: estagio.duracao_meses,
+            data_fim_prevista: estagio.data_fim_prevista
+          });
+
+          this.duracaoMesesFormulario.set(
+            estagio.duracao_meses ?? this.duracaoMesesFormulario()
+          );
+
+          this.fimEstagioFormulario.set(
+            estagio.data_fim_prevista ?? this.fimEstagioFormulario()
+          );
+
+          this.carregarEstagiarios();
+        },
+
+        error: (erro: unknown) => {
+          console.error('Erro ao prorrogar estágio:', erro);
+
+          this.processandoProrrogacao.set(false);
+
+          const resposta = erro as {
+            error?: { message?: string };
+          };
+
+          this.erroProrrogacao.set(
+            resposta.error?.message ||
+              'Não foi possível prorrogar o estágio.'
+          );
         }
       });
 

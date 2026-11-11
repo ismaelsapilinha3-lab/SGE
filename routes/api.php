@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\EstagioAdminController;
+use App\Http\Controllers\Admin\GrupoEstagioAdminController;
 use App\Http\Controllers\Admin\UtilizadorAdminController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminRelatorioController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CandidaturaController;
 use App\Http\Controllers\CoordenadorController;
 use App\Http\Controllers\DepartamentoController;
+use App\Http\Controllers\DiretorController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\DocumentoEstagioController;
 use App\Http\Controllers\EstagiarioController;
@@ -27,7 +29,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [
     AuthController::class,
     'login',
-])->middleware('throttle:6,1');
+])->middleware('throttle:login');
 
 /*
 |--------------------------------------------------------------------------
@@ -367,6 +369,16 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
                 'atrasos',
             ]);
 
+            Route::get('/relatorios/configuracao', [
+                AdminRelatorioController::class,
+                'configuracao',
+            ]);
+
+            Route::put('/relatorios/configuracao', [
+                AdminRelatorioController::class,
+                'guardarConfiguracao',
+            ]);
+
             Route::get('/relatorios/{id}/ficheiro', [
                 RelatorioController::class,
                 'verFicheiro',
@@ -428,14 +440,26 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
             /*
             |--------------------------------------------------------------------------
+            | Gestão de candidaturas
+            |--------------------------------------------------------------------------
+            |
+            | O administrador pode corrigir a direção e a duração prevista de
+            | uma candidatura ainda por decidir.
+            |
+            */
+
+            Route::patch('/candidaturas/{id}', [
+                AdminController::class,
+                'atualizarCandidatura',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
             | Decisões da candidatura
             |--------------------------------------------------------------------------
             |
-            | Estas rotas são mantidas temporariamente para compatibilidade.
-            | O AdminController deve impedir que o administrador aprove
-            | ou recuse candidaturas.
-            |
-            | A decisão final pertence ao coordenador responsável.
+            | O administrador pode recusar candidaturas por decidir, sempre
+            | com justificação. O aprovar continua reservado ao diretor.
             |
             */
 
@@ -472,6 +496,65 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
             /*
             |--------------------------------------------------------------------------
+            | Grupos de estágio
+            |--------------------------------------------------------------------------
+            |
+            | Organização por trimestre, criação de grupos novos, registo de
+            | grupos antigos e consulta/exportação dos estagiários de cada
+            | grupo.
+            |
+            */
+
+            Route::get('/grupos-estagio', [
+                GrupoEstagioAdminController::class,
+                'index',
+            ]);
+
+            Route::post('/grupos-estagio', [
+                GrupoEstagioAdminController::class,
+                'store',
+            ]);
+
+            Route::post('/grupos-estagio/historico', [
+                GrupoEstagioAdminController::class,
+                'storeHistorico',
+            ]);
+
+            Route::get('/grupos-estagio/{grupo}', [
+                GrupoEstagioAdminController::class,
+                'show',
+            ]);
+
+            Route::patch('/grupos-estagio/{grupo}', [
+                GrupoEstagioAdminController::class,
+                'update',
+            ]);
+
+            Route::delete('/grupos-estagio/{grupo}', [
+                GrupoEstagioAdminController::class,
+                'destroy',
+            ]);
+
+            Route::get('/grupos-estagio/{grupo}/estagiarios', [
+                GrupoEstagioAdminController::class,
+                'estagiarios',
+            ]);
+
+            Route::post(
+                '/grupos-estagio/{grupo}/estagiarios-historicos',
+                [
+                    GrupoEstagioAdminController::class,
+                    'adicionarEstagiarioHistorico',
+                ]
+            );
+
+            Route::get('/grupos-estagio/{grupo}/exportar', [
+                GrupoEstagioAdminController::class,
+                'exportar',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
             | Iniciar / alterar o estado de um estágio
             |--------------------------------------------------------------------------
             |
@@ -488,6 +571,16 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
             Route::patch('/estagiarios/{idCandidatura}/estado', [
                 EstagioAdminController::class,
                 'atualizarEstado',
+            ]);
+
+            Route::patch('/estagiarios/{idCandidatura}/prorrogar', [
+                EstagioAdminController::class,
+                'prorrogar',
+            ]);
+
+            Route::patch('/estagios/{idCandidatura}/prorrogar', [
+                EstagioAdminController::class,
+                'prorrogar',
             ]);
 
             /*
@@ -558,6 +651,146 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Rotas exclusivas do diretor
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('diretor')
+        ->prefix('diretor')
+        ->group(function () {
+
+            Route::get('/dashboard', [
+                DiretorController::class,
+                'dashboard',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Candidaturas da direção
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/candidaturas', [
+                DiretorController::class,
+                'candidaturas',
+            ]);
+
+            Route::get('/candidaturas/{id}', [
+                DiretorController::class,
+                'show',
+            ]);
+
+            Route::patch('/candidaturas/{id}/aprovar', [
+                DiretorController::class,
+                'aprovarCandidatura',
+            ]);
+
+            Route::patch('/candidaturas/{id}/recusar', [
+                DiretorController::class,
+                'recusarCandidatura',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Estágios, documentos e planos
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagios', [
+                DiretorController::class,
+                'estagios',
+            ]);
+
+            Route::get('/estagios/{id}', [
+                DiretorController::class,
+                'showEstagio',
+            ]);
+
+            Route::get('/estagios/{id}/documentos', [
+                DiretorController::class,
+                'documentos',
+            ]);
+
+            Route::get('/estagios/{id}/plano', [
+                DiretorController::class,
+                'mostrarPlano',
+            ]);
+
+            Route::put('/estagios/{id}/plano', [
+                DiretorController::class,
+                'submeterPlano',
+            ]);
+
+            Route::patch('/estagios/{id}/plano/aprovar', [
+                DiretorController::class,
+                'aprovarPlano',
+            ]);
+
+            Route::patch('/estagios/{id}/plano/recusar', [
+                DiretorController::class,
+                'recusarPlano',
+            ]);
+
+            Route::patch('/estagios/{id}/plano/enviar-admin', [
+                DiretorController::class,
+                'enviarPlanoAdmin',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Dados submetidos pelos supervisores
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/estagios/{id}/relatorios', [
+                DiretorController::class,
+                'relatorios',
+            ]);
+
+            Route::get('/estagios/{id}/assiduidades', [
+                DiretorController::class,
+                'assiduidades',
+            ]);
+
+            Route::get('/estagios/{id}/atividades', [
+                DiretorController::class,
+                'atividades',
+            ]);
+
+            Route::get('/estagios/{id}/avaliacoes', [
+                DiretorController::class,
+                'avaliacoes',
+            ]);
+
+            Route::post('/estagios/{id}/avaliacoes', [
+                DiretorController::class,
+                'registarAvaliacao',
+            ]);
+
+            Route::get('/estagios/{id}/feedback', [
+                DiretorController::class,
+                'feedback',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Vagas por departamento/direção
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/departamento', [
+                DiretorController::class,
+                'departamento',
+            ]);
+
+            Route::post('/departamentos/{id}/vagas/enviar', [
+                DiretorController::class,
+                'enviarVagas',
+            ]);
+        });
+
+    /*
+    |--------------------------------------------------------------------------
     | Rotas exclusivas do coordenador
     |--------------------------------------------------------------------------
     */
@@ -595,7 +828,12 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
             /*
             |--------------------------------------------------------------------------
-            | Decisão final do coordenador
+            | Parecer do coordenador
+            |--------------------------------------------------------------------------
+            |
+            | A decisão final pertence ao diretor. Estas rotas registam o
+            | parecer do coordenador e enviam a candidatura ao diretor.
+            |
             |--------------------------------------------------------------------------
             */
 
@@ -663,6 +901,11 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
             Route::get('/estagios/{id}/plano', [
                 CoordenadorController::class,
                 'mostrarPlano',
+            ]);
+
+            Route::put('/estagios/{id}/plano', [
+                CoordenadorController::class,
+                'submeterPlano',
             ]);
 
             Route::patch('/estagios/{id}/plano/aprovar', [

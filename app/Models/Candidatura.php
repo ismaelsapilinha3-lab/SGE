@@ -25,15 +25,32 @@ class Candidatura extends Model
         'motivo_recusa',
         'data_decisao',
         'id_departamento_selecionado',
+        'id_grupo_estagio',
+        'duracao_meses',
         'id_coordenador',
+        'id_diretor',
+        'parecer_coordenador',
+        'parecer_coordenador_motivo',
+        'parecer_coordenador_em',
+        'decisao_diretor',
+        'decisao_diretor_motivo',
+        'decisao_diretor_em',
         'encaminhada_em',
+        'consentimento_dados',
+        'consentimento_dados_em',
+        'consentimento_versao',
         'bi_ativo',
     ];
 
     protected $casts = [
         'nascimento' => 'date',
+        'duracao_meses' => 'integer',
         'data_decisao' => 'datetime',
+        'parecer_coordenador_em' => 'datetime',
+        'decisao_diretor_em' => 'datetime',
         'encaminhada_em' => 'datetime',
+        'consentimento_dados' => 'boolean',
+        'consentimento_dados_em' => 'datetime',
         'bi_ativo' => 'boolean',
     ];
 
@@ -64,6 +81,15 @@ class Candidatura extends Model
         );
     }
 
+    public function diretor()
+    {
+        return $this->belongsTo(
+            User::class,
+            'id_diretor',
+            'id_utilizador'
+        );
+    }
+
     public function departamento()
     {
         return $this->belongsTo(
@@ -82,18 +108,14 @@ class Candidatura extends Model
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Garantir o coordenador da direção
-    |--------------------------------------------------------------------------
-    |
-    | Atribui a candidatura a um coordenador ativo da direção escolhida caso
-    | esta ainda não tenha um. Usado ao iniciar o estágio: o candidato passa a
-    | estagiário ativo e o coordenador precisa de o encontrar para lhe
-    | atribuir supervisor. Quando é indicado um coordenador preferido, é esse
-    | que assume a candidatura órfã. É idempotente.
-    |
-    */
+    public function grupoEstagio()
+    {
+        return $this->belongsTo(
+            GrupoEstagio::class,
+            'id_grupo_estagio',
+            'id_grupo_estagio'
+        );
+    }
 
     public function garantirCoordenador(?User $preferido = null): ?User
     {
@@ -119,8 +141,13 @@ class Candidatura extends Model
         $coordenador = User::query()
             ->where('tipo_utilizador', 'coordenador')
             ->where('ativo', true)
-            ->whereHas('perfil', function ($q) {
-                $q->where(
+            ->where(function ($query) {
+                $query->whereHas('perfil', function ($q) {
+                    $q->where(
+                        'id_departamento',
+                        $this->id_departamento_selecionado
+                    );
+                })->orWhere(
                     'id_departamento',
                     $this->id_departamento_selecionado
                 );
@@ -139,13 +166,124 @@ class Candidatura extends Model
         return $coordenador;
     }
 
-    /**
-     * Indica se a candidatura pode ser gerida pelo coordenador indicado.
-     *
-     * Um coordenador ativo da direção vê as candidaturas que lhe estão
-     * atribuídas, as que ainda não têm coordenador e as que ficaram presas a
-     * um coordenador inativo, removido ou de outra direção.
-     */
+    public function garantirDiretor(?User $preferido = null): ?User
+    {
+        if ($this->id_diretor !== null && $this->temDiretorValido()) {
+            return $this->diretor;
+        }
+
+        if (
+            $preferido !== null
+            && $this->diretorPertenceADirecao($preferido)
+        ) {
+            $this->atribuirDiretor($preferido);
+
+            return $preferido;
+        }
+
+        if ($this->id_departamento_selecionado === null) {
+            $this->libertarDiretorInvalido();
+
+            return null;
+        }
+
+        $diretor = User::query()
+            ->where('tipo_utilizador', 'diretor')
+            ->where('ativo', true)
+            ->where(function ($query) {
+                $query->whereHas('perfil', function ($q) {
+                    $q->where(
+                        'id_departamento',
+                        $this->id_departamento_selecionado
+                    );
+                })->orWhere(
+                    'id_departamento',
+                    $this->id_departamento_selecionado
+                );
+            })
+            ->with('perfil')
+            ->first();
+
+        if (! $diretor) {
+            $this->libertarDiretorInvalido();
+
+            return null;
+        }
+
+        $this->atribuirDiretor($diretor);
+
+        return $diretor;
+    }
+
+    public function podeSerDecididaPeloDiretor(User $user): bool
+    {
+        if (! $this->diretorPertenceADirecao($user)) {
+            return false;
+        }
+
+        return $this->id_diretor === null
+            || (int) $this->id_diretor === (int) $user->id_utilizador
+            || ! $this->temDiretorValido();
+    }
+
+    public function temDiretorValido(): bool
+    {
+        return $this->diretor !== null
+            && $this->diretorPertenceADirecao($this->diretor);
+    }
+
+    public function estaEmAnalise(): bool
+    {
+        return $this->estado === 'em_analise';
+    }
+
+    public function aguardaDiretor(): bool
+    {
+        return $this->estado === 'aguarda_diretor';
+    }
+
+    public function foiAprovada(): bool
+    {
+        return $this->estado === 'aprovada';
+    }
+
+    public function foiRecusada(): bool
+    {
+        return $this->estado === 'recusada';
+    }
+
+    private function diretorPertenceADirecao(User $user): bool
+    {
+        if (
+            ! $user->ativo
+            || $user->trashed()
+            || $user->tipo_utilizador !== 'diretor'
+        ) {
+            return false;
+        }
+
+        $idDepartamento = $user->idDepartamento();
+
+        return $idDepartamento !== null
+            && $this->id_departamento_selecionado !== null
+            && $idDepartamento
+                === (int) $this->id_departamento_selecionado;
+    }
+
+    private function atribuirDiretor(User $diretor): void
+    {
+        $this->update([
+            'id_diretor' => $diretor->id_utilizador,
+        ]);
+    }
+
+    private function libertarDiretorInvalido(): void
+    {
+        if ($this->id_diretor !== null) {
+            $this->update(['id_diretor' => null]);
+        }
+    }
+
     public function podeSerCoordenadaPor(User $user): bool
     {
         if (! $this->coordenadorPertenceADirecao($user)) {
@@ -157,9 +295,6 @@ class Candidatura extends Model
             || ! $this->temCoordenadorValido();
     }
 
-    /**
-     * Indica se o coordenador atualmente associado continua válido.
-     */
     public function temCoordenadorValido(): bool
     {
         return $this->coordenador !== null
@@ -176,7 +311,7 @@ class Candidatura extends Model
             return false;
         }
 
-        $idDepartamento = $user->perfil?->id_departamento;
+        $idDepartamento = $user->idDepartamento();
 
         return $idDepartamento !== null
             && $this->id_departamento_selecionado !== null
@@ -199,25 +334,9 @@ class Candidatura extends Model
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Verificação de propriedade
-    |--------------------------------------------------------------------------
-    |
-    | A propriedade decide-se por id_utilizador. O e-mail só é usado como
-    | regresso de segurança para candidaturas antigas ainda sem a chave,
-    | nunca como chave principal.
-    |
-    */
-
     public function pertenceAo(User $utilizador): bool
     {
         if ($this->id_utilizador !== null) {
-            /*
-             * Comparação explícita em inteiro: o driver MySQL pode
-             * devolver os IDs como texto, e uma comparação estrita
-             * entre "2" e 2 negaria acesso ao próprio dono.
-             */
             return (int) $this->id_utilizador
                 === (int) $utilizador->id_utilizador;
         }
